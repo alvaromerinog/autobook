@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Login extends StatefulWidget {
-  Login({Key? key}) : super(key: key);
+  Login({Key key}) : super(key: key);
 
   @override
   _LoginState createState() => _LoginState();
@@ -12,6 +12,11 @@ class _LoginState extends State<Login> {
   String email = '';
   String password = '';
   bool rememberMe = false;
+  RegExp exp = RegExp(
+      r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$",
+      multiLine: true,
+      caseSensitive: true,
+      unicode: true);
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +39,10 @@ class _LoginState extends State<Login> {
                     hintText: 'Email',
                   ),
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
+                    } else if (!exp.hasMatch(value)) {
+                      return 'Introduzca un email válido';
                     }
                   },
                 ),
@@ -52,7 +59,7 @@ class _LoginState extends State<Login> {
                     hintText: 'Contraseña',
                   ),
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     }
                   },
@@ -68,7 +75,7 @@ class _LoginState extends State<Login> {
                     value: rememberMe,
                     onChanged: (newValue) {
                       setState(() {
-                        rememberMe = newValue!;
+                        rememberMe = newValue;
                       });
                     },
                     controlAffinity: ListTileControlAffinity.leading,
@@ -78,10 +85,15 @@ class _LoginState extends State<Login> {
                   vertical: 10.0,
                   horizontal: 10.0,
                 ),
+                margin: EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 50.0),
                 child: ElevatedButton(
-                  child: Text('Iniciar sesión'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(200.0, 50.0),
+                  ),
+                  child:
+                      Text('Iniciar sesión', style: TextStyle(fontSize: 20.0)),
                   onPressed: () {
-                    if (_formKey.currentState!.validate()) {
+                    if (_formKey.currentState.validate()) {
                       ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Processing Data')));
                     }
@@ -93,14 +105,20 @@ class _LoginState extends State<Login> {
                   vertical: 10.0,
                   horizontal: 10.0,
                 ),
-                child: ElevatedButton.icon(
-                  label: Text('Iniciar sesión con Google'),
-                  icon: Icon(Icons.g_translate),
+                child: Text("¿No tienes cuenta?"),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: 10.0,
+                  horizontal: 10.0,
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(200.0, 50.0),
+                  ),
+                  child: Text('Regístrate', style: TextStyle(fontSize: 20.0)),
                   onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Processing Data')));
-                    }
+                    Navigator.pushNamed(context, '/register');
                   },
                 ),
               ),

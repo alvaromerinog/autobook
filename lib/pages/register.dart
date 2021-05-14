@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class Register extends StatefulWidget {
-  Register({Key? key}) : super(key: key);
+  Register({Key key}) : super(key: key);
 
   @override
   _RegisterState createState() => _RegisterState();
@@ -12,10 +12,22 @@ class _RegisterState extends State<Register> {
   String name = '';
   String email = '';
   String password = '';
+  RegExp exp = RegExp(
+      r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$",
+      multiLine: true,
+      caseSensitive: true,
+      unicode: true);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.keyboard_backspace_rounded),
+        backgroundColor: Colors.red,
+        onPressed: () {
+          Navigator.pop(context);
+        },
+      ),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -34,7 +46,7 @@ class _RegisterState extends State<Register> {
                     hintText: 'Nombre',
                   ),
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else {
                       name = value;
@@ -53,8 +65,10 @@ class _RegisterState extends State<Register> {
                     hintText: 'Email',
                   ),
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
+                    } else if (!exp.hasMatch(value)) {
+                      return 'Introduzca un email válido';
                     } else {
                       email = value;
                     }
@@ -73,7 +87,7 @@ class _RegisterState extends State<Register> {
                     hintText: 'Contraseña',
                   ),
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else {
                       password = value;
@@ -93,7 +107,7 @@ class _RegisterState extends State<Register> {
                     hintText: 'Repita la contraseña',
                   ),
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else if (value != password) {
                       return 'La contraseña no coincide';
@@ -107,10 +121,15 @@ class _RegisterState extends State<Register> {
                   horizontal: 10.0,
                 ),
                 child: ElevatedButton(
-                  child: Text('Registrarse'),
-                  style: ButtonStyle(),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(200.0, 50.0),
+                  ),
+                  child: Text(
+                    'Registrarse',
+                    style: TextStyle(fontSize: 20.0),
+                  ),
                   onPressed: () {
-                    if (_formKey.currentState!.validate()) {
+                    if (_formKey.currentState.validate()) {
                       ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Processing Data')));
                     }
