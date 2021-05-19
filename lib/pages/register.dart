@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:amplify_flutter/amplify.dart';
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 
 class Register extends StatefulWidget {
   Register({Key key}) : super(key: key);
@@ -9,14 +11,34 @@ class Register extends StatefulWidget {
 
 class _RegisterState extends State<Register> {
   final _formKey = GlobalKey<FormState>();
-  String name = '';
   String email = '';
-  String password = '';
-  RegExp exp = RegExp(
+  RegExp emailRegExp = RegExp(
       r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$",
       multiLine: true,
       caseSensitive: true,
       unicode: true);
+  String password = '';
+  RegExp passwordRegExp = RegExp(
+      r"^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$",
+      multiLine: true,
+      caseSensitive: true,
+      unicode: true);
+
+  Future<String> onSignUp(email, password) async {
+    try {
+      Map<String, String> userAttributes = {'email': email};
+      Map arguments = {'email': email, 'password': password};
+      await Amplify.Auth.signUp(
+          username: email,
+          password: password,
+          options: CognitoSignUpOptions(userAttributes: userAttributes));
+      Navigator.pushReplacementNamed(context, '/confirmEmail', arguments: arguments);
+    } on UsernameExistsException {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('El email introducido ya existe. Pruebe otro email.'), backgroundColor: Colors.red,));
+    } on AuthException {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ha ocurrido un error. Vuelva a intentarlo.'), backgroundColor: Colors.red,));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,32 +64,15 @@ class _RegisterState extends State<Register> {
                 ),
                 child: TextFormField(
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'Nombre',
-                  ),
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'Este campo no puede estar vacío';
-                    } else {
-                      name = value;
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40))),
                     hintText: 'Email',
                   ),
                   validator: (value) {
+                    value = value.toString();
                     if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
-                    } else if (!exp.hasMatch(value)) {
+                    } else if (!emailRegExp.hasMatch(value)) {
                       return 'Introduzca un email válido';
                     } else {
                       email = value;
@@ -80,10 +85,20 @@ class _RegisterState extends State<Register> {
                   vertical: 10.0,
                   horizontal: 10.0,
                 ),
+                child: Text(
+                    'La contraseña debe ser una combinación de letras mayúsculas y minúsculas y de números, con una longitud mínima de 6'
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: 10.0,
+                  horizontal: 10.0,
+                ),
                 child: TextFormField(
                   obscureText: true,
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40))),
                     hintText: 'Contraseña',
                   ),
                   validator: (value) {
@@ -91,6 +106,9 @@ class _RegisterState extends State<Register> {
                       return 'Este campo no puede estar vacío';
                     } else {
                       password = value;
+                    }
+                    if (!passwordRegExp.hasMatch(value)) {
+                      return 'La contraseña no cumple los requisitos';
                     }
                   },
                 ),
@@ -103,7 +121,8 @@ class _RegisterState extends State<Register> {
                 child: TextFormField(
                   obscureText: true,
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40))),
                     hintText: 'Repita la contraseña',
                   ),
                   validator: (value) {
@@ -117,21 +136,22 @@ class _RegisterState extends State<Register> {
               ),
               Container(
                 padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
+                  vertical: 20.0,
                   horizontal: 10.0,
                 ),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(200.0, 50.0),
-                  ),
+                      primary: Colors.amber,
+                      minimumSize: Size(200.0, 50.0),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50))),
                   child: Text(
                     'Registrarse',
                     style: TextStyle(fontSize: 20.0),
                   ),
                   onPressed: () {
                     if (_formKey.currentState.validate()) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Processing Data')));
+                        onSignUp(email, password);
                     }
                   },
                 ),

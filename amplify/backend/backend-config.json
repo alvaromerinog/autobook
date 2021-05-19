@@ -1,0 +1,12 @@
+{
+  "auth": {
+    "autobookd0048945": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  },
+  "function": {},
+  "api": {}
+}

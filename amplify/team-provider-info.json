@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-autobook-dev-134936-authRole",
+      "UnauthRoleArn": "arn:aws:iam::346590384811:role/amplify-autobook-dev-134936-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::346590384811:role/amplify-autobook-dev-134936-authRole",
+      "Region": "eu-west-1",
+      "DeploymentBucketName": "amplify-autobook-dev-134936-deployment",
+      "UnauthRoleName": "amplify-autobook-dev-134936-unauthRole",
+      "StackName": "amplify-autobook-dev-134936",
+      "StackId": "arn:aws:cloudformation:eu-west-1:346590384811:stack/amplify-autobook-dev-134936/79c1dc00-b4aa-11eb-b259-06c3ac31d823",
+      "AmplifyAppId": "d1yb3vri3fmpwy"
+    },
+    "categories": {
+      "auth": {
+        "autobookd0048945": {}
+      }
+    }
+  }
+}

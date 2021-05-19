@@ -1,31 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:autobook/pages/vehiclesPage.dart';
+import 'package:autobook/pages/maintenancesPage.dart';
+import 'package:autobook/pages/profilepage.dart';
+import 'package:amplify_flutter/amplify.dart';
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 
 class Home extends StatefulWidget {
-  const Home({Key? key}) : super(key: key);
+  const Home({Key key}) : super(key: key);
 
   @override
   _HomeState createState() => _HomeState();
 }
 
-class _HomeState extends State {
+class _HomeState extends State<Home> {
   int _selectedIndex = 0;
+  AuthUser _user;
+  void initState() {
+    super.initState();
+    Amplify.Auth.getCurrentUser().then((user) {
+      setState(() {
+        _user = user;
+      });
+    }).catchError((error) {
+      print(error.cause);
+    });
+  }
 
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    Text(
-      'Vehículos',
-      style: optionStyle,
-    ),
-    Text(
-      'Mantenimientos',
-      style: optionStyle,
-    ),
-    Text(
-      'Perfil',
-      style: optionStyle,
-    ),
+  static List<Widget> _widgetOptions = <Widget>[
+    VehiclesPage(),
+    MaintenancesPage(),
+    ProfilePage(),
   ];
 
   void _onItemTapped(int index) {
