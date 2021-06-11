@@ -14,6 +14,12 @@
     "categories": {
       "auth": {
         "autobookd0048945": {}
+      },
+      "function": {
+        "autobookbf510baa": {
+          "deploymentBucketName": "amplify-autobook-dev-134936-deployment",
+          "s3Key": "amplify-builds/autobookbf510baa-415374476c7147735234-build.zip"
+        }
       }
     }
   }
