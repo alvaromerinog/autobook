@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class ConfirmEmail extends StatefulWidget {
   const ConfirmEmail({Key key}) : super(key: key);
@@ -12,25 +13,40 @@ class ConfirmEmail extends StatefulWidget {
 class _ConfirmEmailState extends State<ConfirmEmail> {
   final _formKey = GlobalKey<FormState>();
   String code = '';
+  Widget confirmButton = Text('Confirmar', style: TextStyle(fontSize: 20.0));
 
   void _verifyCode(BuildContext context) async {
-    try{
+    try {
       Map arguments = ModalRoute.of(context).settings.arguments;
       String email = arguments['email'];
       String password = arguments['password'];
-      final result = await Amplify.Auth.confirmSignUp(username: email, confirmationCode: code);
+      final result = await Amplify.Auth.confirmSignUp(
+          username: email, confirmationCode: code);
       if (result.isSignUpComplete) {
-        final login = await Amplify.Auth.signIn(username: email, password: password);
-        if(login.isSignedIn){
+        final login =
+            await Amplify.Auth.signIn(username: email, password: password);
+        if (login.isSignedIn) {
           Navigator.pushReplacementNamed(context, '/home');
         } else {
           Navigator.pushReplacementNamed(context, '/login');
         }
       }
     } on CodeMismatchException {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('El código no es correcto.'), backgroundColor: Colors.red,));
+      setState(() {
+        confirmButton = Text('Confirmar', style: TextStyle(fontSize: 20.0));
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('El código no es correcto.'),
+        backgroundColor: Colors.red,
+      ));
     } on AuthException {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ha ocurrido un error. Vuelva a intentarlo.'), backgroundColor: Colors.red,));
+      setState(() {
+        confirmButton = Text('Confirmar', style: TextStyle(fontSize: 20.0));
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
+        backgroundColor: Colors.red,
+      ));
     }
   }
 
@@ -39,9 +55,15 @@ class _ConfirmEmailState extends State<ConfirmEmail> {
       Map arguments = ModalRoute.of(context).settings.arguments;
       String email = arguments['email'];
       await Amplify.Auth.resendSignUpCode(username: email);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('El código ha sido reenviado correctamente.'), backgroundColor: Colors.blue,));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('El código ha sido reenviado correctamente.'),
+        backgroundColor: Colors.blue,
+      ));
     } on AuthException {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ha ocurrido un error. Vuelva a intentarlo.'), backgroundColor: Colors.red,));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
+        backgroundColor: Colors.red,
+      ));
     }
   }
 
@@ -87,20 +109,24 @@ class _ConfirmEmailState extends State<ConfirmEmail> {
               Container(
                 padding: EdgeInsets.symmetric(
                   vertical: 20.0,
-                  horizontal: 10.0,
+                  horizontal: 20.0,
                 ),
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                       primary: Colors.amber,
                       minimumSize: Size(200.0, 50.0),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50))),
-                  child: Text(
-                    'Confirmar',
-                    style: TextStyle(fontSize: 20.0),
-                  ),
+                  icon: Icon(Icons.login),
+                  label: confirmButton,
                   onPressed: () {
                     if (_formKey.currentState.validate()) {
+                      setState(() {
+                        confirmButton = SpinKitChasingDots(
+                          color: Colors.white,
+                          size: 25.0,
+                        );
+                      });
                       _verifyCode(context);
                     }
                   },

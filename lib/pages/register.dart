@@ -18,11 +18,8 @@ class _RegisterState extends State<Register> {
       caseSensitive: true,
       unicode: true);
   String password = '';
-  RegExp passwordRegExp = RegExp(
-      r"^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$",
-      multiLine: true,
-      caseSensitive: true,
-      unicode: true);
+  RegExp passwordRegExp = RegExp(r"^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$",
+      multiLine: true, caseSensitive: true, unicode: true);  
 
   Future<String> onSignUp(email, password) async {
     try {
@@ -31,12 +28,19 @@ class _RegisterState extends State<Register> {
       await Amplify.Auth.signUp(
           username: email,
           password: password,
-          options: CognitoSignUpOptions(userAttributes: userAttributes));
-      Navigator.pushReplacementNamed(context, '/confirmEmail', arguments: arguments);
+options: CognitoSignUpOptions(userAttributes: userAttributes));
+      Navigator.pushReplacementNamed(context, '/confirmEmail',
+          arguments: arguments);
     } on UsernameExistsException {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('El email introducido ya existe. Pruebe otro email.'), backgroundColor: Colors.red,));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('El email introducido ya existe. Pruebe otro email.'),
+        backgroundColor: Colors.red,
+      ));
     } on AuthException {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ha ocurrido un error. Vuelva a intentarlo.'), backgroundColor: Colors.red,));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
+        backgroundColor: Colors.red,
+      ));
     }
   }
 
@@ -57,6 +61,17 @@ class _RegisterState extends State<Register> {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+               Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: 10.0,
+                  horizontal: 10.0,
+                ),
+                child: Text(
+                  'La contraseña debe tener: \n\n- Letras mayúsculas y minúsculas.\n- Números.\n- Una longitud mínima de 6.',
+                  textAlign: TextAlign.justify,
+                  style: TextStyle(fontWeight: FontWeight.bold)
+                ),
+              ),
               Container(
                 padding: EdgeInsets.symmetric(
                   vertical: 10.0,
@@ -65,7 +80,8 @@ class _RegisterState extends State<Register> {
                 child: TextFormField(
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40))),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(40))),
                     hintText: 'Email',
                   ),
                   validator: (value) {
@@ -85,20 +101,12 @@ class _RegisterState extends State<Register> {
                   vertical: 10.0,
                   horizontal: 10.0,
                 ),
-                child: Text(
-                    'La contraseña debe ser una combinación de letras mayúsculas y minúsculas y de números, con una longitud mínima de 6'
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
                 child: TextFormField(
                   obscureText: true,
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40))),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(40))),
                     hintText: 'Contraseña',
                   ),
                   validator: (value) {
@@ -122,7 +130,8 @@ class _RegisterState extends State<Register> {
                   obscureText: true,
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(40))),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(40))),
                     hintText: 'Repita la contraseña',
                   ),
                   validator: (value) {
@@ -151,7 +160,7 @@ class _RegisterState extends State<Register> {
                   ),
                   onPressed: () {
                     if (_formKey.currentState.validate()) {
-                        onSignUp(email, password);
+                      onSignUp(email, password);
                     }
                   },
                 ),

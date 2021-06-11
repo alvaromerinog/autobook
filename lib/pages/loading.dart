@@ -5,6 +5,7 @@ import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:autobook/amplifyconfiguration.dart';
 import 'package:autobook/pages/home.dart';
 import 'package:autobook/pages/login.dart';
+import 'package:amplify_api/amplify_api.dart';
 
 class Loading extends StatefulWidget {
   @override
@@ -31,22 +32,21 @@ class _LoadingState extends State<Loading> {
 
   void _configureAmplify() async {
     AmplifyAuthCognito auth = AmplifyAuthCognito();
+    AmplifyAPI api = AmplifyAPI();
     try {
       if (!Amplify.isConfigured) {
-        await Amplify.addPlugins([auth]);
+        await Amplify.addPlugins([auth, api]);
         await Amplify.configure(amplifyconfig);
       }
-
+      // Amplify.Auth.fetchAuthSession(); Mira si hay una sesión activa sin dar una excepción
       await Amplify.Auth.getCurrentUser();
       setState(() {
         initialWidget = Home();
       });
-    } on SignedOutException {
+    } on Exception {
       setState(() {
         initialWidget = Login();
       });
-    } catch (e) {
-      print(e);
     }
   }
 
@@ -54,4 +54,5 @@ class _LoadingState extends State<Loading> {
   Widget build(BuildContext context) {
     return initialWidget;
   }
+
 }
