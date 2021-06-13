@@ -19,6 +19,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
   List vehicles;
   String registration;
   static String selectedRegistration;
+  int selectedIndex = 0;
   Widget vehiclesWidget = SpinKitChasingDots(
     color: Colors.blue[800],
     size: 50.0,
@@ -42,44 +43,60 @@ class _VehiclesPageState extends State<VehiclesPage> {
     getVehicles();
   }
 
+  void onChangeSelectedVehicle(index, vehicles){
+    selectedRegistration = vehicles[selectedIndex]['registration'];
+    setState(() => selectedIndex=index);
+  }
+
   void getVehicles() async {
     dynamic response = await Vehicles().getVehicles(email);
     if (response['result'].length > 0) {
       vehicles = response['result'];
-      selectedRegistration = vehicles[0]['registration'];
+      selectedRegistration = vehicles[selectedIndex]['registration'];
       setState(() {
         vehiclesWidget = ListView.builder(
           itemCount: vehicles.length,
           itemBuilder: (BuildContext ctxt, int index) {
-            return new Card(
-                elevation: 20,
-                child: ListTile(
-                    tileColor: Colors.blue,
-                    title: Text(
-                        '${vehicles[index]['registration']}\n${vehicles[index]['brand']} ${vehicles[index]['model']}'),
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.time_to_leave_rounded,
-                        color: Colors.amber[700],
+            return InkWell(
+              onTap: () {
+                selectedIndex=index;
+                selectedRegistration = vehicles[selectedIndex]['registration'];
+                setState(()=>getVehicles());
+              },
+              child: new Card(
+                shape: (selectedIndex==index)
+                              ? RoundedRectangleBorder(
+                                  side: BorderSide(color: Colors.amber, width: 3.0))
+                              : null,
+                  elevation: 20,
+                  child: ListTile(
+                      tileColor: Colors.blue,
+                      title: Text(
+                          '${vehicles[index]['registration']}\n${vehicles[index]['brand']} ${vehicles[index]['model']}'),
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.white,
+                        child: Icon(
+                          Icons.time_to_leave_rounded,
+                          color: Colors.amber[700],
+                        ),
                       ),
-                    ),
-                    trailing: RawMaterialButton(
-                      onPressed: () {
-                        String registration = vehicles[index]['registration'];
-                        String brand = vehicles[index]['brand'];
-                        String model = vehicles[index]['model'];
-                        editVehicle(registration, brand, model);
-                      },
-                      elevation: 2.0,
-                      fillColor: Colors.white,
-                      child: Icon(
-                        Icons.edit,
-                        color: Colors.blue[800],
-                      ),
-                      padding: EdgeInsets.all(10.0),
-                      shape: CircleBorder(),
-                    )));
+                      trailing: RawMaterialButton(
+                        onPressed: () {
+                          String registration = vehicles[index]['registration'];
+                          String brand = vehicles[index]['brand'];
+                          String model = vehicles[index]['model'];
+                          editVehicle(registration, brand, model);
+                        },
+                        elevation: 2.0,
+                        fillColor: Colors.white,
+                        child: Icon(
+                          Icons.edit,
+                          color: Colors.blue[800],
+                        ),
+                        padding: EdgeInsets.all(10.0),
+                        shape: CircleBorder(),
+                      ))),
+            );
           },
         );
       });
