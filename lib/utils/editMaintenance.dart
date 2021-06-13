@@ -23,7 +23,7 @@ class EditMaintenance {
     }
     */
 
-  dynamic modifyMaintenance(email, registration, idMaintenance, date, odometer, description) async {
+  dynamic modifyMaintenance(email, registration, idMaintenance, description, date, odometer, newDescription) async {
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
     final String formatted = formatter.format(date);
     final response = await post(
@@ -38,9 +38,10 @@ class EditMaintenance {
         "params": {
           "registration": registration,
           "id_maintenance": idMaintenance,
+          "description": description,
           "updates": {
             "maintenance": {"date_maintenance": formatted, "odometer": odometer},
-            "description": description
+            "description": newDescription
           },
         },
       }),

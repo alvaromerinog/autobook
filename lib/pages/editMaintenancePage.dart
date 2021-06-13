@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:intl/intl.dart';
 
 class EditMaintenancePage extends StatefulWidget {
   @override
@@ -18,13 +19,22 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
   DateTime date;
   String registration;
   String idMaintenance;
+  String newDescription;
   Widget buttonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
   bool isConfigured = false;
+  TextEditingController _textEditingController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  void onEditMaintenance(
-      registration, idMaintenance, date, odometer, description) async {
-    dynamic response = await EditMaintenance().modifyMaintenance(email, registration, idMaintenance, date, odometer, description);
+  void onEditMaintenance(registration, idMaintenance, description, date,
+      odometer, newDescription) async {
+    dynamic response = await EditMaintenance().modifyMaintenance(
+        email,
+        registration,
+        idMaintenance,
+        description,
+        date,
+        odometer,
+        newDescription);
     if (response['database_error']) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
@@ -39,7 +49,8 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
   }
 
   void onDeleteMaintenance(registration, idMaintenance) async {
-        dynamic response = await DeleteMaintenance().dropMaintenance(email, registration, idMaintenance);
+    dynamic response = await DeleteMaintenance()
+        .dropMaintenance(email, registration, idMaintenance);
     if (response['database_error']) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
@@ -51,7 +62,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
     } else {
       Navigator.pop(context);
     }
-      }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,10 +72,14 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
       registration = arguments['registration'];
       idMaintenance = arguments['idMaintenance'];
       description = arguments['description'];
+      newDescription = description;
       odometer = arguments['odometer'];
       date = DateTime.parse(arguments['dateMaintenance']);
       isConfigured = true;
     }
+    final DateFormat formatter = DateFormat('yyyy-MM-dd');
+    String formatted = formatter.format(date);
+    _textEditingController.text = formatted;
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
@@ -85,15 +100,31 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                   vertical: 10.0,
                   horizontal: 10.0,
                 ),
-                child: InputDatePickerFormField(
-                  initialDate: date,
-                  firstDate: DateTime(1990, 1, 1),
-                  lastDate: DateTime(2050, 1, 1),
-                  
-                  onDateSubmitted: (value) {
+                child: TextFormField(
+                  controller: _textEditingController,
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.calendar_today_rounded),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(40))),
+                    hintText: 'Fecha',
+                  ),
+                  onTap: () => showDatePicker(
+                          context: context,
+                          initialDate: date,
+                          firstDate: DateTime(1990),
+                          lastDate: DateTime(2100))
+                      .then((newDate) {
+                      date = newDate;
+                      formatted = formatter.format(date);
                     setState(() {
-                      date = value;
+                      _textEditingController.text = formatted;
                     });
+                  }),
+                  validator: (value) {
+                    if (!value.isEmpty) {
+                      date = DateTime.parse(value);
+                    }
                   },
                 ),
               ),
@@ -130,7 +161,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                   horizontal: 10.0,
                 ),
                 child: new DropdownButton<String>(
-                  value: description,
+                  value: newDescription,
                   icon: const Icon(Icons.keyboard_arrow_down_rounded),
                   iconSize: 24,
                   elevation: 16,
@@ -141,7 +172,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                   ),
                   onChanged: (String newValue) {
                     setState(() {
-                      description = newValue;
+                      newDescription = newValue;
                     });
                   },
                   items: <String>[
@@ -236,8 +267,8 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                           size: 25.0,
                         );
                       });
-                      onEditMaintenance(registration, idMaintenance, date,
-                          odometer, description);
+                      onEditMaintenance(registration, idMaintenance,
+                          description, date, odometer, newDescription);
                     }
                   },
                 ),

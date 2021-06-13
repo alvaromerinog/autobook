@@ -64,9 +64,12 @@ class _MaintenancesPageState extends State<MaintenancesPage> {
                         '${maintenances[index]['description']}\n${maintenances[index]['date_maintenance']}'),
                     leading: CircleAvatar(
                       backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.time_to_leave_rounded,
-                        color: Colors.amber[700],
+                      child: maintenances[index]['description'].substring(0,6) == 'CAMBIO' ? Icon(
+                        Icons.sync_rounded,
+                        color: Colors.purple[700],
+                      ) : Icon(
+                        Icons.handyman_rounded,
+                        color: Colors.orange[700],
                       ),
                     ),
                     trailing: RawMaterialButton(

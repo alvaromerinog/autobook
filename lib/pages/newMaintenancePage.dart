@@ -2,6 +2,8 @@ import 'package:autobook/utils/newMaintenance.dart';
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:intl/intl.dart';
 
 class NewMaintenancePage extends StatefulWidget {
   @override
@@ -16,6 +18,7 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
   int odometer = 0;
   DateTime date = DateTime.now();
   Widget buttonLabel = Text('Guardar', style: TextStyle(fontSize: 20.0));
+  TextEditingController _textEditingController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   void onSaveNewMaintenance(date, odometer, maintenanceType) async {
@@ -38,6 +41,9 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
 
   @override
   Widget build(BuildContext context) {
+    final DateFormat formatter = DateFormat('yyyy-MM-dd');
+    String formatted = formatter.format(date);
+    _textEditingController.text = formatted;
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
@@ -58,10 +64,32 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
                   vertical: 10.0,
                   horizontal: 10.0,
                 ),
-                child: InputDatePickerFormField(
-                  initialDate: date,
-                  firstDate: DateTime(1990, 1, 1),
-                  lastDate: DateTime(2050, 1, 1),
+                child: TextFormField(
+                  controller: _textEditingController,
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.calendar_today_rounded),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(40))),
+                    hintText: 'Fecha',
+                  ),
+                  onTap: () => showDatePicker(
+                          context: context,
+                          initialDate: date,
+                          firstDate: DateTime(1990),
+                          lastDate: DateTime(2100))
+                      .then((newDate) {
+                      date = newDate;
+                      formatted = formatter.format(date);
+                    setState(() {
+                      _textEditingController.text = formatted;
+                    });
+                  }),
+                  validator: (value) {
+                    if (!value.isEmpty) {
+                      date = DateTime.parse(value);
+                    }
+                  },
                 ),
               ),
               Container(
@@ -186,15 +214,22 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
                   vertical: 20.0,
                   horizontal: 10.0,
                 ),
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
+                  icon: Icon(Icons.save),
                   style: ElevatedButton.styleFrom(
                       primary: Colors.blue[800],
                       minimumSize: Size(200.0, 50.0),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50))),
-                  child: buttonLabel,
+                  label: buttonLabel,
                   onPressed: () {
                     if (_formKey.currentState.validate()) {
+                      setState(() {
+                        buttonLabel = SpinKitChasingDots(
+                          color: Colors.white,
+                          size: 25.0,
+                        );
+                      });
                       onSaveNewMaintenance(date, odometer, maintenanceType);
                     }
                   },
