@@ -23,7 +23,7 @@ class Vehicles {
 
   dynamic getVehicles(email) async{
     final response = await post(
-      Uri.parse('https://a06zlp66q2.execute-api.eu-west-1.amazonaws.com/dev/vehicles'),
+      Uri.parse('https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles'),
       headers: <String, String>{
         'Content-Type': 'application/json',
       },

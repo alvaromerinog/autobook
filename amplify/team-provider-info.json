@@ -1,25 +1,19 @@
 {
   "dev": {
     "awscloudformation": {
-      "AuthRoleName": "amplify-autobook-dev-134936-authRole",
-      "UnauthRoleArn": "arn:aws:iam::346590384811:role/amplify-autobook-dev-134936-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::346590384811:role/amplify-autobook-dev-134936-authRole",
+      "AuthRoleName": "amplify-autobook-dev-205336-authRole",
+      "UnauthRoleArn": "arn:aws:iam::346590384811:role/amplify-autobook-dev-205336-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::346590384811:role/amplify-autobook-dev-205336-authRole",
       "Region": "eu-west-1",
-      "DeploymentBucketName": "amplify-autobook-dev-134936-deployment",
-      "UnauthRoleName": "amplify-autobook-dev-134936-unauthRole",
-      "StackName": "amplify-autobook-dev-134936",
-      "StackId": "arn:aws:cloudformation:eu-west-1:346590384811:stack/amplify-autobook-dev-134936/79c1dc00-b4aa-11eb-b259-06c3ac31d823",
-      "AmplifyAppId": "d1yb3vri3fmpwy"
+      "DeploymentBucketName": "amplify-autobook-dev-205336-deployment",
+      "UnauthRoleName": "amplify-autobook-dev-205336-unauthRole",
+      "StackName": "amplify-autobook-dev-205336",
+      "StackId": "arn:aws:cloudformation:eu-west-1:346590384811:stack/amplify-autobook-dev-205336/cd192930-e4d4-11eb-92fd-06a5de73d42f",
+      "AmplifyAppId": "dkuj4ntw0c6pb"
     },
     "categories": {
       "auth": {
-        "autobookd0048945": {}
-      },
-      "function": {
-        "autobookbf510baa": {
-          "deploymentBucketName": "amplify-autobook-dev-134936-deployment",
-          "s3Key": "amplify-builds/autobookbf510baa-415374476c7147735234-build.zip"
-        }
+        "autobook8b86d990": {}
       }
     }
   }

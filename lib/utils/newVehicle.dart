@@ -25,7 +25,7 @@ class NewVehicle {
   dynamic putVehicle(email, registration, brand, model) async {
     final response = await post(
       Uri.parse(
-          'https://a06zlp66q2.execute-api.eu-west-1.amazonaws.com/dev/vehicles/new'),
+          'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/new'),
       headers: <String, String>{
         'Content-Type': 'application/json',
       },

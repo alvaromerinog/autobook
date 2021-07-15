@@ -28,7 +28,7 @@ class EditMaintenance {
     final String formatted = formatter.format(date);
     final response = await post(
       Uri.parse(
-          'https://a06zlp66q2.execute-api.eu-west-1.amazonaws.com/dev/vehicles/maintenances/modify'),
+          'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/maintenances/modify'),
       headers: <String, String>{
         'Content-Type': 'application/json',
       },
