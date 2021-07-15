@@ -50,7 +50,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
 
   void getVehicles() async {
     dynamic response = await Vehicles().getVehicles(email);
-    if (response['result'].length > 0) {
+    if (response != null && !response['result'].isEmpty) {
       vehicles = response['result'];
       selectedRegistration = vehicles[selectedIndex]['registration'];
       setState(() {

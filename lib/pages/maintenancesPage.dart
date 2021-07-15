@@ -50,7 +50,7 @@ class _MaintenancesPageState extends State<MaintenancesPage> {
   void getMaintenances() async {
     dynamic response =
         await Maintenances().getMaintenances(email, registration);
-    if (response['result'].length > 0) {
+    if (response != null && !response['result'].isEmpty) {
       maintenances = response['result'];
       setState(() {
         maintenancesWidget = ListView.builder(
