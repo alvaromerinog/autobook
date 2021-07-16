@@ -1,16 +1,21 @@
 import 'dart:convert';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_api/amplify_api.dart';
+import 'package:autobook/factories/maintenanceModifications.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 
-class EditMaintenance {
-  AuthUser user;
-  String email = 'prueba@test.es';
+class MaintenancesModify {
+  String email;
   String registration;
-  String brand;
-  String model;
+  int idMaintenance;
+  DateTime dateMaintenance;
+  int idMaintenanceType;
+  String? odometer;
+  MaintenanceModifications updates;
+
+  MaintenancesModify({required this.email, required this.registration, required this.idMaintenance, required this.dateMaintenance, required this.idMaintenanceType, this.odometer, required this.updates});
 /*
   Future<RestResponse> getVehicles() async {
       List<int> bodyDigits = '{\"mail":\"$email\"}'.codeUnits;
@@ -23,9 +28,9 @@ class EditMaintenance {
     }
     */
 
-  dynamic modifyMaintenance(email, registration, idMaintenance, description, date, odometer, newDescription) async {
+  dynamic modifyMaintenance() async {
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
-    final String formatted = formatter.format(date);
+    final String formatted = formatter.format(this.updates.newDate);
     final response = await post(
       Uri.parse(
           'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/maintenances/modify'),
@@ -34,14 +39,14 @@ class EditMaintenance {
       },
       body: jsonEncode(<String, dynamic>{
         'action': 'update',
-        'mail': email,
+        'mail': this.email,
         "params": {
-          "registration": registration,
-          "id_maintenance": idMaintenance,
-          "description": description,
+          "registration": this.registration,
+          "id_maintenance": this.idMaintenance,
+          "id_maintenance_type": this.idMaintenanceType,
           "updates": {
-            "maintenance": {"date_maintenance": formatted, "odometer": odometer},
-            "description": newDescription
+            "maintenance": {"date_maintenance": formatted, "odometer": this.updates.newOdometer},
+            "id_maintenance_type": this.updates.newIdType
           },
         },
       }),

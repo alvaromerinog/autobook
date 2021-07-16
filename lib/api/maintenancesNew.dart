@@ -6,12 +6,13 @@ import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 
 class NewMaintenance {
-  AuthUser user;
-  String email = 'prueba@test.es';
+  String email;
   String registration;
-  DateTime date_maintenance;
-  String odometer;
-  String description;
+  DateTime dateMaintenance;
+  int idMaintenanceType;
+  String? odometer;
+
+  NewMaintenance({required this.email, required this.registration, required this.dateMaintenance, required this.idMaintenanceType, this.odometer});
 /*
   Future<RestResponse> getVehicles() async {
       List<int> bodyDigits = '{\"mail":\"$email\"}'.codeUnits;
@@ -24,9 +25,9 @@ class NewMaintenance {
     }
     */
 
-  dynamic putMaintenance(email, registration, date_maintenance, odometer, description) async {
+  dynamic putMaintenance() async {
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
-    final String formatted = formatter.format(date_maintenance);
+    final String formatted = formatter.format(this.dateMaintenance);
     final response = await post(
       Uri.parse(
           'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/maintenances/new'),
@@ -35,12 +36,12 @@ class NewMaintenance {
       },
       body: jsonEncode(<String, dynamic>{
         'action': 'insert',
-        'mail': email,
+        'mail': this.email,
         "params": {
-          "registration": registration,
+          "registration": this.registration,
           "date_maintenance": formatted,
-          "odometer": odometer,
-          "description": description
+          "id_maintenance_type": this.idMaintenanceType,
+          "odometer": this.odometer,
         },
       }),
     );

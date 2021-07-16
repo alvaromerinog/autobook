@@ -4,12 +4,13 @@ import 'package:amplify_api/amplify_api.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
-class NewVehicle {
-  AuthUser user;
+class VehiclesNew {
   String email = 'prueba@test.es';
   String registration;
-  String brand;
-  String model;
+  String? brand;
+  String? model;
+
+  VehiclesNew({required this.email, required this.registration, this.brand, this.model});
 /*
   Future<RestResponse> getVehicles() async {
       List<int> bodyDigits = '{\"mail":\"$email\"}'.codeUnits;
@@ -22,7 +23,7 @@ class NewVehicle {
     }
     */
 
-  dynamic putVehicle(email, registration, brand, model) async {
+  dynamic putVehicle() async {
     final response = await post(
       Uri.parse(
           'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/new'),
@@ -31,8 +32,8 @@ class NewVehicle {
       },
       body: jsonEncode(<String, dynamic>{
         'action': 'insert',
-        'mail': email,
-        "params": {"registration": registration, "brand": brand, "model": model},
+        'mail': this.email,
+        "params": {"registration": this.registration, "brand": this.brand, "model": this.model},
       }),
     );
     if (response.statusCode == 200) {

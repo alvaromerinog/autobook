@@ -4,25 +4,13 @@ import 'package:amplify_api/amplify_api.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
-class DeleteVehicle {
-  AuthUser user;
-  String email = 'prueba@test.es';
-  String registration;
-  String brand;
-  String model;
-/*
-  Future<RestResponse> getVehicles() async {
-      List<int> bodyDigits = '{\"mail":\"$email\"}'.codeUnits;
-      Uint8List body = Uint8List.fromList(bodyDigits);
-      Map<String, String> headers = {'Authorization': 'Bearer ${user.userId}'};
-      RestOptions restOptions = RestOptions(path: '/vehicles', body: body, headers: headers);
-      RestOperation operation = AmplifyAPI.post(restOptions: restOptions);
-      Future<RestResponse> response = (await operation.response) as Future<RestResponse>;
-      return response;
-    }
-    */
+class VehiclesDelete {
+  String? email;
+  String? registration;
 
-  dynamic dropVehicle(email, registration) async {
+  VehiclesDelete({this.email, this.registration});
+
+  dynamic dropVehicle() async {
     final response = await post(
       Uri.parse(
           'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/delete'),
@@ -31,9 +19,9 @@ class DeleteVehicle {
       },
       body: jsonEncode(<String, dynamic>{
         'action': 'delete',
-        'mail': email,
+        'mail': this.email,
         "params": {
-          "registration": registration
+          "registration": this.registration
         },
       }),
     );

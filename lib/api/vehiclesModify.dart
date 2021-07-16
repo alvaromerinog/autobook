@@ -1,15 +1,16 @@
 import 'dart:convert';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_api/amplify_api.dart';
+import 'package:autobook/factories/vehicleModifications.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
 class EditVehicle {
-  AuthUser user;
-  String email = 'prueba@test.es';
+  String email;
   String registration;
-  String brand;
-  String model;
+  VehicleModifications updates;
+
+  EditVehicle({required this.email, required this.registration, required this.updates});
 /*
   Future<RestResponse> getVehicles() async {
       List<int> bodyDigits = '{\"mail":\"$email\"}'.codeUnits;
@@ -31,12 +32,13 @@ class EditVehicle {
       },
       body: jsonEncode(<String, dynamic>{
         'action': 'update',
-        'mail': email,
+        'mail': this.email,
         "params": {
-          "registration": registration,
-          "id_maintenance": idMaintenance,
+          "registration": this.registration,
           "updates": {
-            "description": description
+            "registration": this.updates.newRegistration,
+            "brand": this.updates.newBrand,
+            "model": this.updates.newModel,
           },
         },
       }),

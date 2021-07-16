@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 
-class DeleteMaintenance {
-  AuthUser user;
-  String email = 'prueba@test.es';
+class MaintenancesDelete {
+  String email;
   String registration;
-  String brand;
-  String model;
+  int idMaintenance;
+
+  MaintenancesDelete({required this.email, required this.registration, required this.idMaintenance});
 /*
   Future<RestResponse> getVehicles() async {
       List<int> bodyDigits = '{\"mail":\"$email\"}'.codeUnits;
@@ -23,7 +23,7 @@ class DeleteMaintenance {
     }
     */
 
-  dynamic dropMaintenance(email, registration, idMaintenance) async {
+  dynamic dropMaintenance() async {
     final response = await post(
       Uri.parse(
           'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/maintenances/delete'),
@@ -32,10 +32,10 @@ class DeleteMaintenance {
       },
       body: jsonEncode(<String, dynamic>{
         'action': 'delete',
-        'mail': email,
+        'mail': this.email,
         "params": {
-          "registration": registration,
-          "id_maintenance": idMaintenance,
+          "registration": this.registration,
+          "id_maintenance": this.idMaintenance,
           "updates": {},
         },
       }),
