@@ -1,7 +1,7 @@
+import 'package:autobook/api/vehiclesSelect.dart';
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
-import 'package:autobook/utils/selectVehicles.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class VehiclesPage extends StatefulWidget {
@@ -14,11 +14,11 @@ class VehiclesPage extends StatefulWidget {
 }
 
 class _VehiclesPageState extends State<VehiclesPage> {
-  String email;
-  AuthUser user;
-  List vehicles;
-  String registration;
-  static String selectedRegistration;
+  String? email;
+  AuthUser? user;
+  List? vehicles;
+  String? registration;
+  static String selectedRegistration = '';
   int selectedIndex = 0;
   Widget vehiclesWidget = SpinKitChasingDots(
     color: Colors.blue[800],
@@ -39,7 +39,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
 
   void getEmail() async {
     this.user = await Amplify.Auth.getCurrentUser();
-    this.email = user.username;
+    this.email = user!.username;
     getVehicles();
   }
 
@@ -49,18 +49,18 @@ class _VehiclesPageState extends State<VehiclesPage> {
   }
 
   void getVehicles() async {
-    dynamic response = await Vehicles().getVehicles(email);
+    dynamic response = await VehiclesSelect(email: email).getVehicles();
     if (response != null && !response['result'].isEmpty) {
       vehicles = response['result'];
-      selectedRegistration = vehicles[selectedIndex]['registration'];
+      selectedRegistration = vehicles![selectedIndex]['registration'];
       setState(() {
         vehiclesWidget = ListView.builder(
-          itemCount: vehicles.length,
+          itemCount: vehicles!.length,
           itemBuilder: (BuildContext ctxt, int index) {
             return InkWell(
               onTap: () {
                 selectedIndex=index;
-                selectedRegistration = vehicles[selectedIndex]['registration'];
+                selectedRegistration = vehicles![selectedIndex]['registration'];
                 setState(()=>getVehicles());
               },
               child: new Card(
@@ -72,7 +72,7 @@ class _VehiclesPageState extends State<VehiclesPage> {
                   child: ListTile(
                       tileColor: Colors.blue,
                       title: Text(
-                          '${vehicles[index]['registration']}\n${vehicles[index]['brand']} ${vehicles[index]['model']}'),
+                          '${vehicles![index]['registration']}\n${vehicles![index]['brand']} ${vehicles![index]['model']}'),
                       leading: CircleAvatar(
                         backgroundColor: Colors.white,
                         child: Icon(
@@ -82,9 +82,9 @@ class _VehiclesPageState extends State<VehiclesPage> {
                       ),
                       trailing: RawMaterialButton(
                         onPressed: () {
-                          String registration = vehicles[index]['registration'];
-                          String brand = vehicles[index]['brand'];
-                          String model = vehicles[index]['model'];
+                          String registration = vehicles![index]['registration'];
+                          String brand = vehicles![index]['brand'];
+                          String model = vehicles![index]['model'];
                           editVehicle(registration, brand, model);
                         },
                         elevation: 2.0,
