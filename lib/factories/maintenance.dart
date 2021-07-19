@@ -1,12 +1,12 @@
 class Maintenance{
-  final String? registration;
-  final String? idMaintenance;
+  final String registration;
+  final String idMaintenance;
   final String? date;
   final int? odometer;
-  final int? idType;
+  final int idType;
   final String? type;
 
-  Maintenance({this.registration, this.idMaintenance, this.date, this.odometer, this.idType, this.type});
+  Maintenance({required this.registration, required this.idMaintenance, this.date, this.odometer, required this.idType, this.type});
 
   factory Maintenance.fromMap(Map<String, dynamic> data){
     return Maintenance(
