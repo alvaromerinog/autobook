@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "autobook8b86d990": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  }
+}

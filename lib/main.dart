@@ -1,3 +1,4 @@
+import 'package:autobook/pages/login.dart';
 import 'package:flutter/material.dart';
 import 'package:autobook/pages/home.dart';
 
@@ -11,9 +12,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       routes: {
-        '/': (context) => Home(),
+        '/': (context) => Login(),
+        '/home': (context) => Home(),
       },
-      title: 'Flutter Demo',
+      title: 'Autobook',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
