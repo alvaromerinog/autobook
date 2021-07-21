@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:amplify_flutter/amplify.dart';
 import 'package:amplify_api/amplify_api.dart';
+import 'package:amplify_flutter/amplify.dart';
 
 class VehiclesSelect{
   String? email;
@@ -18,8 +17,8 @@ class VehiclesSelect{
 
   List? getVehicles(){
     Future<RestResponse> response = this.get();
-    List? vehicles_list;
-    return vehicles_list;
+    List? vehiclesList;
+    return vehiclesList;
   }
 
 }

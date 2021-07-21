@@ -1,21 +1,18 @@
 import 'package:autobook/api/vehiclesSelect.dart';
 import 'package:flutter/material.dart';
-import 'package:amplify_flutter/amplify.dart';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-class VehiclesPage extends StatefulWidget {
+class Vehicles extends StatefulWidget {
   @override
-  _VehiclesPageState createState() => _VehiclesPageState();
+  _VehiclesState createState() => _VehiclesState();
 
   static String getRegistration() {
-    return _VehiclesPageState.selectedRegistration;
+    return _VehiclesState.selectedRegistration;
   }
 }
 
-class _VehiclesPageState extends State<VehiclesPage> {
+class _VehiclesState extends State<Vehicles> {
   String? email;
-  AuthUser? user;
   List? vehicles;
   String? registration;
   static String selectedRegistration = '';
@@ -33,14 +30,8 @@ class _VehiclesPageState extends State<VehiclesPage> {
   }
 
   void editVehicle(registration, brand, model) async {
-    Map arguments = {'email': email, 'registration': registration, 'brand': brand, 'model': model};
+    Map arguments = {'email': this.email, 'registration': registration, 'brand': brand, 'model': model};
     Navigator.pushNamed(context, '/editVehicle', arguments: arguments);
-  }
-
-  void getEmail() async {
-    this.user = await Amplify.Auth.getCurrentUser();
-    this.email = user!.username;
-    getVehicles();
   }
 
   void onChangeSelectedVehicle(index, vehicles){
@@ -49,12 +40,13 @@ class _VehiclesPageState extends State<VehiclesPage> {
   }
 
   void getVehicles() async {
-    dynamic response = await VehiclesSelect(email: email).getVehicles();
+    dynamic response = VehiclesSelect(email: this.email).getVehicles();
     if (response != null && !response['result'].isEmpty) {
       vehicles = response['result'];
       selectedRegistration = vehicles![selectedIndex]['registration'];
       setState(() {
         vehiclesWidget = ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
           itemCount: vehicles!.length,
           itemBuilder: (BuildContext ctxt, int index) {
             return InkWell(
@@ -106,8 +98,8 @@ class _VehiclesPageState extends State<VehiclesPage> {
           elevation: 20,
           child: ListTile(
             leading: Icon(
-              Icons.sentiment_very_dissatisfied,
-              color: Colors.blue[800],
+              Icons.warning_amber_rounded,
+              color: Colors.amber,
               size: 30,
             ),
             title: Text('No se han encontrado vehículos',
@@ -118,10 +110,9 @@ class _VehiclesPageState extends State<VehiclesPage> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    getEmail();
+  Future<void> _refreshData() async {
+    this.getVehicles();
+    Future.delayed(Duration(seconds: 3));
   }
 
   @override
@@ -133,6 +124,6 @@ class _VehiclesPageState extends State<VehiclesPage> {
             Navigator.pushNamed(context, '/newVehicle', arguments: email);
           },
         ),
-        body: vehiclesWidget);
+        body: RefreshIndicator(child: vehiclesWidget, onRefresh: _refreshData,));
   }
 }

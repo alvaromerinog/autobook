@@ -7,7 +7,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../amplifyconfiguration.dart';
 
 class Login extends StatefulWidget {
-  const Login({ Key? key }) : super(key: key);
+  const Login({Key? key}) : super(key: key);
 
   @override
   _LoginState createState() => _LoginState();
@@ -25,8 +25,8 @@ class _LoginState extends State<Login> {
   );
   Widget loadingButton = SpinKitChasingDots(color: Colors.white, size: 25.0);
   Widget loginButton = Text('Iniciar sesión', style: TextStyle(fontSize: 20.0));
-  Widget normalButton = Text('Iniciar sesión', style: TextStyle(fontSize: 20.0));
-
+  Widget normalButton =
+      Text('Iniciar sesión', style: TextStyle(fontSize: 20.0));
 
   @override
   void initState() {
@@ -42,13 +42,13 @@ class _LoginState extends State<Login> {
         await Amplify.addPlugins([auth, api]);
         await Amplify.configure(amplifyconfig);
       }
-      
-      AuthSession session = await Amplify.Auth.fetchAuthSession(options: CognitoSessionOptions(getAWSCredentials: true));
-      
-      if(session.isSignedIn){
+
+      AuthSession session = await Amplify.Auth.fetchAuthSession(
+          options: CognitoSessionOptions(getAWSCredentials: true));
+
+      if (session.isSignedIn) {
         Navigator.pushReplacementNamed(context, '/home', arguments: session);
       }
-
     } on Exception {
       print('Hubo un error al configurar Amplify');
     }
@@ -72,8 +72,7 @@ class _LoginState extends State<Login> {
         loginButton = normalButton;
       });
       Map arguments = {'email': email, 'password': password};
-      Navigator.pushNamed(context, '/confirmEmail',
-          arguments: arguments);
+      Navigator.pushNamed(context, '/confirmEmail', arguments: arguments);
     } on AuthException {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
@@ -87,16 +86,13 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       body: SafeArea(
         child: Form(
-          key: _formKey,
-          child: Container(
-            padding: EdgeInsets.all(25.0),
-            child: (Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
+            key: _formKey,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.all(25.0),
               children: [
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
@@ -194,8 +190,6 @@ class _LoginState extends State<Login> {
                 ),
               ],
             )),
-          ),
-        ),
       ),
     );
   }

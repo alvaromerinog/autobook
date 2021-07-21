@@ -5,15 +5,15 @@ import 'package:autobook/pages/vehicles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-class MaintenancesPage extends StatefulWidget {
+class History extends StatefulWidget {
   @override
-  _MaintenancesPageState createState() => _MaintenancesPageState();
+  _HistoryState createState() => _HistoryState();
 }
 
-class _MaintenancesPageState extends State<MaintenancesPage> {
+class _HistoryState extends State<History> {
   String? email;
   List? maintenances;
-  String registration = VehiclesPage.getRegistration();
+  String registration = Vehicles.getRegistration();
   Map? arguments;
   Widget maintenancesWidget = SpinKitChasingDots(
     color: Colors.blue[800],

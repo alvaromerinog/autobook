@@ -4,5 +4,4 @@ class MaintenanceModifications{
   String newOdometer;
 
   MaintenanceModifications({required this.newIdType, required this.newDate, required this.newOdometer});
-
 }
