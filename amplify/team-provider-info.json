@@ -14,6 +14,12 @@
     "categories": {
       "auth": {
         "autobook8b86d990": {}
+      },
+      "function": {
+        "autobook16ba232d": {
+          "deploymentBucketName": "amplify-autobook-dev-205336-deployment",
+          "s3Key": "amplify-builds/autobook16ba232d-794130314b3064577372-build.zip"
+        }
       }
     }
   }

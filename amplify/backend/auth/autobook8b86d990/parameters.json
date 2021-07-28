@@ -12,10 +12,10 @@
     ],
     "smsAuthenticationMessage": "Your authentication code is {####}",
     "smsVerificationMessage": "Your verification code is {####}",
-    "emailVerificationSubject": "Autobook - Código de verificación",
-    "emailVerificationMessage": "<p>Buenos días,</p> <p>tu código de verificación es {####}</p><br><p>Gracias por utilizar y reciba un cordial saludo del equipo de desarrollo.</p>",
+    "emailVerificationSubject": "Your verification code",
+    "emailVerificationMessage": "Your verification code is {####}",
     "defaultPasswordPolicy": false,
-    "passwordPolicyMinLength": 6,
+    "passwordPolicyMinLength": 8,
     "passwordPolicyCharacters": [],
     "requiredAttributes": [
         "email"
