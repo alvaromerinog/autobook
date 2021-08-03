@@ -1,4 +1,12 @@
+import 'package:autobook/pages/changePassword.dart';
+import 'package:autobook/pages/editMaintenance.dart';
+import 'package:autobook/pages/editVehicle.dart';
 import 'package:autobook/pages/login.dart';
+import 'package:autobook/pages/newMaintenance.dart';
+import 'package:autobook/pages/newVehicle.dart';
+import 'package:autobook/pages/recoverPassword.dart';
+import 'package:autobook/pages/register.dart';
+import 'package:autobook/pages/registerConfirm.dart';
 import 'package:flutter/material.dart';
 import 'package:autobook/pages/home.dart';
 
@@ -14,6 +22,14 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => Login(),
         '/home': (context) => Home(),
+        '/register': (context) => Register(),
+        '/confirmRegister': (context) => RegisterConfirm(),
+        '/recoverPassword': (context) => RecoverPassword(),
+        '/changePassword': (context) => ChangePassword(),
+        '/newVehicle': (context) => NewVehiclePage(),
+        '/editVehicle': (context) => EditVehiclePage(),
+        '/newMaintenance': (context) => NewMaintenancePage(),
+        '/editMaintenance': (context) => EditMaintenancePage(),
       },
       title: 'Autobook',
       theme: ThemeData(
