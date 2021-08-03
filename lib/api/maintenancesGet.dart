@@ -1,18 +1,25 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify.dart';
+import 'package:http/http.dart';
 
-class VehiclesSelect {
+class MaintenancesGet {
   String email;
-  VehiclesSelect({required this.email});
+  String registration;
 
-  dynamic getVehicles() async {
+  MaintenancesGet({required this.email, required this.registration});
+
+  dynamic selectMaintenances() async {
     try {
       RestOptions restOptions = RestOptions(
         apiName: 'AutobookDevAPI2',
-        path: '/vehicles',
-        queryParameters: {"mail": this.email},
+        path: '/vehicles/maintenances',
+        queryParameters: {
+          "mail": this.email,
+          "registration": this.registration
+        },
       );
       RestOperation getOperation = Amplify.API.get(restOptions: restOptions);
       RestResponse response = await getOperation.response;
