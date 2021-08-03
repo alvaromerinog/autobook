@@ -1,8 +1,8 @@
 class VehicleModifications{
   String newRegistration;
-  String newModel;
-  String newBrand;
+  String? newModel;
+  String? newBrand;
 
-  VehicleModifications({required this.newRegistration, required this.newModel, required this.newBrand});
+  VehicleModifications({required this.newRegistration, this.newModel, this.newBrand});
 
 }
