@@ -13,14 +13,8 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
-  final TextStyle optionStyle = TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   String email = '';
-  String password = '';
-  List<Widget> _widgetOptions = <Widget>[
-    Vehicles(),
-    History(),
-    Profile(),
-  ];
+  List<Widget> _widgetOptions = [];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -30,28 +24,36 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    email = (ModalRoute.of(context)!.settings.arguments as Map)['email'] as String;
-    password = (ModalRoute.of(context)!.settings.arguments as Map)['password'] as String;
-
+    email = ModalRoute.of(context)!.settings.arguments as String;
+    _widgetOptions = <Widget>[
+      Vehicles(email: email),
+      History(email: email),
+      Profile(email: email),
+    ];
     return Scaffold(
       bottomNavigationBar: BottomNavigationBar(
+        showUnselectedLabels: false,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.time_to_leave_rounded),
+            label: "Vehículos",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.history),
+            label: "Historial",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
+            label: "Perfil",
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
+        selectedItemColor: Colors.blue[800],
         onTap: _onItemTapped,
       ),
-      body: SafeArea(
-        child: _widgetOptions.elementAt(_selectedIndex),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _widgetOptions,
       ),
     );
   }

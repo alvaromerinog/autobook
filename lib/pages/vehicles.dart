@@ -1,4 +1,4 @@
-import 'package:autobook/api/vehiclesSelect.dart';
+import 'package:autobook/api/vehiclesGet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -57,7 +57,7 @@ class _VehiclesState extends State<Vehicles> {
 
   void getVehicles() async {
     try {
-      vehicles = await VehiclesSelect(email: this.email).getVehicles();
+      vehicles = await VehiclesGet(email: this.email).selectVehicles();
       buildVehicles(vehicles);
     } on Exception {
       print('There was a problem getting vehicles');
@@ -129,14 +129,14 @@ class _VehiclesState extends State<Vehicles> {
           children: [
             Card(
               shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(7.0)),
-                      ),
+                borderRadius: BorderRadius.all(Radius.circular(7.0)),
+              ),
               elevation: 20,
               color: Colors.white10,
               child: ListTile(
                 shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(7.0)),
-                      ),
+                  borderRadius: BorderRadius.all(Radius.circular(7.0)),
+                ),
                 leading: Icon(
                   Icons.warning_amber_rounded,
                   color: Colors.amber,

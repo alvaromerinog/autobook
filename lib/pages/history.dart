@@ -1,6 +1,6 @@
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_flutter/amplify.dart';
-import 'package:autobook/api/maintenancesSelect.dart';
+import 'package:autobook/api/maintenancesGet.dart';
 import 'package:autobook/pages/vehicles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -60,9 +60,9 @@ class _HistoryState extends State<History> {
   }
 
   void getMaintenances() async {
-    maintenances = await MaintenancesSelect(
+    maintenances = await MaintenancesGet(
             email: this.email, registration: this.registration)
-        .getMaintenances();
+        .selectMaintenances();
     this.buildMaintenances(maintenances);
   }
 
