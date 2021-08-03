@@ -5,12 +5,12 @@ import 'package:autobook/factories/vehicleModifications.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
-class EditVehicle {
+class VehiclesModify {
   String email;
   String registration;
   VehicleModifications updates;
 
-  EditVehicle({required this.email, required this.registration, required this.updates});
+  VehiclesModify({required this.email, required this.registration, required this.updates});
 /*
   Future<RestResponse> getVehicles() async {
       List<int> bodyDigits = '{\"mail":\"$email\"}'.codeUnits;
@@ -23,7 +23,7 @@ class EditVehicle {
     }
     */
 
-  dynamic modifyVehicle(email, registration, idMaintenance, description) async {
+  dynamic updateVehicle() async {
     final response = await post(
       Uri.parse(
           'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/modify'),

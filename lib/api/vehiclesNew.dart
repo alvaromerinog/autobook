@@ -23,7 +23,7 @@ class VehiclesNew {
     }
     */
 
-  dynamic putVehicle() async {
+  dynamic createVehicle() async {
     final response = await post(
       Uri.parse(
           'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/new'),

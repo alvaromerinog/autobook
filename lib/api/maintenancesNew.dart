@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 
-class NewMaintenance {
+class MaintenancesNew {
   String email;
   String registration;
   DateTime dateMaintenance;
   int idMaintenanceType;
   String? odometer;
 
-  NewMaintenance({required this.email, required this.registration, required this.dateMaintenance, required this.idMaintenanceType, this.odometer});
+  MaintenancesNew({required this.email, required this.registration, required this.dateMaintenance, required this.idMaintenanceType, this.odometer});
 /*
   Future<RestResponse> getVehicles() async {
       List<int> bodyDigits = '{\"mail":\"$email\"}'.codeUnits;
@@ -25,7 +25,7 @@ class NewMaintenance {
     }
     */
 
-  dynamic putMaintenance() async {
+  dynamic createMaintenance() async {
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
     final String formatted = formatter.format(this.dateMaintenance);
     final response = await post(

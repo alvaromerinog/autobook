@@ -28,7 +28,7 @@ class MaintenancesModify {
     }
     */
 
-  dynamic modifyMaintenance() async {
+  dynamic updateMaintenance() async {
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
     final String formatted = formatter.format(this.updates.newDate);
     final response = await post(
