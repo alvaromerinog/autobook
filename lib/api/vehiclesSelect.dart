@@ -1,25 +1,32 @@
-import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify.dart';
 
-class VehiclesSelect{
-  String? email;
-  VehiclesSelect({this.email});
+class VehiclesSelect {
+  String email;
+  VehiclesSelect({required this.email});
 
-  Future<RestResponse> get() async{
-    List<int> bodyBytes = '{\"mail\":\"${this.email}\"}'.codeUnits;
-    Uint8List? body = Uint8List.fromList(bodyBytes);
-    RestOptions restOptions = RestOptions(apiName: 'AutobookApi2', path: '/vehicles', body: body);
-    Future<RestResponse> response = Amplify.API.get(restOptions: restOptions).response;
-    return response;
+  dynamic getVehicles() async {
+    try {
+      RestOptions restOptions = RestOptions(
+        apiName: 'AutobookDevAPI2',
+        path: '/vehicles',
+        queryParameters: {"mail": this.email},
+      );
+      RestOperation getOperation = Amplify.API.get(restOptions: restOptions);
+      RestResponse response = await getOperation.response;
+      Map json = jsonDecode(String.fromCharCodes(response.data));
+      if (!json['error']) {
+        List vehiclesList = json['result'];
+        return vehiclesList;
+      } else {
+        throw Exception;
+      }
+    } on ApiException catch (e) {
+      print('Get call failed: $e');
+    } on Exception {
+      print('There was a problem getting user vehicles');
+    }
   }
-
-  List? getVehicles(){
-    Future<RestResponse> response = this.get();
-    List? vehiclesList;
-    return vehiclesList;
-  }
-
 }
-
