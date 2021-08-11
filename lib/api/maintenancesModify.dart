@@ -1,18 +1,15 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:autobook/factories/maintenanceModifications.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 
 class MaintenancesModify {
   String email;
   String registration;
   int idMaintenance;
-  DateTime dateMaintenance;
   int idMaintenanceType;
   String? odometer;
   MaintenanceModifications updates;
@@ -21,7 +18,6 @@ class MaintenancesModify {
       {required this.email,
       required this.registration,
       required this.idMaintenance,
-      required this.dateMaintenance,
       required this.idMaintenanceType,
       this.odometer,
       required this.updates});

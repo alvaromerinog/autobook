@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 
 class MaintenancesNew {
@@ -20,17 +18,6 @@ class MaintenancesNew {
       required this.dateMaintenance,
       required this.idMaintenanceType,
       this.odometer});
-/*
-  Future<RestResponse> getVehicles() async {
-      List<int> bodyDigits = '{\"mail":\"$email\"}'.codeUnits;
-      Uint8List body = Uint8List.fromList(bodyDigits);
-      Map<String, String> headers = {'Authorization': 'Bearer ${user.userId}'};
-      RestOptions restOptions = RestOptions(path: '/vehicles', body: body, headers: headers);
-      RestOperation operation = AmplifyAPI.post(restOptions: restOptions);
-      Future<RestResponse> response = (await operation.response) as Future<RestResponse>;
-      return response;
-    }
-    */
 
   dynamic insertMaintenance() async {
     try {

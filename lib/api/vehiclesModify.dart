@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+
 import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:autobook/factories/vehicleModifications.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 
 class VehiclesModify {
   String email;
@@ -18,7 +16,7 @@ class VehiclesModify {
   dynamic updateVehicle() async {
     try {
       List<int> bodyDigits =
-          '{\"action\": \"update\",\"mail\": \"$email\",\"params\": {\"registration\": \"$registration\",\"updates\": {\"registration\": \"${updates.newRegistration}\",\"brand\": \"${updates.newBrand}\",\"model\": \"${updates.newModel}\"}}}'
+          '{\"action\": \"update\",\"mail\": \"${this.email}\",\"params\": {\"registration\": \"${this.registration}\",\"updates\": {\"registration\": \"${this.updates.newRegistration}\",\"brand\": \"${this.updates.newBrand}\",\"model\": \"${this.updates.newModel}\"}}}'
               .codeUnits;
       Uint8List body = Uint8List.fromList(bodyDigits);
       RestOptions restOptions = RestOptions(
