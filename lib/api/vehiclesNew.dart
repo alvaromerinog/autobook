@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_api/amplify_api.dart';
+import 'package:amplify_flutter/amplify.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
@@ -10,37 +12,36 @@ class VehiclesNew {
   String? brand;
   String? model;
 
-  VehiclesNew({required this.email, required this.registration, this.brand, this.model});
-/*
-  Future<RestResponse> getVehicles() async {
-      List<int> bodyDigits = '{\"mail":\"$email\"}'.codeUnits;
-      Uint8List body = Uint8List.fromList(bodyDigits);
-      Map<String, String> headers = {'Authorization': 'Bearer ${user.userId}'};
-      RestOptions restOptions = RestOptions(path: '/vehicles', body: body, headers: headers);
-      RestOperation operation = AmplifyAPI.post(restOptions: restOptions);
-      Future<RestResponse> response = (await operation.response) as Future<RestResponse>;
-      return response;
-    }
-    */
+  VehiclesNew(
+      {required this.email,
+      required this.registration,
+      this.brand,
+      this.model});
 
-  dynamic createVehicle() async {
-    final response = await post(
-      Uri.parse(
-          'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/new'),
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(<String, dynamic>{
-        'action': 'insert',
-        'mail': this.email,
-        "params": {"registration": this.registration, "brand": this.brand, "model": this.model},
-      }),
-    );
-    if (response.statusCode == 200) {
-      dynamic body = jsonDecode(response.body);
-      return body;
-    } else {
-      return null;
+  dynamic insertVehicle() async {
+    try {
+      List<int> bodyDigits =
+          '{\"action\": \"insert\",\"mail\": \"$email\",\"params\": {\"registration\": \"$registration\",\"brand\": \"$brand\",\"model\": \"$model\"}}'
+              .codeUnits;
+      Uint8List body = Uint8List.fromList(bodyDigits);
+      RestOptions restOptions = RestOptions(
+        apiName: 'AutobookDevAPI2',
+        path: '/vehicles/new',
+        body: body,
+      );
+      RestOperation getOperation = Amplify.API.post(restOptions: restOptions);
+      RestResponse response = await getOperation.response;
+      Map json = jsonDecode(String.fromCharCodes(response.data));
+      if (!json['error']) {
+        List vehiclesList = json['result'];
+        return vehiclesList;
+      } else {
+        throw Exception;
+      }
+    } on ApiException catch (e) {
+      print('Get call failed: $e');
+    } on Exception {
+      print('There was a problem getting user vehicles');
     }
   }
 }

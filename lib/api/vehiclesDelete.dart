@@ -1,35 +1,41 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_api/amplify_api.dart';
+import 'package:amplify_flutter/amplify.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 
 class VehiclesDelete {
-  String? email;
-  String? registration;
+  String email;
+  String registration;
 
-  VehiclesDelete({this.email, this.registration});
+  VehiclesDelete({required this.email, required this.registration});
 
-  dynamic dropVehicle() async {
-    final response = await post(
-      Uri.parse(
-          'https://v7u89mfj4l.execute-api.eu-west-1.amazonaws.com/dev/vehicles/delete'),
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(<String, dynamic>{
-        'action': 'delete',
-        'mail': this.email,
-        "params": {
-          "registration": this.registration
-        },
-      }),
-    );
-    if (response.statusCode == 200) {
-      dynamic body = jsonDecode(response.body);
-      return body;
-    } else {
-      return null;
+  dynamic deleteVehicle() async {
+    try {
+      List<int> bodyDigits =
+          '{\"action\": \"update\",\"mail\": \"$email\",\"params\": {\"registration\": \"$registration\"}}'
+              .codeUnits;
+      Uint8List body = Uint8List.fromList(bodyDigits);
+      RestOptions restOptions = RestOptions(
+        apiName: 'AutobookDevAPI2',
+        path: '/vehicles/delete',
+        body: body,
+      );
+      RestOperation getOperation = Amplify.API.delete(restOptions: restOptions);
+      RestResponse response = await getOperation.response;
+      Map json = jsonDecode(String.fromCharCodes(response.data));
+      if (!json['error']) {
+        List vehiclesList = json['result'];
+        return vehiclesList;
+      } else {
+        throw Exception;
+      }
+    } on ApiException catch (e) {
+      print('Get call failed: $e');
+    } on Exception {
+      print('There was a problem getting user vehicles');
     }
   }
 }
