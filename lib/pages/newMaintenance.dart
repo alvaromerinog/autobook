@@ -28,7 +28,12 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
     this.email = arguments['email'];
     this.registration = arguments['registration'];
     dynamic response = await MaintenancesNew(
-        email: this.email, registration: this.registration, dateMaintenance: date, odometer: odometer, idMaintenanceType: maintenanceType).createMaintenance();
+            email: this.email,
+            registration: this.registration,
+            dateMaintenance: date,
+            odometer: odometer,
+            idMaintenanceType: maintenanceType)
+        .insertMaintenance();
     if (response['database_error']) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),

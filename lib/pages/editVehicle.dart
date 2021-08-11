@@ -18,11 +18,12 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
   String? model;
   Widget buttonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
   final _formKey = GlobalKey<FormState>();
-  VehicleModifications updates = VehicleModifications(newRegistration: ''); 
+  VehicleModifications updates = VehicleModifications(newRegistration: '');
 
   void onEditVehicle(updates) async {
-    dynamic response =
-        await VehiclesModify(email: email, registration: registration, updates: updates).updateVehicle();
+    dynamic response = await VehiclesModify(
+            email: email, registration: registration, updates: updates)
+        .updateVehicle();
     if (response['params']['database_error']) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
@@ -38,7 +39,8 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
 
   void onDeleteVehicle(registration) async {
     dynamic response =
-        await VehiclesDelete(email: email, registration: registration).dropVehicle();
+        await VehiclesDelete(email: email, registration: registration)
+            .deleteVehicle();
     if (response['params']['database_error']) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
@@ -91,7 +93,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
                     if (value!.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else {
-                      registration = value;
+                      updates.newRegistration = value;
                     }
                   },
                 ),
@@ -110,7 +112,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
                     hintText: 'Marca',
                   ),
                   validator: (value) {
-                    brand = value;
+                    updates.newBrand = value;
                   },
                 ),
               ),
@@ -128,7 +130,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
                     hintText: 'Modelo',
                   ),
                   validator: (value) {
-                    model = value;
+                    updates.newModel = value;
                   },
                 ),
               ),
@@ -158,7 +160,6 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
                   },
                 ),
               ),
-              
               Container(
                 padding: EdgeInsets.symmetric(
                   vertical: 20.0,
