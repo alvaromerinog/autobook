@@ -1,8 +1,10 @@
 class MaintenanceModifications {
-  int newIdType;
+  String newMaintenanceType;
   DateTime newDate;
   int? newOdometer;
 
   MaintenanceModifications(
-      {required this.newIdType, required this.newDate, this.newOdometer});
+      {required this.newMaintenanceType,
+      required this.newDate,
+      this.newOdometer});
 }
