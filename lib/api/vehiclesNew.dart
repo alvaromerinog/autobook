@@ -18,28 +18,24 @@ class VehiclesNew {
 
   dynamic insertVehicle() async {
     try {
-      List<int> bodyDigits =
-          '{\"action\": \"insert\",\"mail\": \"$email\",\"params\": {\"registration\": \"$registration\",\"brand\": \"$brand\",\"model\": \"$model\"}}'
-              .codeUnits;
+      List<int> bodyDigits = Utf8Codec().encode(
+          '{\"action\": \"insert\",\"mail\": \"$email\",\"params\": {\"registration\": \"$registration\",\"brand\": \"$brand\",\"model\": \"$model\"}}');
       Uint8List body = Uint8List.fromList(bodyDigits);
       RestOptions restOptions = RestOptions(
         apiName: 'AutobookDevAPI2',
         path: '/vehicles/new',
         body: body,
       );
-      RestOperation getOperation = Amplify.API.post(restOptions: restOptions);
-      RestResponse response = await getOperation.response;
+      RestOperation postOperation = Amplify.API.post(restOptions: restOptions);
+      RestResponse response = await postOperation.response;
       Map json = jsonDecode(String.fromCharCodes(response.data));
-      if (!json['error']) {
-        List vehiclesList = json['result'];
-        return vehiclesList;
+      if (!json['params']['database_error']) {
+        return json['params']['database_error'];
       } else {
         throw Exception;
       }
-    } on ApiException catch (e) {
-      print('Get call failed: $e');
-    } on Exception {
-      print('There was a problem getting user vehicles');
+    } catch (e) {
+      throw e;
     }
   }
 }

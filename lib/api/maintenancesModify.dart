@@ -10,7 +10,7 @@ class MaintenancesModify {
   String email;
   String registration;
   int idMaintenance;
-  int idMaintenanceType;
+  String maintenanceType;
   String? odometer;
   MaintenanceModifications updates;
 
@@ -18,7 +18,7 @@ class MaintenancesModify {
       {required this.email,
       required this.registration,
       required this.idMaintenance,
-      required this.idMaintenanceType,
+      required this.maintenanceType,
       this.odometer,
       required this.updates});
 
@@ -26,27 +26,25 @@ class MaintenancesModify {
     try {
       final DateFormat formatter = DateFormat('yyyy-MM-dd');
       final String formatted = formatter.format(this.updates.newDate);
-      List<int> bodyDigits =
-          '{\"action\": \"update\",\"mail\": ${this.email},\"params\": {\"registration\": ${this.registration},\"id_maintenance\": ${this.idMaintenance},\"id_maintenance_type\": ${this.idMaintenanceType},\"updates\": {\"maintenance\": {\"date_maintenance\": $formatted,\"odometer\": ${this.updates.newOdometer}},\"id_maintenance_type\": ${this.updates.newIdType}}}}'
-              .codeUnits;
+      List<int> bodyDigits = Utf8Codec().encode(
+          '{\"action\": \"update\",\"mail\": \"${this.email}\",\"params\": {\"registration\": \"${this.registration}\",\"id_maintenance\": ${this.idMaintenance},\"description\": \"${this.maintenanceType}\",\"updates\": {\"maintenance\": {\"date_maintenance\": \"$formatted\",\"odometer\": ${this.updates.newOdometer}},\"description\": \"${this.updates.newMaintenanceType}\"}}}');
       Uint8List body = Uint8List.fromList(bodyDigits);
       RestOptions restOptions = RestOptions(
         apiName: 'AutobookDevAPI2',
         path: '/vehicles/maintenances/modify',
         body: body,
       );
-      RestOperation getOperation = Amplify.API.patch(restOptions: restOptions);
-      RestResponse response = await getOperation.response;
+      RestOperation patchOperation =
+          Amplify.API.patch(restOptions: restOptions);
+      RestResponse response = await patchOperation.response;
       Map json = jsonDecode(String.fromCharCodes(response.data));
-      if (!json['error']) {
-        return json;
+      if (!json['database_error']) {
+        return json['database_error'];
       } else {
         throw Exception;
       }
-    } on ApiException catch (e) {
-      print('Get call failed: $e');
-    } on Exception {
-      print('There was a problem getting user vehicles');
+    } catch (e) {
+      throw e;
     }
   }
 }

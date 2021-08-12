@@ -15,28 +15,25 @@ class VehiclesModify {
 
   dynamic updateVehicle() async {
     try {
-      List<int> bodyDigits =
-          '{\"action\": \"update\",\"mail\": \"${this.email}\",\"params\": {\"registration\": \"${this.registration}\",\"updates\": {\"registration\": \"${this.updates.newRegistration}\",\"brand\": \"${this.updates.newBrand}\",\"model\": \"${this.updates.newModel}\"}}}'
-              .codeUnits;
+      List<int> bodyDigits = Utf8Codec().encode(
+          '{\"action\": \"update\",\"mail\": \"${this.email}\",\"params\": {\"registration\": \"${this.registration}\",\"updates\": {\"registration\": \"${this.updates.newRegistration}\",\"brand\": \"${this.updates.newBrand}\",\"model\": \"${this.updates.newModel}\"}}}');
       Uint8List body = Uint8List.fromList(bodyDigits);
       RestOptions restOptions = RestOptions(
         apiName: 'AutobookDevAPI2',
         path: '/vehicles/modify',
         body: body,
       );
-      RestOperation getOperation = Amplify.API.patch(restOptions: restOptions);
-      RestResponse response = await getOperation.response;
+      RestOperation patchOperation =
+          Amplify.API.patch(restOptions: restOptions);
+      RestResponse response = await patchOperation.response;
       Map json = jsonDecode(String.fromCharCodes(response.data));
-      if (!json['error']) {
-        List vehiclesList = json['result'];
-        return vehiclesList;
+      if (!json['params']['database_error']) {
+        return json['params']['database_error'];
       } else {
         throw Exception;
       }
-    } on ApiException catch (e) {
-      print('Get call failed: $e');
-    } on Exception {
-      print('There was a problem getting user vehicles');
+    } catch (e) {
+      throw e;
     }
   }
 }

@@ -23,10 +23,8 @@ class VehiclesGet {
       } else {
         throw Exception;
       }
-    } on ApiException catch (e) {
-      print('Get call failed: $e');
-    } on Exception {
-      print('There was a problem getting user vehicles');
+    } catch (e) {
+      throw e;
     }
   }
 }
