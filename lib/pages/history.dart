@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:autobook/api/maintenancesGet.dart';
@@ -37,6 +39,7 @@ class _HistoryState extends State<History> {
     String newRegistration = Vehicles.getRegistration();
     if (newRegistration != registration) {
       registration = newRegistration;
+      arguments = {"email": this.email, "registration": this.registration};
       maintenancesWidget = SpinKitChasingDots(
         color: Colors.blue[800],
         size: 50.0,
@@ -46,24 +49,42 @@ class _HistoryState extends State<History> {
     super.didUpdateWidget(oldWidget);
   }
 
+  FutureOr onGoBack(dynamic value) {
+    getMaintenances();
+    setState(() {
+      maintenancesWidget = SpinKitChasingDots(
+        color: Colors.blue[800],
+        size: 50.0,
+      );
+    });
+  }
+
   void editMaintenance(registration, idMaintenance, description,
       dateMaintenance, odometer) async {
     Map arguments = {
       'email': email,
       'registration': registration,
       'idMaintenance': idMaintenance,
-      'description': description,
+      'maintenanceType': description,
       'dateMaintenance': dateMaintenance,
       'odometer': odometer,
     };
-    Navigator.pushNamed(context, '/editMaintenance', arguments: arguments);
+    Navigator.pushNamed(context, '/editMaintenance', arguments: arguments)
+        .then(onGoBack);
   }
 
   void getMaintenances() async {
-    maintenances = await MaintenancesGet(
-            email: this.email, registration: this.registration)
-        .selectMaintenances();
-    this.buildMaintenances(maintenances);
+    try {
+      maintenances = await MaintenancesGet(
+              email: this.email, registration: this.registration)
+          .selectMaintenances();
+      this.buildMaintenances(maintenances);
+    } on Exception {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('No se han podido recuperar los vehículos.'),
+        backgroundColor: Colors.red,
+      ));
+    }
   }
 
   void buildMaintenances(List? vehicles) {
@@ -174,7 +195,8 @@ class _HistoryState extends State<History> {
         heroTag: "btn2",
         child: Icon(Icons.add),
         onPressed: () {
-          Navigator.pushNamed(context, '/newMaintenance', arguments: arguments);
+          Navigator.pushNamed(context, '/newMaintenance', arguments: arguments)
+              .then(onGoBack);
         },
       ),
       body: SafeArea(

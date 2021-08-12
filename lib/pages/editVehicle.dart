@@ -16,41 +16,42 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
   String registration = '';
   String? brand;
   String? model;
-  Widget buttonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
+  Widget saveButtonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
+  Widget deleteButtonLabel = Text('Eliminar', style: TextStyle(fontSize: 20.0));
   final _formKey = GlobalKey<FormState>();
   VehicleModifications updates = VehicleModifications(newRegistration: '');
 
   void onEditVehicle(updates) async {
-    dynamic response = await VehiclesModify(
-            email: email, registration: registration, updates: updates)
-        .updateVehicle();
-    if (response['params']['database_error']) {
+    try {
+      dynamic response = await VehiclesModify(
+              email: email, registration: registration, updates: updates)
+          .updateVehicle();
+      Navigator.pop(context);
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
         backgroundColor: Colors.red,
       ));
       setState(() {
-        buttonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
+        saveButtonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
       });
-    } else {
-      Navigator.pop(context);
     }
   }
 
   void onDeleteVehicle(registration) async {
-    dynamic response =
-        await VehiclesDelete(email: email, registration: registration)
-            .deleteVehicle();
-    if (response['params']['database_error']) {
+    try {
+      dynamic response =
+          await VehiclesDelete(email: email, registration: registration)
+              .deleteVehicle();
+      Navigator.pop(context);
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
         backgroundColor: Colors.red,
       ));
       setState(() {
-        buttonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
+        deleteButtonLabel = Text('Eliminar', style: TextStyle(fontSize: 20.0));
       });
-    } else {
-      Navigator.pop(context);
     }
   }
 
@@ -146,11 +147,11 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
                       minimumSize: Size(200.0, 50.0),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50))),
-                  label: buttonLabel,
+                  label: saveButtonLabel,
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       setState(() {
-                        buttonLabel = SpinKitChasingDots(
+                        saveButtonLabel = SpinKitChasingDots(
                           color: Colors.white,
                           size: 25.0,
                         );

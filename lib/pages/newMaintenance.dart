@@ -17,24 +17,26 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
   String email = '';
   String registration = '';
   String maintenanceType = 'CAMBIO DE ACEITE';
-  int odometer = 0;
+  int? odometer;
   DateTime date = DateTime.now();
   Widget buttonLabel = Text('Guardar', style: TextStyle(fontSize: 20.0));
   TextEditingController _textEditingController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   void onSaveNewMaintenance(date, odometer, maintenanceType) async {
-    Map arguments = ModalRoute.of(context)!.settings.arguments as Map;
-    this.email = arguments['email'];
-    this.registration = arguments['registration'];
-    dynamic response = await MaintenancesNew(
-            email: this.email,
-            registration: this.registration,
-            dateMaintenance: date,
-            odometer: odometer,
-            idMaintenanceType: maintenanceType)
-        .insertMaintenance();
-    if (response['database_error']) {
+    try {
+      Map arguments = ModalRoute.of(context)!.settings.arguments as Map;
+      this.email = arguments['email'];
+      this.registration = arguments['registration'];
+      dynamic response = await MaintenancesNew(
+              email: this.email,
+              registration: this.registration,
+              dateMaintenance: date,
+              odometer: odometer,
+              maintenanceType: maintenanceType)
+          .insertMaintenance();
+      Navigator.pop(context);
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
         backgroundColor: Colors.red,
@@ -42,8 +44,6 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
       setState(() {
         buttonLabel = Text('Guardar', style: TextStyle(fontSize: 20.0));
       });
-    } else {
-      Navigator.pop(context);
     }
   }
 
@@ -119,9 +119,9 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
                     hintText: 'Odómetro',
                   ),
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value!.isNotEmpty) {
                       odometer = int.parse(value);
-                      if (odometer < 0) {
+                      if (odometer! < 0) {
                         return 'Este campo no puede ser negativo';
                       }
                     }
@@ -138,10 +138,11 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
                   icon: const Icon(Icons.keyboard_arrow_down_rounded),
                   iconSize: 24,
                   elevation: 16,
-                  style: const TextStyle(color: Colors.deepPurple),
+                  style: const TextStyle(
+                      color: Colors.blue, fontWeight: FontWeight.bold),
                   underline: Container(
                     height: 2,
-                    color: Colors.deepPurpleAccent,
+                    color: Colors.blueAccent,
                   ),
                   onChanged: (newValue) {
                     if (newValue != null) {

@@ -16,56 +16,56 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
   String email = '';
   String registration = '';
   int idMaintenance = 1;
-  int idMaintenanceType = 1;
   DateTime date = DateTime(2000);
   int? odometer;
-  String? description;
-  String? newDescription;
+  String maintenanceType = '';
+  String? newMaintenanceType;
   MaintenanceModifications updates =
-      MaintenanceModifications(newIdType: 1, newDate: DateTime(2000));
-  Widget buttonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
+      MaintenanceModifications(newMaintenanceType: '', newDate: DateTime(2000));
+  Widget saveButtonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
+  Widget deleteButtonLabel = Text('Eliminar', style: TextStyle(fontSize: 20.0));
   bool isConfigured = false;
   TextEditingController _textEditingController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   void onEditMaintenance(
       registration, idMaintenance, idMaintenanceType, updates) async {
-    dynamic response = await MaintenancesModify(
-            email: this.email,
-            registration: this.registration,
-            idMaintenance: this.idMaintenance,
-            idMaintenanceType: this.idMaintenanceType,
-            updates: this.updates)
-        .updateMaintenance();
-    if (response['database_error']) {
+    try {
+      dynamic response = await MaintenancesModify(
+              email: this.email,
+              registration: this.registration,
+              idMaintenance: this.idMaintenance,
+              maintenanceType: this.maintenanceType,
+              updates: this.updates)
+          .updateMaintenance();
+      Navigator.pop(context);
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
         backgroundColor: Colors.red,
       ));
       setState(() {
-        buttonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
+        saveButtonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
       });
-    } else {
-      Navigator.pop(context);
     }
   }
 
   void onDeleteMaintenance(registration, idMaintenance) async {
-    dynamic response = await MaintenancesDelete(
-            email: email,
-            registration: registration,
-            idMaintenance: idMaintenance)
-        .dropMaintenance();
-    if (response['database_error']) {
+    try {
+      dynamic response = await MaintenancesDelete(
+              email: email,
+              registration: registration,
+              idMaintenance: idMaintenance)
+          .dropMaintenance();
+      Navigator.pop(context);
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
         backgroundColor: Colors.red,
       ));
       setState(() {
-        buttonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
+        deleteButtonLabel = Text('Eliminar', style: TextStyle(fontSize: 20.0));
       });
-    } else {
-      Navigator.pop(context);
     }
   }
 
@@ -73,11 +73,15 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
   Widget build(BuildContext context) {
     if (!isConfigured) {
       Map arguments = ModalRoute.of(context)!.settings.arguments as Map;
+      email = arguments['email'];
       registration = arguments['registration'];
-      idMaintenance = arguments['idMaintenance'];
-      description = arguments['description'];
-      newDescription = description;
-      odometer = arguments['odometer'];
+      idMaintenance = int.parse(arguments['idMaintenance']);
+      maintenanceType = arguments['maintenanceType'];
+      this.updates.newMaintenanceType = maintenanceType;
+      odometer =
+          arguments['odometer'] != "None" && arguments['odometer'].isNotEmpty
+              ? int.parse(arguments['odometer'])
+              : null;
       date = DateTime.parse(arguments['dateMaintenance']);
       isConfigured = true;
     }
@@ -121,6 +125,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                       .then((newDate) {
                     if (newDate != null) {
                       date = newDate;
+                      this.updates.newDate = newDate;
                       formatted = formatter.format(date);
                       setState(() {
                         _textEditingController.text = formatted;
@@ -140,7 +145,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                   horizontal: 10.0,
                 ),
                 child: TextFormField(
-                  initialValue: odometer.toString(),
+                  initialValue: odometer != null ? odometer.toString() : null,
                   keyboardType: TextInputType.number,
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
@@ -152,7 +157,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                     hintText: 'Odómetro',
                   ),
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value != null && value.isNotEmpty) {
                       odometer = int.parse(value);
                       this.updates.newOdometer = odometer;
                       if (odometer! < 0) {
@@ -168,20 +173,22 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                   horizontal: 10.0,
                 ),
                 child: new DropdownButton<String>(
-                  value: newDescription,
+                  value: this.updates.newMaintenanceType,
                   icon: const Icon(Icons.keyboard_arrow_down_rounded),
                   iconSize: 24,
                   elevation: 16,
-                  style: const TextStyle(color: Colors.blue),
+                  style: const TextStyle(
+                      color: Colors.blue, fontWeight: FontWeight.bold),
                   underline: Container(
                     height: 2,
                     color: Colors.blueAccent,
                   ),
                   onChanged: (String? newValue) {
-                    setState(() {
-                      this.updates.newIdType =
-                          newValue; //Ver si se puede añadir el idType
-                    });
+                    if (newValue!.isNotEmpty) {
+                      setState(() {
+                        this.updates.newMaintenanceType = newValue;
+                      });
+                    }
                   },
                   items: <String>[
                     "CAMBIO DE ACEITE",
@@ -266,17 +273,17 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                       minimumSize: Size(200.0, 50.0),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50))),
-                  label: buttonLabel,
+                  label: saveButtonLabel,
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       setState(() {
-                        buttonLabel = SpinKitChasingDots(
+                        saveButtonLabel = SpinKitChasingDots(
                           color: Colors.white,
                           size: 25.0,
                         );
                       });
                       onEditMaintenance(registration, idMaintenance,
-                          idMaintenanceType, updates);
+                          maintenanceType, updates);
                     }
                   },
                 ),
@@ -293,12 +300,15 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                       minimumSize: Size(200.0, 50.0),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50))),
-                  label: Text(
-                    'Eliminar',
-                    style: TextStyle(fontSize: 20.0),
-                  ),
+                  label: deleteButtonLabel,
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
+                      setState(() {
+                        deleteButtonLabel = SpinKitChasingDots(
+                          color: Colors.white,
+                          size: 25.0,
+                        );
+                      });
                       onDeleteMaintenance(registration, idMaintenance);
                     }
                   },

@@ -15,14 +15,16 @@ class _NewVehiclePageState extends State<NewVehiclePage> {
   final _formKey = GlobalKey<FormState>();
 
   void onSaveNewVehicle(date, odometer, maintenanceType) async {
-    String email = ModalRoute.of(context)!.settings.arguments as String;
-    dynamic response = await VehiclesNew(
-            email: email,
-            registration: registration,
-            brand: brand,
-            model: model)
-        .insertVehicle();
-    if (response['params']['database_error']) {
+    try {
+      String email = ModalRoute.of(context)!.settings.arguments as String;
+      dynamic response = await VehiclesNew(
+              email: email,
+              registration: registration,
+              brand: brand,
+              model: model)
+          .insertVehicle();
+      Navigator.pop(context);
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
         backgroundColor: Colors.red,
@@ -30,8 +32,6 @@ class _NewVehiclePageState extends State<NewVehiclePage> {
       setState(() {
         buttonLabel = Text('Guardar', style: TextStyle(fontSize: 20.0));
       });
-    } else {
-      Navigator.pop(context);
     }
   }
 

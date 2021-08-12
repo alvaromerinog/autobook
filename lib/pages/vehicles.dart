@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:autobook/api/vehiclesGet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -40,6 +42,16 @@ class _VehiclesState extends State<Vehicles> {
     super.didUpdateWidget(oldWidget);
   }
 
+  FutureOr onGoBack(dynamic value) {
+    getVehicles();
+    setState(() {
+      vehiclesWidget = SpinKitChasingDots(
+        color: Colors.blue[800],
+        size: 50.0,
+      );
+    });
+  }
+
   void editVehicle(registration, brand, model) async {
     Map arguments = {
       'email': this.email,
@@ -47,7 +59,8 @@ class _VehiclesState extends State<Vehicles> {
       'brand': brand,
       'model': model
     };
-    Navigator.pushNamed(context, '/editVehicle', arguments: arguments);
+    Navigator.pushNamed(context, '/editVehicle', arguments: arguments)
+        .then(onGoBack);
   }
 
   void onChangeSelectedVehicle(index, vehicles) {
@@ -60,7 +73,10 @@ class _VehiclesState extends State<Vehicles> {
       vehicles = await VehiclesGet(email: this.email).selectVehicles();
       buildVehicles(vehicles);
     } on Exception {
-      print('There was a problem getting vehicles');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('No se han podido recuperar los vehículos.'),
+        backgroundColor: Colors.red,
+      ));
     }
   }
 
@@ -170,7 +186,8 @@ class _VehiclesState extends State<Vehicles> {
         heroTag: "btn1",
         child: Icon(Icons.add),
         onPressed: () {
-          Navigator.pushNamed(context, '/newVehicle', arguments: email);
+          Navigator.pushNamed(context, '/newVehicle', arguments: email)
+              .then(onGoBack);
         },
       ),
       body: SafeArea(
