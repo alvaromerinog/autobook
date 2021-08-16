@@ -83,10 +83,11 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
               ? int.parse(arguments['odometer'])
               : null;
       date = DateTime.parse(arguments['dateMaintenance']);
+      this.updates.newDate = date;
       isConfigured = true;
     }
     final DateFormat formatter = DateFormat('yyyy-MM-dd');
-    String formatted = formatter.format(date);
+    String formatted = formatter.format(this.updates.newDate);
     _textEditingController.text = formatted;
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -99,220 +100,228 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             children: [
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  controller: _textEditingController,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.calendar_today_rounded),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Fecha',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      controller: _textEditingController,
+                      readOnly: true,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.calendar_today_rounded),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Fecha',
+                      ),
+                      onTap: () => showDatePicker(
+                              context: context,
+                              initialDate: this.updates.newDate,
+                              firstDate: DateTime(1990),
+                              lastDate: DateTime(2100))
+                          .then((newDate) {
+                        if (newDate != null) {
+                          this.updates.newDate = newDate;
+                          formatted = formatter.format(this.updates.newDate);
+                          setState(() {
+                            _textEditingController.text = formatted;
+                          });
+                        }
+                      }),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          this.updates.newDate = DateTime.parse(value);
+                        }
+                      },
+                    ),
                   ),
-                  onTap: () => showDatePicker(
-                          context: context,
-                          initialDate: date,
-                          firstDate: DateTime(1990),
-                          lastDate: DateTime(2100))
-                      .then((newDate) {
-                    if (newDate != null) {
-                      date = newDate;
-                      this.updates.newDate = newDate;
-                      formatted = formatter.format(date);
-                      setState(() {
-                        _textEditingController.text = formatted;
-                      });
-                    }
-                  }),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      date = DateTime.parse(value);
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  initialValue: odometer != null ? odometer.toString() : null,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ],
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.edit_road_rounded),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Odómetro',
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      initialValue:
+                          odometer != null ? odometer.toString() : null,
+                      maxLength: 6,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: <TextInputFormatter>[
+                        FilteringTextInputFormatter.digitsOnly
+                      ],
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.edit_road_rounded),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Odómetro',
+                      ),
+                      validator: (value) {
+                        if (value != null && value.isNotEmpty) {
+                          odometer = int.parse(value);
+                          this.updates.newOdometer = odometer;
+                          if (odometer! < 0) {
+                            return 'Este campo no puede ser negativo';
+                          }
+                        }
+                      },
+                    ),
                   ),
-                  validator: (value) {
-                    if (value != null && value.isNotEmpty) {
-                      odometer = int.parse(value);
-                      this.updates.newOdometer = odometer;
-                      if (odometer! < 0) {
-                        return 'Este campo no puede ser negativo';
-                      }
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: new DropdownButton<String>(
-                  value: this.updates.newMaintenanceType,
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                  iconSize: 24,
-                  elevation: 16,
-                  style: const TextStyle(
-                      color: Colors.blue, fontWeight: FontWeight.bold),
-                  underline: Container(
-                    height: 2,
-                    color: Colors.blueAccent,
-                  ),
-                  onChanged: (String? newValue) {
-                    if (newValue!.isNotEmpty) {
-                      setState(() {
-                        this.updates.newMaintenanceType = newValue;
-                      });
-                    }
-                  },
-                  items: <String>[
-                    "CAMBIO DE ACEITE",
-                    "CAMBIO DE ACELERADOR",
-                    "CAMBIO DE ANTICONGELANTE",
-                    "CAMBIO DE BATERÍA",
-                    "CAMBIO DE BOMBA DE AGUA",
-                    "CAMBIO DE CATALIZADORES",
-                    "CAMBIO DE CORREA",
-                    "CAMBIO DE DIRECCIÓN",
-                    "CAMBIO DE EMBRAGUE",
-                    "CAMBIO DE FILTRO DE AIRE",
-                    "CAMBIO DE FILTRO DE COMBUSTIBLE",
-                    "CAMBIO DE FILTRO DEL HABITÁCULO",
-                    "CAMBIO DE FRENOS",
-                    "CAMBIO DE FUSIBLES",
-                    "CAMBIO DE LIMPIAPARABRISAS",
-                    "CAMBIO DE LUNA DELANTERA",
-                    "CAMBIO DE LUNA TRASERA",
-                    "CAMBIO DE LUZ DE ANTINIEBLA",
-                    "CAMBIO DE LUZ DE CARRETERA",
-                    "CAMBIO DE LUZ DE CRUCE",
-                    "CAMBIO DE LUZ DE FRENO",
-                    "CAMBIO DE LUZ DE INTERMITENCIA",
-                    "CAMBIO DE LUZ DE MARCHA ATRÁS",
-                    "CAMBIO DE LUZ DE POSICIÓN",
-                    "CAMBIO DE LÍQUIDO DE FRENOS",
-                    "CAMBIO DE LÍQUIDO LIMPIAPARABRISAS",
-                    "CAMBIO DE MOTOR",
-                    "CAMBIO DE NEUMÁTICOS",
-                    "CAMBIO DE PANEL DE INSTRUMENTOS",
-                    "CAMBIO DE RADIADOR",
-                    "CAMBIO DE SISTEMA ELÉCTRICO",
-                    "CAMBIO DE SUSPENSIÓN",
-                    "CAMBIO DE TODAS LAS LUCES",
-                    "CAMBIO DE TODAS LAS LUNAS",
-                    "CAMBIO DE TODOS LOS FILTROS",
-                    "CAMBIO DE TODOS LOS LÍQUIDOS",
-                    "CAMBIO DE TRANSMISIÓN",
-                    "CAMBIO DE TUBO DE ESCAPE",
-                    "CAMBIO DE VENTANILLAS",
-                    "CAMBIO DEL TUBO DE ESCAPE",
-                    "REPARACIÓN DE ACELERADOR",
-                    "REPARACIÓN DE DIRECCIÓN",
-                    "REPARACIÓN DE EMBRAGUE",
-                    "REPARACIÓN DE FRENOS",
-                    "REPARACIÓN DE LUNA DELANTERA",
-                    "REPARACIÓN DE LUNA TRASERA",
-                    "REPARACIÓN DE LUZ DE ANTINIEBLA",
-                    "REPARACIÓN DE LUZ DE CARRETERA",
-                    "REPARACIÓN DE LUZ DE CRUCE",
-                    "REPARACIÓN DE LUZ DE FRENO",
-                    "REPARACIÓN DE LUZ DE INTERMITENCIA",
-                    "REPARACIÓN DE LUZ DE MARCHA ATRÁS",
-                    "REPARACIÓN DE LUZ DE POSICIÓN",
-                    "REPARACIÓN DE MOTOR",
-                    "REPARACIÓN DE RADIADOR",
-                    "REPARACIÓN DE SISTEMA ELÉCTRICO",
-                    "REPARACIÓN DE SUSPENSIÓN",
-                    "REPARACIÓN DE TODAS LAS LUCES",
-                    "REPARACIÓN DE TODAS LAS LUNAS",
-                    "REPARACIÓN DE TRANSMISIÓN",
-                    "REPARACIÓN DE TUBO DE ESCAPE",
-                    "REPARACIÓN DE VENTANILLAS"
-                  ].map((String value) {
-                    return new DropdownMenuItem<String>(
-                      value: value,
-                      child: new Text(value),
-                    );
-                  }).toList(),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 20.0,
-                  horizontal: 10.0,
-                ),
-                child: ElevatedButton.icon(
-                  icon: Icon(Icons.edit),
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.blue[800],
-                      minimumSize: Size(200.0, 50.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50))),
-                  label: saveButtonLabel,
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      setState(() {
-                        saveButtonLabel = SpinKitChasingDots(
-                          color: Colors.white,
-                          size: 25.0,
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: new DropdownButton<String>(
+                      value: this.updates.newMaintenanceType,
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                      iconSize: 24,
+                      elevation: 16,
+                      style: const TextStyle(
+                          color: Colors.blue, fontWeight: FontWeight.bold),
+                      underline: Container(
+                        height: 2,
+                        color: Colors.blueAccent,
+                      ),
+                      onChanged: (String? newValue) {
+                        if (newValue!.isNotEmpty) {
+                          setState(() {
+                            this.updates.newMaintenanceType = newValue;
+                          });
+                        }
+                      },
+                      items: <String>[
+                        "CAMBIO DE ACEITE",
+                        "CAMBIO DE ACELERADOR",
+                        "CAMBIO DE ANTICONGELANTE",
+                        "CAMBIO DE BATERÍA",
+                        "CAMBIO DE BOMBA DE AGUA",
+                        "CAMBIO DE CATALIZADORES",
+                        "CAMBIO DE CORREA",
+                        "CAMBIO DE DIRECCIÓN",
+                        "CAMBIO DE EMBRAGUE",
+                        "CAMBIO DE FILTRO DE AIRE",
+                        "CAMBIO DE FILTRO DE COMBUSTIBLE",
+                        "CAMBIO DE FILTRO DEL HABITÁCULO",
+                        "CAMBIO DE FRENOS",
+                        "CAMBIO DE FUSIBLES",
+                        "CAMBIO DE LIMPIAPARABRISAS",
+                        "CAMBIO DE LUNA DELANTERA",
+                        "CAMBIO DE LUNA TRASERA",
+                        "CAMBIO DE LUZ DE ANTINIEBLA",
+                        "CAMBIO DE LUZ DE CARRETERA",
+                        "CAMBIO DE LUZ DE CRUCE",
+                        "CAMBIO DE LUZ DE FRENO",
+                        "CAMBIO DE LUZ DE INTERMITENCIA",
+                        "CAMBIO DE LUZ DE MARCHA ATRÁS",
+                        "CAMBIO DE LUZ DE POSICIÓN",
+                        "CAMBIO DE LÍQUIDO DE FRENOS",
+                        "CAMBIO DE LÍQUIDO LIMPIAPARABRISAS",
+                        "CAMBIO DE MOTOR",
+                        "CAMBIO DE NEUMÁTICOS",
+                        "CAMBIO DE PANEL DE INSTRUMENTOS",
+                        "CAMBIO DE RADIADOR",
+                        "CAMBIO DE SISTEMA ELÉCTRICO",
+                        "CAMBIO DE SUSPENSIÓN",
+                        "CAMBIO DE TODAS LAS LUCES",
+                        "CAMBIO DE TODAS LAS LUNAS",
+                        "CAMBIO DE TODOS LOS FILTROS",
+                        "CAMBIO DE TODOS LOS LÍQUIDOS",
+                        "CAMBIO DE TRANSMISIÓN",
+                        "CAMBIO DE TUBO DE ESCAPE",
+                        "CAMBIO DE VENTANILLAS",
+                        "CAMBIO DEL TUBO DE ESCAPE",
+                        "REPARACIÓN DE ACELERADOR",
+                        "REPARACIÓN DE DIRECCIÓN",
+                        "REPARACIÓN DE EMBRAGUE",
+                        "REPARACIÓN DE FRENOS",
+                        "REPARACIÓN DE LUNA DELANTERA",
+                        "REPARACIÓN DE LUNA TRASERA",
+                        "REPARACIÓN DE LUZ DE ANTINIEBLA",
+                        "REPARACIÓN DE LUZ DE CARRETERA",
+                        "REPARACIÓN DE LUZ DE CRUCE",
+                        "REPARACIÓN DE LUZ DE FRENO",
+                        "REPARACIÓN DE LUZ DE INTERMITENCIA",
+                        "REPARACIÓN DE LUZ DE MARCHA ATRÁS",
+                        "REPARACIÓN DE LUZ DE POSICIÓN",
+                        "REPARACIÓN DE MOTOR",
+                        "REPARACIÓN DE RADIADOR",
+                        "REPARACIÓN DE SISTEMA ELÉCTRICO",
+                        "REPARACIÓN DE SUSPENSIÓN",
+                        "REPARACIÓN DE TODAS LAS LUCES",
+                        "REPARACIÓN DE TODAS LAS LUNAS",
+                        "REPARACIÓN DE TRANSMISIÓN",
+                        "REPARACIÓN DE TUBO DE ESCAPE",
+                        "REPARACIÓN DE VENTANILLAS"
+                      ].map((String value) {
+                        return new DropdownMenuItem<String>(
+                          value: value,
+                          child: new Text(value),
                         );
-                      });
-                      onEditMaintenance(registration, idMaintenance,
-                          maintenanceType, updates);
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 20.0,
-                  horizontal: 10.0,
-                ),
-                child: ElevatedButton.icon(
-                  icon: Icon(Icons.delete),
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.red,
-                      minimumSize: Size(200.0, 50.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50))),
-                  label: deleteButtonLabel,
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      setState(() {
-                        deleteButtonLabel = SpinKitChasingDots(
-                          color: Colors.white,
-                          size: 25.0,
-                        );
-                      });
-                      onDeleteMaintenance(registration, idMaintenance);
-                    }
-                  },
-                ),
+                      }).toList(),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 20.0,
+                      horizontal: 10.0,
+                    ),
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.edit),
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.blue[800],
+                          minimumSize: Size(200.0, 50.0),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50))),
+                      label: saveButtonLabel,
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            saveButtonLabel = SpinKitChasingDots(
+                              color: Colors.white,
+                              size: 25.0,
+                            );
+                          });
+                          onEditMaintenance(registration, idMaintenance,
+                              maintenanceType, updates);
+                        }
+                      },
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 20.0,
+                      horizontal: 10.0,
+                    ),
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.delete),
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.red,
+                          minimumSize: Size(200.0, 50.0),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50))),
+                      label: deleteButtonLabel,
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            deleteButtonLabel = SpinKitChasingDots(
+                              color: Colors.white,
+                              size: 25.0,
+                            );
+                          });
+                          onDeleteMaintenance(registration, idMaintenance);
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

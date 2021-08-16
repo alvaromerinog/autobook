@@ -20,6 +20,11 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
   Widget deleteButtonLabel = Text('Eliminar', style: TextStyle(fontSize: 20.0));
   final _formKey = GlobalKey<FormState>();
   VehicleModifications updates = VehicleModifications(newRegistration: '');
+  RegExp registrationRegExp = RegExp(
+      r"^[a-zA-Z]{0,2}[0-9]{0,4}([a-zA-Z]{3}|[a-zA-Z]{1})$",
+      multiLine: true,
+      caseSensitive: true,
+      unicode: true);
 
   void onEditVehicle(updates) async {
     try {
@@ -73,116 +78,129 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             children: [
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  initialValue: registration,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.fingerprint_rounded),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Matrícula',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      initialValue: registration,
+                      maxLength: 7,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.fingerprint_rounded),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Matrícula',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Este campo no puede estar vacío';
+                        } else if (!registrationRegExp.hasMatch(value)) {
+                          return 'La matrícula no es válida';
+                        } else {
+                          updates.newRegistration = value;
+                        }
+                      },
+                    ),
                   ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Este campo no puede estar vacío';
-                    } else {
-                      updates.newRegistration = value;
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  initialValue: brand,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.perm_contact_calendar_rounded),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Marca',
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      initialValue: brand,
+                      maxLength: 45,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.perm_contact_calendar_rounded),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Marca',
+                      ),
+                      validator: (value) {
+                        updates.newBrand = value;
+                      },
+                    ),
                   ),
-                  validator: (value) {
-                    updates.newBrand = value;
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  initialValue: model,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.badge_rounded),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Modelo',
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      initialValue: model,
+                      maxLength: 45,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.badge_rounded),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Modelo',
+                      ),
+                      validator: (value) {
+                        updates.newModel = value;
+                      },
+                    ),
                   ),
-                  validator: (value) {
-                    updates.newModel = value;
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 20.0,
-                  horizontal: 10.0,
-                ),
-                child: ElevatedButton.icon(
-                  icon: Icon(Icons.edit),
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.blue[800],
-                      minimumSize: Size(200.0, 50.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50))),
-                  label: saveButtonLabel,
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      setState(() {
-                        saveButtonLabel = SpinKitChasingDots(
-                          color: Colors.white,
-                          size: 25.0,
-                        );
-                      });
-                      onEditVehicle(updates);
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 20.0,
-                  horizontal: 10.0,
-                ),
-                child: ElevatedButton.icon(
-                  icon: Icon(Icons.delete_rounded),
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.red,
-                      minimumSize: Size(200.0, 50.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50))),
-                  label: Text(
-                    'Eliminar',
-                    style: TextStyle(fontSize: 20.0),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 20.0,
+                      horizontal: 10.0,
+                    ),
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.edit),
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.blue[800],
+                          minimumSize: Size(200.0, 50.0),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50))),
+                      label: saveButtonLabel,
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            saveButtonLabel = SpinKitChasingDots(
+                              color: Colors.white,
+                              size: 25.0,
+                            );
+                          });
+                          onEditVehicle(updates);
+                        }
+                      },
+                    ),
                   ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      onDeleteVehicle(registration);
-                    }
-                  },
-                ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 20.0,
+                      horizontal: 10.0,
+                    ),
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.delete_rounded),
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.red,
+                          minimumSize: Size(200.0, 50.0),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50))),
+                      label: Text(
+                        'Eliminar',
+                        style: TextStyle(fontSize: 20.0),
+                      ),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          onDeleteVehicle(registration);
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

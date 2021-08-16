@@ -23,7 +23,8 @@ class _RecoverPasswordState extends State<RecoverPassword> {
         content: Text('Se ha enviado el correo correctamente.'),
         backgroundColor: Colors.blue,
       ));
-      Navigator.pushReplacementNamed(context, '/confirmReset', arguments: email);
+      Navigator.pushReplacementNamed(context, '/confirmReset',
+          arguments: email);
     } on InvalidParameterException {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('La cuenta no ha sido verificada.'),
@@ -51,54 +52,60 @@ class _RecoverPasswordState extends State<RecoverPassword> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             children: [
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  initialValue: email,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Email',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      initialValue: email,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.email),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Email',
+                      ),
+                      validator: (value) {
+                        value = value.toString();
+                        if (value.isEmpty) {
+                          return 'Este campo no puede estar vacío';
+                        } else {
+                          email = value;
+                        }
+                      },
+                    ),
                   ),
-                  validator: (value) {
-                    value = value.toString();
-                    if (value.isEmpty) {
-                      return 'Este campo no puede estar vacío';
-                    } else {
-                      email = value;
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 20.0,
-                  horizontal: 10.0,
-                ),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.amber,
-                      minimumSize: Size(200.0, 50.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50))),
-                  child: Text(
-                    'Enviar',
-                    style: TextStyle(fontSize: 20.0),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 20.0,
+                      horizontal: 10.0,
+                    ),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.amber,
+                          minimumSize: Size(200.0, 50.0),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50))),
+                      child: Text(
+                        'Enviar',
+                        style: TextStyle(fontSize: 20.0),
+                      ),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          _onRecoverPassword(email);
+                        }
+                      },
+                    ),
                   ),
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _onRecoverPassword(email);
-                    }
-                  },
-                ),
+                ],
               ),
             ],
           ),

@@ -14,6 +14,11 @@ class _ProfileState extends State<Profile> {
   String email;
   _ProfileState({required this.email});
 
+  void onSignOut() async {
+    await Amplify.Auth.signOut();
+    Navigator.pushReplacementNamed(context, '/');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -40,32 +45,12 @@ class _ProfileState extends State<Profile> {
             margin: EdgeInsets.fromLTRB(0, 0, 0, 50.0),
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                  primary: Colors.amber,
-                  minimumSize: Size(2000.0, 50.0),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(50))),
-              onPressed: () {
-                Amplify.Auth.signOut();
-                Navigator.pushNamed(context, '/changePassword');
-              },
-              icon: Icon(Icons.password_rounded),
-              label: Text(
-                'Cambiar contraseña',
-                style: TextStyle(fontSize: 16.0),
-              ),
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.fromLTRB(0, 0, 0, 50.0),
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
                   primary: Colors.redAccent,
                   minimumSize: Size(2000.0, 50.0),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(50))),
               onPressed: () {
-                Amplify.Auth.signOut();
-                Navigator.pushReplacementNamed(context, '/');
+                onSignOut();
               },
               icon: Icon(
                 Icons.logout,

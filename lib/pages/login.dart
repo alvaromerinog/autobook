@@ -51,7 +51,7 @@ class _LoginState extends State<Login> {
         email = user.username;
         Navigator.pushReplacementNamed(context, '/home', arguments: email);
       }
-    } on Exception {
+    } on Exception catch (e) {
       print('Hubo un error al configurar Amplify');
     }
   }
@@ -142,7 +142,8 @@ class _LoginState extends State<Login> {
                       style: TextStyle(fontSize: 15.0),
                     ),
                     onPressed: () {
-                      Navigator.pushNamed(context, '/recoverPassword', arguments: email);
+                      Navigator.pushNamed(context, '/recoverPassword',
+                          arguments: email);
                     },
                   ),
                 ),
@@ -170,7 +171,10 @@ class _LoginState extends State<Login> {
                     vertical: 10.0,
                     horizontal: 10.0,
                   ),
-                  child: Text("¿No tiene cuenta?", textAlign: TextAlign.center,),
+                  child: Text(
+                    "¿No tiene cuenta?",
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 Container(
                   padding: EdgeInsets.symmetric(

@@ -1,4 +1,3 @@
-import 'package:autobook/pages/changePassword.dart';
 import 'package:autobook/pages/editMaintenance.dart';
 import 'package:autobook/pages/editVehicle.dart';
 import 'package:autobook/pages/login.dart';
@@ -25,7 +24,6 @@ class MyApp extends StatelessWidget {
         '/register': (context) => Register(),
         '/confirmRegister': (context) => RegisterConfirm(),
         '/recoverPassword': (context) => RecoverPassword(),
-        '/changePassword': (context) => ChangePassword(),
         '/newVehicle': (context) => NewVehiclePage(),
         '/editVehicle': (context) => EditVehiclePage(),
         '/newMaintenance': (context) => NewMaintenancePage(),
