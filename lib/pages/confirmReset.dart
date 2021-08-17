@@ -61,104 +61,122 @@ class _ConfirmResetState extends State<ConfirmReset> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             children: [
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.mark_email_read),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Código de confirmación',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: Text(
+                        'La contraseña debe tener: \n\n- Letras mayúsculas y minúsculas.\n- Números.\n- Una longitud mínima de 6.',
+                        textAlign: TextAlign.justify,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
-                  validator: (value) {
-                    value = value.toString();
-                    if (value.isEmpty) {
-                      return 'Este campo no puede estar vacío';
-                    } else {
-                      code = value;
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Nueva contraseña',
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.mark_email_read),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Código de confirmación',
+                      ),
+                      validator: (value) {
+                        value = value.toString();
+                        if (value.isEmpty) {
+                          return 'Este campo no puede estar vacío';
+                        } else {
+                          code = value;
+                        }
+                      },
+                    ),
                   ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Este campo no puede estar vacío';
-                    } else {
-                      password = value;
-                    }
-                    if (!passwordRegExp.hasMatch(value)) {
-                      return 'La contraseña no cumple los requisitos';
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Repita la nueva contraseña',
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.lock),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Nueva contraseña',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Este campo no puede estar vacío';
+                        } else {
+                          password = value;
+                        }
+                        if (!passwordRegExp.hasMatch(value)) {
+                          return 'La contraseña no cumple los requisitos';
+                        }
+                      },
+                    ),
                   ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Este campo no puede estar vacío';
-                    } else if (value != password) {
-                      return 'La contraseña no coincide';
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 20.0,
-                  horizontal: 10.0,
-                ),
-                child: ElevatedButton.icon(
-                  icon: Icon(Icons.restart_alt_rounded),
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.amber,
-                      minimumSize: Size(200.0, 50.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50))),
-                  label: resetLabelButton,
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      setState(() {
-                        resetLabelButton = SpinKitChasingDots(
-                          color: Colors.white,
-                          size: 25.0,
-                        );
-                      });
-                      _verifyCode(context, password);
-                    }
-                  },
-                ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.lock),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Repita la nueva contraseña',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Este campo no puede estar vacío';
+                        } else if (value != password) {
+                          return 'La contraseña no coincide';
+                        }
+                      },
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 20.0,
+                      horizontal: 10.0,
+                    ),
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.restart_alt_rounded),
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.amber,
+                          minimumSize: Size(200.0, 50.0),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50))),
+                      label: resetLabelButton,
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            resetLabelButton = SpinKitChasingDots(
+                              color: Colors.white,
+                              size: 25.0,
+                            );
+                          });
+                          _verifyCode(context, password);
+                        }
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

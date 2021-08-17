@@ -36,6 +36,11 @@ class _RecoverPasswordState extends State<RecoverPassword> {
             'Ha excedido el limite de intentos para reestablecer la contraseña. Inténtelo de nuevo más tarde.'),
         backgroundColor: Colors.red,
       ));
+    } on UserNotFoundException {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('La cuenta no existe.'),
+        backgroundColor: Colors.red,
+      ));
     } on AuthException {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
@@ -58,60 +63,54 @@ class _RecoverPasswordState extends State<RecoverPassword> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 10.0,
-                      horizontal: 10.0,
-                    ),
-                    child: TextFormField(
-                      initialValue: email,
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.email),
-                        border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(40))),
-                        hintText: 'Email',
-                      ),
-                      validator: (value) {
-                        value = value.toString();
-                        if (value.isEmpty) {
-                          return 'Este campo no puede estar vacío';
-                        } else {
-                          email = value;
-                        }
-                      },
-                    ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: 10.0,
+                  horizontal: 10.0,
+                ),
+                child: TextFormField(
+                  initialValue: email,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(40))),
+                    hintText: 'Email',
                   ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 20.0,
-                      horizontal: 10.0,
-                    ),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          primary: Colors.amber,
-                          minimumSize: Size(200.0, 50.0),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50))),
-                      child: Text(
-                        'Enviar',
-                        style: TextStyle(fontSize: 20.0),
-                      ),
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          _onRecoverPassword(email);
-                        }
-                      },
-                    ),
+                  validator: (value) {
+                    value = value.toString();
+                    if (value.isEmpty) {
+                      return 'Este campo no puede estar vacío';
+                    } else {
+                      email = value;
+                    }
+                  },
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: 20.0,
+                  horizontal: 10.0,
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      primary: Colors.amber,
+                      minimumSize: Size(200.0, 50.0),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50))),
+                  child: Text(
+                    'Enviar',
+                    style: TextStyle(fontSize: 20.0),
                   ),
-                ],
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _onRecoverPassword(email);
+                    }
+                  },
+                ),
               ),
             ],
           ),
