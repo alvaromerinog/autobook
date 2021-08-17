@@ -4,7 +4,7 @@ My ASIR final project
 
 ## Summary
 
-This project is a secure and simply vehicles maintenances application.
+This project is a secure and simply vehicle maintenances management application.
 
 ## Tecnologies
 
