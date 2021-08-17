@@ -26,7 +26,7 @@ class _RegisterConfirmState extends State<RegisterConfirm> {
         final login =
             await Amplify.Auth.signIn(username: email, password: password);
         if (login.isSignedIn) {
-          Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushReplacementNamed(context, '/home', arguments: email);
         } else {
           Navigator.pushReplacementNamed(context, '/login');
         }
@@ -101,7 +101,7 @@ class _RegisterConfirmState extends State<RegisterConfirm> {
                     if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else {
-                      code = value;
+                      code = value.trim();
                     }
                   },
                 ),

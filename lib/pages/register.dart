@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class Register extends StatefulWidget {
   Register({Key? key}) : super(key: key);
@@ -20,6 +21,9 @@ class _RegisterState extends State<Register> {
   String password = '';
   RegExp passwordRegExp = RegExp(r"^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$",
       multiLine: true, caseSensitive: true, unicode: true);
+  Widget loadingButton = SpinKitChasingDots(color: Colors.white, size: 25.0);
+  Widget registerButton = Text('Registrarse', style: TextStyle(fontSize: 20.0));
+  Widget normalButton = Text('Registrarse', style: TextStyle(fontSize: 20.0));
 
   Future<void> onSignUp(email, password) async {
     try {
@@ -32,11 +36,17 @@ class _RegisterState extends State<Register> {
       Navigator.pushReplacementNamed(context, '/confirmRegister',
           arguments: arguments);
     } on UsernameExistsException {
+      setState(() {
+        registerButton = normalButton;
+      });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('El email introducido ya existe. Pruebe otro email.'),
         backgroundColor: Colors.red,
       ));
     } on AuthException {
+      setState(() {
+        registerButton = normalButton;
+      });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
         backgroundColor: Colors.red,
@@ -152,12 +162,12 @@ class _RegisterState extends State<Register> {
                       minimumSize: Size(200.0, 50.0),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50))),
-                  child: Text(
-                    'Registrarse',
-                    style: TextStyle(fontSize: 20.0),
-                  ),
+                  child: registerButton,
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
+                      setState(() {
+                        registerButton = loadingButton;
+                      });
                       onSignUp(email, password);
                     }
                   },

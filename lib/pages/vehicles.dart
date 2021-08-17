@@ -148,14 +148,14 @@ class _VehiclesState extends State<Vehicles> {
                 borderRadius: BorderRadius.all(Radius.circular(7.0)),
               ),
               elevation: 20,
-              color: Colors.white10,
+              color: Colors.white,
               child: ListTile(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(Radius.circular(7.0)),
                 ),
                 leading: Icon(
                   Icons.warning_amber_rounded,
-                  color: Colors.amber,
+                  color: Colors.amber[600],
                   size: 30,
                 ),
                 title: Text('No se han encontrado vehículos',
