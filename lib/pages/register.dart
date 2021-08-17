@@ -29,7 +29,7 @@ class _RegisterState extends State<Register> {
           username: email,
           password: password,
           options: CognitoSignUpOptions(userAttributes: userAttributes));
-      Navigator.pushReplacementNamed(context, '/confirmEmail',
+      Navigator.pushReplacementNamed(context, '/confirmRegister',
           arguments: arguments);
     } on UsernameExistsException {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -89,7 +89,7 @@ class _RegisterState extends State<Register> {
                     } else if (!emailRegExp.hasMatch(value)) {
                       return 'Introduzca un email válido';
                     } else {
-                      email = value;
+                      email = value.trim();
                     }
                   },
                 ),

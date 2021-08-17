@@ -51,7 +51,7 @@ class _LoginState extends State<Login> {
         email = user.username;
         Navigator.pushReplacementNamed(context, '/home', arguments: email);
       }
-    } on Exception catch (e) {
+    } catch (e) {
       print('Hubo un error al configurar Amplify');
     }
   }
