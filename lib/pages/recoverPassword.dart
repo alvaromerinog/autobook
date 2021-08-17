@@ -81,7 +81,7 @@ class _RecoverPasswordState extends State<RecoverPassword> {
                     hintText: 'Email',
                   ),
                   validator: (value) {
-                    value = value.toString();
+                    value = value.toString().trim();
                     if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else {

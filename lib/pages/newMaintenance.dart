@@ -130,7 +130,8 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
                         hintText: 'Odómetro',
                       ),
                       validator: (value) {
-                        if (value!.isNotEmpty) {
+                        value = value.toString().trim();
+                        if (value.isNotEmpty) {
                           odometer = int.parse(value);
                           if (odometer! < 0) {
                             return 'Este campo no puede ser negativo';
