@@ -1,55 +1,72 @@
+import 'package:autobook/api/vehiclesDelete.dart';
+import 'package:autobook/api/vehiclesModify.dart';
+import 'package:autobook/factories/vehicleModifications.dart';
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify.dart';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-class ConfirmReset extends StatefulWidget {
-  const ConfirmReset({Key? key}) : super(key: key);
-
+class EditVehiclePage extends StatefulWidget {
   @override
-  _ConfirmResetState createState() => _ConfirmResetState();
+  _EditVehiclePageState createState() => _EditVehiclePageState();
 }
 
-class _ConfirmResetState extends State<ConfirmReset> {
+class _EditVehiclePageState extends State<EditVehiclePage> {
+  String email = '';
+  String registration = '';
+  String? brand;
+  String? model;
+  Widget saveButtonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
+  Widget deleteButtonLabel = Text('Eliminar', style: TextStyle(fontSize: 20.0));
   final _formKey = GlobalKey<FormState>();
-  Widget resetLabelButton = Text('Confirmar', style: TextStyle(fontSize: 20.0));
-  String code = '';
-  String password = '';
-  RegExp passwordRegExp = RegExp(r"^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$",
-      multiLine: true, caseSensitive: true, unicode: true);
+  VehicleModifications updates = VehicleModifications(newRegistration: '');
+  RegExp registrationRegExp = RegExp(
+      r"^[a-zA-Z]{0,2}[0-9]{0,4}([a-zA-Z]{3}|[a-zA-Z]{1})$",
+      multiLine: true,
+      caseSensitive: true,
+      unicode: true);
 
-  void _verifyCode(BuildContext context, password) async {
+  void onEditVehicle(updates) async {
     try {
-      String email = ModalRoute.of(context)!.settings.arguments as String;
-      await Amplify.Auth.confirmPassword(
-          username: email, newPassword: password, confirmationCode: code);
-      await Amplify.Auth.signIn(username: email, password: password);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('La contraseña ha sido reestablecida.'),
-        backgroundColor: Colors.blue,
-      ));
-      Navigator.pushReplacementNamed(context, '/home', arguments: email);
-    } on CodeMismatchException {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('El código no es correcto.'),
-        backgroundColor: Colors.red,
-      ));
-      setState(() {
-        resetLabelButton = Text('Confirmar', style: TextStyle(fontSize: 20.0));
-      });
-    } on AuthException {
+      dynamic response = await VehiclesModify(
+              email: email, registration: registration, updates: updates)
+          .updateVehicle();
+      Navigator.pop(context);
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
         backgroundColor: Colors.red,
       ));
       setState(() {
-        resetLabelButton = Text('Confirmar', style: TextStyle(fontSize: 20.0));
+        saveButtonLabel = Text('Editar', style: TextStyle(fontSize: 20.0));
+      });
+    }
+  }
+
+  void onDeleteVehicle(registration) async {
+    try {
+      dynamic response =
+          await VehiclesDelete(email: email, registration: registration)
+              .deleteVehicle();
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
+        backgroundColor: Colors.red,
+      ));
+      setState(() {
+        deleteButtonLabel = Text('Eliminar', style: TextStyle(fontSize: 20.0));
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    Map arguments = ModalRoute.of(context)!.settings.arguments as Map;
+    email = arguments['email'];
+    registration = arguments['registration'];
+    brand = arguments['brand'];
+    model = arguments['model'];
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
@@ -73,30 +90,23 @@ class _ConfirmResetState extends State<ConfirmReset> {
                       vertical: 10.0,
                       horizontal: 10.0,
                     ),
-                    child: Text(
-                        'La contraseña debe tener: \n\n- Letras mayúsculas y minúsculas.\n- Números.\n- Una longitud mínima de 6.',
-                        textAlign: TextAlign.justify,
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 10.0,
-                      horizontal: 10.0,
-                    ),
                     child: TextFormField(
+                      initialValue: registration,
+                      maxLength: 7,
                       decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.mark_email_read),
+                        prefixIcon: Icon(Icons.fingerprint_rounded),
                         border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(40))),
-                        hintText: 'Código de confirmación',
+                        hintText: 'Matrícula',
                       ),
                       validator: (value) {
-                        value = value.toString();
-                        if (value.isEmpty) {
+                        if (value!.isEmpty) {
                           return 'Este campo no puede estar vacío';
+                        } else if (!registrationRegExp.hasMatch(value)) {
+                          return 'La matrícula no es válida';
                         } else {
-                          code = value;
+                          updates.newRegistration = value;
                         }
                       },
                     ),
@@ -107,23 +117,17 @@ class _ConfirmResetState extends State<ConfirmReset> {
                       horizontal: 10.0,
                     ),
                     child: TextFormField(
-                      obscureText: true,
+                      initialValue: brand,
+                      maxLength: 45,
                       decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.lock),
+                        prefixIcon: Icon(Icons.perm_contact_calendar_rounded),
                         border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(40))),
-                        hintText: 'Nueva contraseña',
+                        hintText: 'Marca',
                       ),
                       validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Este campo no puede estar vacío';
-                        } else {
-                          password = value;
-                        }
-                        if (!passwordRegExp.hasMatch(value)) {
-                          return 'La contraseña no cumple los requisitos';
-                        }
+                        updates.newBrand = value;
                       },
                     ),
                   ),
@@ -133,19 +137,42 @@ class _ConfirmResetState extends State<ConfirmReset> {
                       horizontal: 10.0,
                     ),
                     child: TextFormField(
-                      obscureText: true,
+                      initialValue: model,
+                      maxLength: 45,
                       decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.lock),
+                        prefixIcon: Icon(Icons.badge_rounded),
                         border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(40))),
-                        hintText: 'Repita la nueva contraseña',
+                        hintText: 'Modelo',
                       ),
                       validator: (value) {
-                        if (value!.isEmpty) {
-                          return 'Este campo no puede estar vacío';
-                        } else if (value != password) {
-                          return 'La contraseña no coincide';
+                        updates.newModel = value;
+                      },
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 20.0,
+                      horizontal: 10.0,
+                    ),
+                    child: ElevatedButton.icon(
+                      icon: Icon(Icons.edit),
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.blue[800],
+                          minimumSize: Size(200.0, 50.0),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50))),
+                      label: saveButtonLabel,
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            saveButtonLabel = SpinKitChasingDots(
+                              color: Colors.white,
+                              size: 25.0,
+                            );
+                          });
+                          onEditVehicle(updates);
                         }
                       },
                     ),
@@ -156,22 +183,19 @@ class _ConfirmResetState extends State<ConfirmReset> {
                       horizontal: 10.0,
                     ),
                     child: ElevatedButton.icon(
-                      icon: Icon(Icons.restart_alt_rounded),
+                      icon: Icon(Icons.delete_rounded),
                       style: ElevatedButton.styleFrom(
-                          primary: Colors.amber,
+                          primary: Colors.red,
                           minimumSize: Size(200.0, 50.0),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(50))),
-                      label: resetLabelButton,
+                      label: Text(
+                        'Eliminar',
+                        style: TextStyle(fontSize: 20.0),
+                      ),
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          setState(() {
-                            resetLabelButton = SpinKitChasingDots(
-                              color: Colors.white,
-                              size: 25.0,
-                            );
-                          });
-                          _verifyCode(context, password);
+                          onDeleteVehicle(registration);
                         }
                       },
                     ),
