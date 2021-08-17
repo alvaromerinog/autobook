@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:amplify_flutter/amplify.dart';
+import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_flutter/amplify.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
+import '../amplifyconfiguration.dart';
+
 class Login extends StatefulWidget {
-  Login({Key key}) : super(key: key);
+  const Login({Key? key}) : super(key: key);
 
   @override
   _LoginState createState() => _LoginState();
@@ -14,62 +17,83 @@ class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>();
   String email = '';
   String password = '';
-  bool rememberMe = false;
   RegExp exp = RegExp(
     r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$",
     multiLine: true,
     caseSensitive: true,
     unicode: true,
   );
+  Widget loadingButton = SpinKitChasingDots(color: Colors.white, size: 25.0);
   Widget loginButton = Text('Iniciar sesión', style: TextStyle(fontSize: 20.0));
+  Widget normalButton =
+      Text('Iniciar sesión', style: TextStyle(fontSize: 20.0));
 
+  @override
   void initState() {
     super.initState();
+    _configureAmplify();
   }
 
-  Future<String> onSignIn(email, password) async {
+  void _configureAmplify() async {
+    AmplifyAuthCognito auth = AmplifyAuthCognito();
+    AmplifyAPI api = AmplifyAPI();
     try {
-      Map arguments = {'email': email, 'password': password};
+      if (!Amplify.isConfigured) {
+        await Amplify.addPlugins([auth, api]);
+        await Amplify.configure(amplifyconfig);
+      }
+
+      AuthSession session = await Amplify.Auth.fetchAuthSession(
+          options: CognitoSessionOptions(getAWSCredentials: true));
+
+      if (session.isSignedIn) {
+        AuthUser user = await Amplify.Auth.getCurrentUser();
+        email = user.username;
+        Navigator.pushReplacementNamed(context, '/home', arguments: email);
+      }
+    } catch (e) {
+      print('Hubo un error al configurar Amplify');
+    }
+  }
+
+  Future onSignIn(email, password) async {
+    try {
       await Amplify.Auth.signIn(username: email, password: password);
-      Navigator.pushReplacementNamed(context, '/home', arguments: arguments);
+      Navigator.pushReplacementNamed(context, '/home', arguments: email);
     } on NotAuthorizedException {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('El email o la contraseña no son correctos.'),
         backgroundColor: Colors.red,
       ));
       setState(() {
-        loginButton = Text('Iniciar sesión', style: TextStyle(fontSize: 20.0));
+        loginButton = normalButton;
       });
     } on UserNotConfirmedException {
       setState(() {
-        loginButton = Text('Iniciar sesión', style: TextStyle(fontSize: 20.0));
+        loginButton = normalButton;
       });
       Map arguments = {'email': email, 'password': password};
-      Navigator.pushNamed(context, '/confirmEmail',
-          arguments: arguments);
+      Navigator.pushNamed(context, '/confirmRegister', arguments: arguments);
     } on AuthException {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
         backgroundColor: Colors.red,
       ));
       setState(() {
-        loginButton = Text('Iniciar sesión', style: TextStyle(fontSize: 20.0));
+        loginButton = normalButton;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       body: SafeArea(
         child: Form(
-          key: _formKey,
-          child: Container(
-            padding: EdgeInsets.all(25.0),
-            child: (Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
+            key: _formKey,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.all(25.0),
               children: [
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
@@ -82,7 +106,7 @@ class _LoginState extends State<Login> {
                         hintText: 'Email',
                       ),
                       validator: (value) {
-                        if (value.isEmpty) {
+                        if (value!.isEmpty) {
                           return 'Este campo no puede estar vacío';
                         } else if (!exp.hasMatch(value)) {
                           return 'Introduzca un email válido';
@@ -103,7 +127,7 @@ class _LoginState extends State<Login> {
                       hintText: 'Contraseña',
                     ),
                     validator: (value) {
-                      if (value.isEmpty) {
+                      if (value!.isEmpty) {
                         return 'Este campo no puede estar vacío';
                       } else {
                         password = value;
@@ -118,7 +142,8 @@ class _LoginState extends State<Login> {
                       style: TextStyle(fontSize: 15.0),
                     ),
                     onPressed: () {
-                      Navigator.pushNamed(context, '/forgot', arguments: email);
+                      Navigator.pushNamed(context, '/recoverPassword',
+                          arguments: email);
                     },
                   ),
                 ),
@@ -132,12 +157,9 @@ class _LoginState extends State<Login> {
                     icon: Icon(Icons.login),
                     label: loginButton,
                     onPressed: () {
-                      if (_formKey.currentState.validate()) {
+                      if (_formKey.currentState!.validate()) {
                         setState(() {
-                          loginButton = SpinKitChasingDots(
-                            color: Colors.white,
-                            size: 25.0,
-                          );
+                          loginButton = loadingButton;
                         });
                         onSignIn(email, password);
                       }
@@ -149,7 +171,10 @@ class _LoginState extends State<Login> {
                     vertical: 10.0,
                     horizontal: 10.0,
                   ),
-                  child: Text("¿No tiene cuenta?"),
+                  child: Text(
+                    "¿No tiene cuenta?",
+                    textAlign: TextAlign.center,
+                  ),
                 ),
                 Container(
                   padding: EdgeInsets.symmetric(
@@ -170,8 +195,6 @@ class _LoginState extends State<Login> {
                 ),
               ],
             )),
-          ),
-        ),
       ),
     );
   }

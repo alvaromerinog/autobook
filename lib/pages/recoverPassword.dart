@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 
-class ForgotPassword extends StatefulWidget {
+class RecoverPassword extends StatefulWidget {
   @override
-  _ForgotPasswordState createState() => _ForgotPasswordState();
+  _RecoverPasswordState createState() => _RecoverPasswordState();
 }
 
-class _ForgotPasswordState extends State<ForgotPassword> {
+class _RecoverPasswordState extends State<RecoverPassword> {
   final _formKey = GlobalKey<FormState>();
   String email = '';
 
@@ -16,17 +16,29 @@ class _ForgotPasswordState extends State<ForgotPassword> {
     super.initState();
   }
 
-  Future<String> _onRecoverPassword(email) {
+  void _onRecoverPassword(email) async {
     try {
-      final result = Amplify.Auth.resetPassword(username: email);
+      final result = await Amplify.Auth.resetPassword(username: email);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Se ha enviado el correo correctamente.'),
         backgroundColor: Colors.blue,
       ));
-      Navigator.pushReplacementNamed(context, '/confirmReset', arguments: email);
+      Navigator.pushReplacementNamed(context, '/confirmReset',
+          arguments: email);
     } on InvalidParameterException {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('La cuenta no ha sido verificada.'),
+        backgroundColor: Colors.red,
+      ));
+    } on LimitExceededException {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            'Ha excedido el limite de intentos para reestablecer la contraseña. Inténtelo de nuevo más tarde.'),
+        backgroundColor: Colors.red,
+      ));
+    } on UserNotFoundException {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('La cuenta no existe.'),
         backgroundColor: Colors.red,
       ));
     } on AuthException {
@@ -39,6 +51,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
   @override
   Widget build(BuildContext context) {
+    email = ModalRoute.of(context)!.settings.arguments as String;
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
@@ -60,7 +73,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   horizontal: 10.0,
                 ),
                 child: TextFormField(
-                  initialValue: ModalRoute.of(context).settings.arguments,
+                  initialValue: email,
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.email),
                     border: OutlineInputBorder(
@@ -93,7 +106,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     style: TextStyle(fontSize: 20.0),
                   ),
                   onPressed: () {
-                    if (_formKey.currentState.validate()) {
+                    if (_formKey.currentState!.validate()) {
                       _onRecoverPassword(email);
                     }
                   },

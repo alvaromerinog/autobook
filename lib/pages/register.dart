@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class Register extends StatefulWidget {
-  Register({Key key}) : super(key: key);
+  Register({Key? key}) : super(key: key);
 
   @override
   _RegisterState createState() => _RegisterState();
@@ -19,24 +20,33 @@ class _RegisterState extends State<Register> {
       unicode: true);
   String password = '';
   RegExp passwordRegExp = RegExp(r"^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,}$",
-      multiLine: true, caseSensitive: true, unicode: true);  
+      multiLine: true, caseSensitive: true, unicode: true);
+  Widget loadingButton = SpinKitChasingDots(color: Colors.white, size: 25.0);
+  Widget registerButton = Text('Registrarse', style: TextStyle(fontSize: 20.0));
+  Widget normalButton = Text('Registrarse', style: TextStyle(fontSize: 20.0));
 
-  Future<String> onSignUp(email, password) async {
+  Future<void> onSignUp(email, password) async {
     try {
       Map<String, String> userAttributes = {'email': email};
       Map arguments = {'email': email, 'password': password};
       await Amplify.Auth.signUp(
           username: email,
           password: password,
-options: CognitoSignUpOptions(userAttributes: userAttributes));
-      Navigator.pushReplacementNamed(context, '/confirmEmail',
+          options: CognitoSignUpOptions(userAttributes: userAttributes));
+      Navigator.pushReplacementNamed(context, '/confirmRegister',
           arguments: arguments);
     } on UsernameExistsException {
+      setState(() {
+        registerButton = normalButton;
+      });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('El email introducido ya existe. Pruebe otro email.'),
         backgroundColor: Colors.red,
       ));
     } on AuthException {
+      setState(() {
+        registerButton = normalButton;
+      });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Ha ocurrido un error. Vuelva a intentarlo.'),
         backgroundColor: Colors.red,
@@ -57,20 +67,18 @@ options: CognitoSignUpOptions(userAttributes: userAttributes));
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             children: [
-               Container(
+              Container(
                 padding: EdgeInsets.symmetric(
                   vertical: 10.0,
                   horizontal: 10.0,
                 ),
                 child: Text(
-                  'La contraseña debe tener: \n\n- Letras mayúsculas y minúsculas.\n- Números.\n- Una longitud mínima de 6.',
-                  textAlign: TextAlign.justify,
-                  style: TextStyle(fontWeight: FontWeight.bold)
-                ),
+                    'La contraseña debe tener: \n\n- Letras mayúsculas y minúsculas.\n- Números.\n- Una longitud mínima de 6.',
+                    textAlign: TextAlign.justify,
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ),
               Container(
                 padding: EdgeInsets.symmetric(
@@ -91,7 +99,7 @@ options: CognitoSignUpOptions(userAttributes: userAttributes));
                     } else if (!emailRegExp.hasMatch(value)) {
                       return 'Introduzca un email válido';
                     } else {
-                      email = value;
+                      email = value.trim();
                     }
                   },
                 ),
@@ -110,7 +118,7 @@ options: CognitoSignUpOptions(userAttributes: userAttributes));
                     hintText: 'Contraseña',
                   ),
                   validator: (value) {
-                    if (value.isEmpty) {
+                    if (value!.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else {
                       password = value;
@@ -135,7 +143,7 @@ options: CognitoSignUpOptions(userAttributes: userAttributes));
                     hintText: 'Repita la contraseña',
                   ),
                   validator: (value) {
-                    if (value.isEmpty) {
+                    if (value!.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else if (value != password) {
                       return 'La contraseña no coincide';
@@ -154,12 +162,12 @@ options: CognitoSignUpOptions(userAttributes: userAttributes));
                       minimumSize: Size(200.0, 50.0),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50))),
-                  child: Text(
-                    'Registrarse',
-                    style: TextStyle(fontSize: 20.0),
-                  ),
+                  child: registerButton,
                   onPressed: () {
-                    if (_formKey.currentState.validate()) {
+                    if (_formKey.currentState!.validate()) {
+                      setState(() {
+                        registerButton = loadingButton;
+                      });
                       onSignUp(email, password);
                     }
                   },

@@ -1,0 +1,35 @@
+{
+  "paths": [
+    {
+      "name": "/items",
+      "lambdaFunction": "autobook16ba232d",
+      "privacy": {
+        "open": true
+      },
+      "policyResourceName": "/items"
+    }
+  ],
+  "resourceName": "miAPI",
+  "apiName": "miAPI",
+  "functionArns": [
+    {
+      "lambdaFunction": "autobook16ba232d"
+    }
+  ],
+  "privacy": {
+    "auth": 0,
+    "unauth": 0,
+    "authRoleName": "amplify-autobook-dev-205336-authRole",
+    "unAuthRoleName": "amplify-autobook-dev-205336-unauthRole"
+  },
+  "dependsOn": [
+    {
+      "category": "function",
+      "resourceName": "autobook16ba232d",
+      "attributes": [
+        "Name",
+        "Arn"
+      ]
+    }
+  ]
+}

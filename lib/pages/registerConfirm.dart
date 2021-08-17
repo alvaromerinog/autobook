@@ -3,30 +3,30 @@ import 'package:amplify_flutter/amplify.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-class ConfirmEmail extends StatefulWidget {
-  const ConfirmEmail({Key key}) : super(key: key);
+class RegisterConfirm extends StatefulWidget {
+  const RegisterConfirm({Key? key}) : super(key: key);
 
   @override
-  _ConfirmEmailState createState() => _ConfirmEmailState();
+  _RegisterConfirmState createState() => _RegisterConfirmState();
 }
 
-class _ConfirmEmailState extends State<ConfirmEmail> {
+class _RegisterConfirmState extends State<RegisterConfirm> {
   final _formKey = GlobalKey<FormState>();
   String code = '';
   Widget confirmButton = Text('Confirmar', style: TextStyle(fontSize: 20.0));
 
   void _verifyCode(BuildContext context) async {
     try {
-      Map arguments = ModalRoute.of(context).settings.arguments;
-      String email = arguments['email'];
-      String password = arguments['password'];
+      final Map args = ModalRoute.of(context)!.settings.arguments as Map;
+      String email = args['email'];
+      String password = args['password'];
       final result = await Amplify.Auth.confirmSignUp(
           username: email, confirmationCode: code);
       if (result.isSignUpComplete) {
         final login =
             await Amplify.Auth.signIn(username: email, password: password);
         if (login.isSignedIn) {
-          Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushReplacementNamed(context, '/home', arguments: email);
         } else {
           Navigator.pushReplacementNamed(context, '/login');
         }
@@ -52,7 +52,7 @@ class _ConfirmEmailState extends State<ConfirmEmail> {
 
   void _resendCode(BuildContext context) async {
     try {
-      Map arguments = ModalRoute.of(context).settings.arguments;
+      Map arguments = ModalRoute.of(context)!.settings.arguments as Map;
       String email = arguments['email'];
       await Amplify.Auth.resendSignUpCode(username: email);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -91,7 +91,7 @@ class _ConfirmEmailState extends State<ConfirmEmail> {
                 ),
                 child: TextFormField(
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock),
+                    prefixIcon: Icon(Icons.mark_email_read),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(40))),
                     hintText: 'Código de confirmación',
@@ -101,7 +101,7 @@ class _ConfirmEmailState extends State<ConfirmEmail> {
                     if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else {
-                      code = value;
+                      code = value.trim();
                     }
                   },
                 ),
@@ -120,7 +120,7 @@ class _ConfirmEmailState extends State<ConfirmEmail> {
                   icon: Icon(Icons.login),
                   label: confirmButton,
                   onPressed: () {
-                    if (_formKey.currentState.validate()) {
+                    if (_formKey.currentState!.validate()) {
                       setState(() {
                         confirmButton = SpinKitChasingDots(
                           color: Colors.white,
