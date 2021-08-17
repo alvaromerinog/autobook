@@ -91,7 +91,7 @@ class _RegisterConfirmState extends State<RegisterConfirm> {
                 ),
                 child: TextFormField(
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock),
+                    prefixIcon: Icon(Icons.mark_email_read),
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(40))),
                     hintText: 'Código de confirmación',

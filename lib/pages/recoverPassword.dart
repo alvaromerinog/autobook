@@ -16,9 +16,9 @@ class _RecoverPasswordState extends State<RecoverPassword> {
     super.initState();
   }
 
-  void _onRecoverPassword(email) {
+  void _onRecoverPassword(email) async {
     try {
-      final result = Amplify.Auth.resetPassword(username: email);
+      final result = await Amplify.Auth.resetPassword(username: email);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Se ha enviado el correo correctamente.'),
         backgroundColor: Colors.blue,
@@ -28,6 +28,12 @@ class _RecoverPasswordState extends State<RecoverPassword> {
     } on InvalidParameterException {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('La cuenta no ha sido verificada.'),
+        backgroundColor: Colors.red,
+      ));
+    } on LimitExceededException {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            'Ha excedido el limite de intentos para reestablecer la contraseña. Inténtelo de nuevo más tarde.'),
         backgroundColor: Colors.red,
       ));
     } on AuthException {
