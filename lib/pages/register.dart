@@ -93,13 +93,13 @@ class _RegisterState extends State<Register> {
                     hintText: 'Email',
                   ),
                   validator: (value) {
-                    value = value.toString();
+                    value = value.toString().trim();
                     if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else if (!emailRegExp.hasMatch(value)) {
                       return 'Introduzca un email válido';
                     } else {
-                      email = value.trim();
+                      email = value;
                     }
                   },
                 ),

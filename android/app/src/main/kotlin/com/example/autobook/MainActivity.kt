@@ -1,4 +1,4 @@
-package com.example.autobook
+package com.alvaromerinog.autobook
 
 import io.flutter.embedding.android.FlutterActivity
 

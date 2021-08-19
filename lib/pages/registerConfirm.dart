@@ -97,11 +97,11 @@ class _RegisterConfirmState extends State<RegisterConfirm> {
                     hintText: 'Código de confirmación',
                   ),
                   validator: (value) {
-                    value = value.toString();
+                    value = value.toString().trim();
                     if (value.isEmpty) {
                       return 'Este campo no puede estar vacío';
                     } else {
-                      code = value.trim();
+                      code = value;
                     }
                   },
                 ),
