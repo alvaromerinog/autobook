@@ -101,7 +101,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
                         hintText: 'Matrícula',
                       ),
                       validator: (value) {
-                        value = value.toString().trim();
+                        value = value.toString().toUpperCase().trim();
                         if (value.isEmpty) {
                           return 'Este campo no puede estar vacío';
                         } else if (!registrationRegExp.hasMatch(value)) {
