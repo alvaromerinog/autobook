@@ -106,7 +106,8 @@ class _LoginState extends State<Login> {
                         hintText: 'Email',
                       ),
                       validator: (value) {
-                        if (value!.isEmpty) {
+                        value = value.toString().trim();
+                        if (value.isEmpty) {
                           return 'Este campo no puede estar vacío';
                         } else if (!exp.hasMatch(value)) {
                           return 'Introduzca un email válido';
