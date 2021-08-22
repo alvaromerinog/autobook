@@ -2,8 +2,6 @@ import 'package:autobook/api/vehiclesDelete.dart';
 import 'package:autobook/api/vehiclesModify.dart';
 import 'package:autobook/factories/vehicleModifications.dart';
 import 'package:flutter/material.dart';
-import 'package:amplify_flutter/amplify.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class EditVehiclePage extends StatefulWidget {

@@ -1,8 +1,6 @@
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
-import 'package:amplify_flutter/amplify.dart';
 import 'package:autobook/pages/history.dart';
-import 'package:autobook/pages/vehicles.dart';
 import 'package:autobook/pages/profile.dart';
+import 'package:autobook/pages/vehicles.dart';
 import 'package:flutter/material.dart';
 
 class Home extends StatefulWidget {
