@@ -45,7 +45,7 @@ class _NewVehiclePageState extends State<NewVehiclePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.blue,
         onPressed: () {
           Navigator.pop(context);
         },
@@ -53,10 +53,10 @@ class _NewVehiclePageState extends State<NewVehiclePage> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              Column(
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -152,7 +152,7 @@ class _NewVehiclePageState extends State<NewVehiclePage> {
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

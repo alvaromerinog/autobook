@@ -70,7 +70,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.blue,
         onPressed: () {
           Navigator.pop(context);
         },
@@ -190,12 +190,15 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
                           minimumSize: Size(200.0, 50.0),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(50))),
-                      label: Text(
-                        'Eliminar',
-                        style: TextStyle(fontSize: 20.0),
-                      ),
+                      label: deleteButtonLabel,
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            deleteButtonLabel = SpinKitChasingDots(
+                              color: Colors.white,
+                              size: 25.0,
+                            );
+                          });
                           onDeleteVehicle(registration);
                         }
                       },

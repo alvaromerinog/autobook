@@ -92,7 +92,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.blue,
         onPressed: () {
           Navigator.pop(context);
         },
@@ -161,7 +161,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                         border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(40))),
-                        hintText: 'Odómetro',
+                        hintText: 'Kilometraje',
                       ),
                       validator: (value) {
                         if (value != null && value.isNotEmpty) {

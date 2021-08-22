@@ -135,9 +135,9 @@ class _HistoryState extends State<History> {
                         dateMaintenance, odometer);
                   },
                   elevation: 2.0,
-                  fillColor: Colors.blue[800],
+                  fillColor: Colors.grey[600],
                   child: Icon(
-                    Icons.edit,
+                    Icons.settings,
                     color: Colors.white,
                   ),
                   padding: EdgeInsets.all(10.0),
