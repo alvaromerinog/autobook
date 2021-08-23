@@ -67,113 +67,120 @@ class _RegisterState extends State<Register> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: Text(
-                    'La contraseña debe tener: \n\n- Letras mayúsculas y minúsculas.\n- Números.\n- Una longitud mínima de 6.',
-                    textAlign: TextAlign.justify,
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Email',
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: Text(
+                        'La contraseña debe tener: \n\n- Letras mayúsculas y minúsculas.\n- Números.\n- Una longitud mínima de 6.',
+                        textAlign: TextAlign.justify,
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
-                  validator: (value) {
-                    value = value.toString().trim();
-                    if (value.isEmpty) {
-                      return 'Este campo no puede estar vacío';
-                    } else if (!emailRegExp.hasMatch(value)) {
-                      return 'Introduzca un email válido';
-                    } else {
-                      email = value;
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Contraseña',
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.email),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Email',
+                      ),
+                      validator: (value) {
+                        value = value.toString().trim();
+                        if (value.isEmpty) {
+                          return 'Este campo no puede estar vacío';
+                        } else if (!emailRegExp.hasMatch(value)) {
+                          return 'Introduzca un email válido';
+                        } else {
+                          email = value;
+                        }
+                      },
+                    ),
                   ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Este campo no puede estar vacío';
-                    } else {
-                      password = value;
-                    }
-                    if (!passwordRegExp.hasMatch(value)) {
-                      return 'La contraseña no cumple los requisitos';
-                    }
-                  },
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 10.0,
-                  horizontal: 10.0,
-                ),
-                child: TextFormField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(40))),
-                    hintText: 'Repita la contraseña',
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.lock),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Contraseña',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Este campo no puede estar vacío';
+                        } else {
+                          password = value;
+                        }
+                        if (!passwordRegExp.hasMatch(value)) {
+                          return 'La contraseña no cumple los requisitos';
+                        }
+                      },
+                    ),
                   ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return 'Este campo no puede estar vacío';
-                    } else if (value != password) {
-                      return 'La contraseña no coincide';
-                    }
-                  },
-                ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 10.0,
+                      horizontal: 10.0,
+                    ),
+                    child: TextFormField(
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.lock),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(40))),
+                        hintText: 'Repita la contraseña',
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Este campo no puede estar vacío';
+                        } else if (value != password) {
+                          return 'La contraseña no coincide';
+                        }
+                      },
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      vertical: 20.0,
+                      horizontal: 10.0,
+                    ),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          primary: Colors.amber,
+                          minimumSize: Size(200.0, 50.0),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50))),
+                      child: registerButton,
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            registerButton = loadingButton;
+                          });
+                          onSignUp(email, password);
+                        }
+                      },
+                    ),
+                  )
+                ],
               ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  vertical: 20.0,
-                  horizontal: 10.0,
-                ),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.amber,
-                      minimumSize: Size(200.0, 50.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50))),
-                  child: registerButton,
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      setState(() {
-                        registerButton = loadingButton;
-                      });
-                      onSignUp(email, password);
-                    }
-                  },
-                ),
-              )
-            ],
+            ),
           ),
         ),
       ),

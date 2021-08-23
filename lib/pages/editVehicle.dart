@@ -76,10 +76,10 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              Column(
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -204,7 +204,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

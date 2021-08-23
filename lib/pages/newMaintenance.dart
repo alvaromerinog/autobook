@@ -64,10 +64,10 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              Column(
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -258,7 +258,7 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
