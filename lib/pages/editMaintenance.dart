@@ -92,7 +92,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.blue,
         onPressed: () {
           Navigator.pop(context);
         },
@@ -100,10 +100,10 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              Column(
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -161,7 +161,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                         border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(40))),
-                        hintText: 'Odómetro',
+                        hintText: 'Kilometraje',
                       ),
                       validator: (value) {
                         if (value != null && value.isNotEmpty) {
@@ -323,7 +323,7 @@ class _EditMaintenancePageState extends State<EditMaintenancePage> {
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

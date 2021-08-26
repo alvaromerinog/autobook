@@ -43,6 +43,7 @@ class _VehiclesState extends State<Vehicles> {
   }
 
   FutureOr onGoBack(dynamic value) {
+    selectedIndex = 0;
     getVehicles();
     setState(() {
       vehiclesWidget = SpinKitChasingDots(
@@ -86,6 +87,7 @@ class _VehiclesState extends State<Vehicles> {
       setState(() {
         vehiclesWidget = ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 100),
           itemCount: vehicles.length,
           itemBuilder: (BuildContext ctxt, int index) {
             return InkWell(
@@ -96,10 +98,11 @@ class _VehiclesState extends State<Vehicles> {
                 });
               },
               child: new Card(
+                  margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
                   shape: (selectedIndex == index)
                       ? RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(7.0)),
-                          side: BorderSide(color: Colors.amber, width: 3.0))
+                          side: BorderSide(color: Colors.cyan, width: 3.0))
                       : RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(7.0)),
                         ),
@@ -109,10 +112,16 @@ class _VehiclesState extends State<Vehicles> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(7.0)),
                       ),
-                      title: Text(
-                          '${vehicles[index]['registration']}\n${vehicles[index]['brand']} ${vehicles[index]['model']}'),
+                      title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${vehicles[index]['registration']}',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text(
+                                '${vehicles[index]['brand']} ${vehicles[index]['model']}'),
+                          ]),
                       leading: CircleAvatar(
-                        backgroundColor: Colors.amber[700],
+                        backgroundColor: Colors.blue,
                         child: Icon(
                           Icons.time_to_leave_rounded,
                           color: Colors.white,
@@ -126,9 +135,9 @@ class _VehiclesState extends State<Vehicles> {
                           editVehicle(registration, brand, model);
                         },
                         elevation: 2.0,
-                        fillColor: Colors.blue[800],
+                        fillColor: Colors.grey[600],
                         child: Icon(
-                          Icons.edit,
+                          Icons.settings,
                           color: Colors.white,
                         ),
                         padding: EdgeInsets.all(10.0),
@@ -141,9 +150,11 @@ class _VehiclesState extends State<Vehicles> {
     } else {
       setState(() {
         vehiclesWidget = ListView(
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 100),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             Card(
+              margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(7.0)),
               ),
