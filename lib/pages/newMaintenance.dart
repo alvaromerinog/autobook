@@ -1,9 +1,5 @@
 import 'package:autobook/api/maintenancesNew.dart';
-import 'package:autobook/api/vehiclesDelete.dart';
-import 'package:autobook/api/vehiclesModify.dart';
-import 'package:autobook/factories/vehicleModifications.dart';
 import 'package:flutter/material.dart';
-import 'package:amplify_flutter/amplify.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
@@ -60,7 +56,7 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.blue,
         onPressed: () {
           Navigator.pop(context);
         },
@@ -68,10 +64,10 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              Column(
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -127,7 +123,7 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
                         border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(40))),
-                        hintText: 'Odómetro',
+                        hintText: 'Kilometraje',
                       ),
                       validator: (value) {
                         value = value.toString().trim();
@@ -262,7 +258,7 @@ class _NewMaintenancePageState extends State<NewMaintenancePage> {
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

@@ -2,8 +2,6 @@ import 'package:autobook/api/vehiclesDelete.dart';
 import 'package:autobook/api/vehiclesModify.dart';
 import 'package:autobook/factories/vehicleModifications.dart';
 import 'package:flutter/material.dart';
-import 'package:amplify_flutter/amplify.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class EditVehiclePage extends StatefulWidget {
@@ -70,7 +68,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.blue,
         onPressed: () {
           Navigator.pop(context);
         },
@@ -78,10 +76,10 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
       body: SafeArea(
         child: Form(
           key: _formKey,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            children: [
-              Column(
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -190,12 +188,15 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
                           minimumSize: Size(200.0, 50.0),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(50))),
-                      label: Text(
-                        'Eliminar',
-                        style: TextStyle(fontSize: 20.0),
-                      ),
+                      label: deleteButtonLabel,
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            deleteButtonLabel = SpinKitChasingDots(
+                              color: Colors.white,
+                              size: 25.0,
+                            );
+                          });
                           onDeleteVehicle(registration);
                         }
                       },
@@ -203,7 +204,7 @@ class _EditVehiclePageState extends State<EditVehiclePage> {
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

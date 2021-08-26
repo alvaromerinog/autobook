@@ -55,7 +55,7 @@ class _RecoverPasswordState extends State<RecoverPassword> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.keyboard_backspace_rounded),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.blue,
         onPressed: () {
           Navigator.pop(context);
         },
