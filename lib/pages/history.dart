@@ -20,9 +20,17 @@ class _HistoryState extends State<History> {
   List? maintenances;
   String registration = '';
   Map? arguments;
-  Widget maintenancesWidget = SpinKitChasingDots(
-    color: Colors.blue[800],
-    size: 50.0,
+  Widget maintenancesWidget = ListView(
+    padding: EdgeInsets.symmetric(vertical: 50, horizontal: 0),
+    physics: const AlwaysScrollableScrollPhysics(),
+    children: [
+      Center(
+        child: SpinKitChasingDots(
+          color: Colors.blue[800],
+          size: 50.0,
+        ),
+      ),
+    ],
   );
 
   @override
@@ -38,9 +46,17 @@ class _HistoryState extends State<History> {
     if (newRegistration != registration) {
       registration = newRegistration;
       arguments = {"email": this.email, "registration": this.registration};
-      maintenancesWidget = SpinKitChasingDots(
-        color: Colors.blue[800],
-        size: 50.0,
+      maintenancesWidget = ListView(
+        padding: EdgeInsets.symmetric(vertical: 50, horizontal: 0),
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          Center(
+            child: SpinKitChasingDots(
+              color: Colors.blue[800],
+              size: 50.0,
+            ),
+          ),
+        ],
       );
       getMaintenances();
     }
@@ -50,10 +66,17 @@ class _HistoryState extends State<History> {
   FutureOr onGoBack(dynamic value) {
     getMaintenances();
     setState(() {
-      maintenancesWidget = SpinKitChasingDots(
-        color: Colors.blue[800],
-        size: 50.0,
-      );
+      maintenancesWidget = ListView(
+          padding: EdgeInsets.symmetric(vertical: 50, horizontal: 0),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Center(
+              child: SpinKitChasingDots(
+                color: Colors.blue[800],
+                size: 50.0,
+              ),
+            ),
+          ]);
     });
   }
 
@@ -78,10 +101,34 @@ class _HistoryState extends State<History> {
           .selectMaintenances();
       this.buildMaintenances(maintenances);
     } on Exception {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('No se han podido recuperar los vehículos.'),
-        backgroundColor: Colors.red,
-      ));
+      setState(() {
+        ListView(
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 100),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Card(
+              margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(7.0)),
+              ),
+              elevation: 20,
+              color: Colors.white,
+              child: ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(7.0)),
+                ),
+                leading: Icon(
+                  Icons.dangerous,
+                  color: Colors.red,
+                  size: 30,
+                ),
+                title: Text('No se han podido recuperar los mantenimientos.',
+                    style: TextStyle(fontSize: 20.0)),
+              ),
+            ),
+          ],
+        );
+      });
     }
   }
 

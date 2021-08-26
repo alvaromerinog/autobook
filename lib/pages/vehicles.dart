@@ -24,9 +24,17 @@ class _VehiclesState extends State<Vehicles> {
   String? registration;
   static String selectedRegistration = '';
   int selectedIndex = 0;
-  Widget vehiclesWidget = SpinKitChasingDots(
-    color: Colors.blue[800],
-    size: 50.0,
+  Widget vehiclesWidget = ListView(
+    padding: EdgeInsets.symmetric(vertical: 50, horizontal: 0),
+    physics: const AlwaysScrollableScrollPhysics(),
+    children: [
+      Center(
+        child: SpinKitChasingDots(
+          color: Colors.blue[800],
+          size: 50.0,
+        ),
+      ),
+    ],
   );
 
   @override
@@ -36,20 +44,21 @@ class _VehiclesState extends State<Vehicles> {
     }
   }
 
-  @override
-  void didUpdateWidget(covariant Vehicles oldWidget) {
-    getVehicles();
-    super.didUpdateWidget(oldWidget);
-  }
-
   FutureOr onGoBack(dynamic value) {
     selectedIndex = 0;
     getVehicles();
     setState(() {
-      vehiclesWidget = SpinKitChasingDots(
-        color: Colors.blue[800],
-        size: 50.0,
-      );
+      vehiclesWidget = ListView(
+          padding: EdgeInsets.symmetric(vertical: 50, horizontal: 0),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Center(
+              child: SpinKitChasingDots(
+                color: Colors.blue[800],
+                size: 50.0,
+              ),
+            ),
+          ]);
     });
   }
 
@@ -74,10 +83,34 @@ class _VehiclesState extends State<Vehicles> {
       vehicles = await VehiclesGet(email: this.email).selectVehicles();
       buildVehicles(vehicles);
     } on Exception {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('No se han podido recuperar los vehículos.'),
-        backgroundColor: Colors.red,
-      ));
+      setState(() {
+        ListView(
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 100),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Card(
+              margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(7.0)),
+              ),
+              elevation: 20,
+              color: Colors.white,
+              child: ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(7.0)),
+                ),
+                leading: Icon(
+                  Icons.dangerous,
+                  color: Colors.red,
+                  size: 30,
+                ),
+                title: Text('No se han podido recuperar los vehículos.',
+                    style: TextStyle(fontSize: 20.0)),
+              ),
+            ),
+          ],
+        );
+      });
     }
   }
 
