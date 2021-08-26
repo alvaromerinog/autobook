@@ -89,10 +89,12 @@ class _HistoryState extends State<History> {
     if (maintenances!.length != 0) {
       setState(() {
         maintenancesWidget = ListView.builder(
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 100),
           physics: const AlwaysScrollableScrollPhysics(),
           itemCount: maintenances!.length,
           itemBuilder: (BuildContext context, int index) {
             return new Card(
+              margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
               elevation: 20,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(7.0)),
@@ -102,8 +104,21 @@ class _HistoryState extends State<History> {
                   borderRadius: BorderRadius.all(Radius.circular(7.0)),
                 ),
                 tileColor: Colors.white70,
-                title: Text(
-                    '${maintenances![index]['description']}\n${maintenances![index]['date_maintenance']}'),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${maintenances![index]['description']}',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('${maintenances![index]['date_maintenance']}',
+                        style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            fontWeight: FontWeight.w600)),
+                    maintenances![index]['odometer'] != 'None'
+                        ? Text('${maintenances![index]['odometer']} Km.',
+                            style: TextStyle(fontWeight: FontWeight.w400))
+                        : Text('')
+                  ],
+                ),
                 leading: maintenances![index]['description'].substring(0, 6) ==
                         'CAMBIO'
                     ? CircleAvatar(
@@ -149,9 +164,11 @@ class _HistoryState extends State<History> {
     } else {
       setState(() {
         maintenancesWidget = ListView(
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 100),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             Card(
+              margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(7.0)),
               ),

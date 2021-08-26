@@ -48,6 +48,7 @@ class _HomeState extends State<Home> {
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.blue[800],
         onTap: _onItemTapped,
+        elevation: 10.0,
       ),
       body: IndexedStack(
         index: _selectedIndex,

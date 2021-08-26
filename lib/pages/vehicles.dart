@@ -87,6 +87,7 @@ class _VehiclesState extends State<Vehicles> {
       setState(() {
         vehiclesWidget = ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 100),
           itemCount: vehicles.length,
           itemBuilder: (BuildContext ctxt, int index) {
             return InkWell(
@@ -97,6 +98,7 @@ class _VehiclesState extends State<Vehicles> {
                 });
               },
               child: new Card(
+                  margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
                   shape: (selectedIndex == index)
                       ? RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(7.0)),
@@ -110,8 +112,14 @@ class _VehiclesState extends State<Vehicles> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(7.0)),
                       ),
-                      title: Text(
-                          '${vehicles[index]['registration']}\n${vehicles[index]['brand']} ${vehicles[index]['model']}'),
+                      title: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${vehicles[index]['registration']}',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text(
+                                '${vehicles[index]['brand']} ${vehicles[index]['model']}'),
+                          ]),
                       leading: CircleAvatar(
                         backgroundColor: Colors.blue,
                         child: Icon(
@@ -142,9 +150,11 @@ class _VehiclesState extends State<Vehicles> {
     } else {
       setState(() {
         vehiclesWidget = ListView(
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 100),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             Card(
+              margin: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(7.0)),
               ),
