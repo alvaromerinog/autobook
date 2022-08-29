@@ -4,7 +4,14 @@ My ASIR final project
 
 ## Summary
 
-This project is a secure and simply vehicle maintenances management application.
+This project is a secure and simply vehicle maintenances management application for mobile devices.
+
+## Requirements
+
+* Android 5.0+
+* iOS 11.0+
+* Internet connection
+* 30MB free space
 
 ## Tecnologies
 
