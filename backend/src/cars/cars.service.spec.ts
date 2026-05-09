@@ -3,6 +3,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CarsService } from './cars.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PrismaService } from '../prisma/prisma.service';
+import { randomUUID } from 'crypto';
+import { unlinkSync, existsSync, readdirSync, readFileSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import Database from 'better-sqlite3';
 
 const TEST_CARS = [
   {
@@ -34,11 +39,30 @@ const TEST_CARS = [
   },
 ];
 
+const MIGRATIONS_DIR = join(__dirname, '../../prisma/migrations');
+
+function applyMigrations(dbPath: string): void {
+  const db = new Database(dbPath);
+  readdirSync(MIGRATIONS_DIR)
+    .filter((entry) => entry !== 'migration_lock.toml')
+    .sort()
+    .forEach((dir) => {
+      const sql = readFileSync(join(MIGRATIONS_DIR, dir, 'migration.sql'), 'utf8');
+      db.exec(sql);
+    });
+  db.close();
+}
+
 describe('CarsService (integration)', () => {
   let service: CarsService;
   let prisma: PrismaService;
+  let dbPath: string;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
+    dbPath = join(tmpdir(), `autobook-test-${randomUUID()}.db`);
+    applyMigrations(dbPath);
+    process.env.DATABASE_URL = `file:${dbPath}`;
+
     const module: TestingModule = await Test.createTestingModule({
       imports: [PrismaModule],
       providers: [CarsService],
@@ -48,12 +72,11 @@ describe('CarsService (integration)', () => {
     prisma = module.get<PrismaService>(PrismaService);
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await prisma.$disconnect();
-  });
-
-  beforeEach(async () => {
-    await prisma.car.deleteMany();
+    if (existsSync(dbPath)) {
+      unlinkSync(dbPath);
+    }
   });
 
   it('given no cars in the database when getCars then returns an empty list', async () => {
