@@ -19,4 +19,11 @@ export class CarsService {
     const cars = await this.prisma.car.findMany();
     return { cars };
   }
+
+  async updateCar(input: Car): Promise<{ id: string } | null> {
+    const existing = await this.prisma.car.findUnique({ where: { id: input.id } });
+    if (!existing) return null;
+    const car = await this.prisma.car.update({ where: { id: input.id }, data: input });
+    return { id: car.id };
+  }
 }
