@@ -1,5 +1,5 @@
 FROM node:22-alpine AS base
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
 
 
 FROM base AS builder
@@ -33,4 +33,4 @@ ENV NODE_ENV="production"
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node dist/src/main"]
