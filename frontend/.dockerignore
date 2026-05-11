@@ -1,0 +1,26 @@
+# Build outputs and tool caches (stale host paths break package resolution)
+build/
+.dart_tool/
+.fvm/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Native platform projects (not needed for the web build)
+android/
+ios/
+linux/
+macos/
+windows/
+
+# VCS and IDE
+.git/
+.gitignore
+.idea/
+.vscode/
+*.iml
+
+# Misc
+*.log
+.DS_Store
+Dockerfile
+.dockerignore
