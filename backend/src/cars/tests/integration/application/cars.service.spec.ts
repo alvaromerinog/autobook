@@ -1,13 +1,15 @@
-import '../test-setup';
+import '../../../../test-setup';
 import { Test, TestingModule } from '@nestjs/testing';
-import { CarsService } from './cars.service';
-import { PrismaModule } from '../prisma/prisma.module';
-import { PrismaService } from '../prisma/prisma.service';
+import { CarsService } from '../../../application/cars.service';
+import { PrismaModule } from '../../../../prisma/prisma.module';
+import { PrismaDatabase } from '../../../../prisma/infrastructure/prisma.database';
 import { randomUUID } from 'crypto';
 import { unlinkSync, existsSync, readdirSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import Database from 'better-sqlite3';
+import { CarsRepository } from '../../../domain/repositories/cars.repository';
+import { PrismaCarsRepository } from '../../../infrastructure/repositories/cars.repository';
 
 const TEST_CARS = [
   {
@@ -55,7 +57,7 @@ function applyMigrations(dbPath: string): void {
 
 describe('CarsService (integration)', () => {
   let service: CarsService;
-  let prisma: PrismaService;
+  let prisma: PrismaDatabase;
   let dbPath: string;
 
   beforeEach(async () => {
@@ -65,11 +67,11 @@ describe('CarsService (integration)', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [PrismaModule],
-      providers: [CarsService],
+    providers: [CarsService, { provide: CarsRepository, useClass: PrismaCarsRepository }],
     }).compile();
 
     service = module.get<CarsService>(CarsService);
-    prisma = module.get<PrismaService>(PrismaService);
+    prisma = module.get<PrismaDatabase>(PrismaDatabase);
   });
 
   afterEach(async () => {
