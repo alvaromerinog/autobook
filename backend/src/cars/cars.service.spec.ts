@@ -96,4 +96,21 @@ describe('CarsService (integration)', () => {
     expect(sorted[1]).toMatchObject({ id: TEST_CARS[1].id, licensePlate: TEST_CARS[1].licensePlate });
     expect(sorted[2]).toMatchObject({ id: TEST_CARS[2].id, licensePlate: TEST_CARS[2].licensePlate });
   });
+
+  it('given a car exists when updateCar then returns the id and persists the new values', async () => {
+    await prisma.car.create({ data: TEST_CARS[0] });
+    const updated = { ...TEST_CARS[0], color: 'Red', mileage: 50000 };
+
+    const result = await service.updateCar(updated);
+
+    expect(result).toEqual({ id: TEST_CARS[0].id });
+    const car = await prisma.car.findUnique({ where: { id: TEST_CARS[0].id } });
+    expect(car).toMatchObject({ color: 'Red', mileage: 50000 });
+  });
+
+  it('given no car with the given id when updateCar then returns null', async () => {
+    const result = await service.updateCar(TEST_CARS[0]);
+
+    expect(result).toBeNull();
+  });
 });
