@@ -69,6 +69,7 @@ pnpm test:e2e       # Run end-to-end tests (config: test/jest-e2e.json)
 - `src/test-setup.ts` is loaded via Jest `setupFiles` and injects `env/test.env` into `process.env` before any module is instantiated.
 - Integration tests use the real SQLite database and clean relevant tables in `beforeEach`.
 - Test descriptions follow the format: **given** {state} **when** {function} **then** {expected result}.
+- Each test is structured in three blocks: `given` (setup data and services), `when` (call to the function under test), and `then` (assertions). Lines within each block are grouped with no blank lines between them. Blocks are separated by a single blank line.
 
 ## Code Style
 
