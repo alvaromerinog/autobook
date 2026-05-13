@@ -1,0 +1,27 @@
+# Host-built dependencies (macOS .node binaries break dlopen inside the linux image)
+node_modules/
+
+# Build outputs
+dist/
+generated/
+coverage/
+
+# Local databases and env files
+*.db
+.env
+.env.*
+
+# Tests (not needed in the runtime image)
+test/
+
+# VCS and IDE
+.git/
+.gitignore
+.idea/
+.vscode/
+
+# Misc
+*.log
+.DS_Store
+Dockerfile
+.dockerignore
