@@ -12,6 +12,10 @@ export class PrismaCarsRepository implements CarsRepository {
     return cars;
   }
 
+  async create(input: Car): Promise<Car> {
+    return this.prisma.car.create({ data: input });
+  }
+
   async update(input: Car): Promise<{ id: string } | null> {
     const existing = await this.prisma.car.findUnique({ where: { id: input.id } });
     if (!existing) return null;
