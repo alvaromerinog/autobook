@@ -1,6 +1,6 @@
-import { Car } from "../../domain/entities/car.entity";
-import { CarsRepository } from "../../domain/repositories/cars.repository";
-import { PrismaDatabase } from "../../../prisma/infrastructure/prisma.database";
+import { Car } from '../../domain/entities/car.entity';
+import { CarsRepository } from '../../domain/repositories/cars.repository';
+import { PrismaDatabase } from '../../../prisma/infrastructure/prisma.database';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -17,9 +17,14 @@ export class PrismaCarsRepository implements CarsRepository {
   }
 
   async update(input: Car): Promise<{ id: string } | null> {
-    const existing = await this.prisma.car.findUnique({ where: { id: input.id } });
+    const existing = await this.prisma.car.findUnique({
+      where: { id: input.id },
+    });
     if (!existing) return null;
-    const car = await this.prisma.car.update({ where: { id: input.id }, data: input });
+    const car = await this.prisma.car.update({
+      where: { id: input.id },
+      data: input,
+    });
     return { id: car.id };
   }
 }

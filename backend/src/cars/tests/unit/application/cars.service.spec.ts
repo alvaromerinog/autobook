@@ -46,7 +46,10 @@ describe('CarsService (unit)', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CarsService, { provide: CarsRepository, useValue: mockRepository }],
+      providers: [
+        CarsService,
+        { provide: CarsRepository, useValue: mockRepository },
+      ],
     }).compile();
 
     service = module.get<CarsService>(CarsService);
