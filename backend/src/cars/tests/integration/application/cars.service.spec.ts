@@ -41,7 +41,7 @@ const TEST_CARS = [
   },
 ];
 
-const MIGRATIONS_DIR = join(__dirname, '../../prisma/migrations');
+const MIGRATIONS_DIR = join(__dirname, '../../../../../prisma/migrations');
 
 function applyMigrations(dbPath: string): void {
   const db = new Database(dbPath);
@@ -114,5 +114,23 @@ describe('CarsService (integration)', () => {
     const result = await service.updateCar(TEST_CARS[0]);
 
     expect(result).toBeNull();
+  });
+
+  it('given valid car data when createCar then persists and returns the created car', async () => {
+    const car = await service.createCar(TEST_CARS[0]);
+
+    expect(car).toMatchObject({ brand: 'Toyota', model: 'Corolla', year: 2020 });
+    const persisted = await prisma.car.findUnique({ where: { id: car.id } });
+    expect(persisted).toMatchObject({ brand: 'Toyota', model: 'Corolla' });
+  });
+
+  it('given car data with null optional fields when createCar then persists null values', async () => {
+    const car = await service.createCar(TEST_CARS[1]);
+
+    expect(car.color).toBeNull();
+    expect(car.mileage).toBeNull();
+    const persisted = await prisma.car.findUnique({ where: { id: car.id } });
+    expect(persisted!.color).toBeNull();
+    expect(persisted!.mileage).toBeNull();
   });
 });
