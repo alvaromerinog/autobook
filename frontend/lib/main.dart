@@ -1,19 +1,19 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'providers/cars_provider.dart';
 import 'screens/home_screen.dart';
-import 'services/api_service.dart';
-import 'services/connectivity_service.dart';
 
 void main() {
+  FlutterError.onError = FlutterError.presentError;
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Uncaught: $error\n$stack');
+    return true;
+  };
+
   runApp(
-    ProviderScope(
-      overrides: [
-        carsProvider.overrideWith(
-          () => Cars(ApiService(), ConnectivityService()),
-        ),
-      ],
-      child: const AutobookApp(),
+    const ProviderScope(
+      child: AutobookApp(),
     ),
   );
 }

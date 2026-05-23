@@ -60,13 +60,15 @@ class Car {
         'mileage': mileage,
       };
 
+  static const _unset = Object();
+
   Car copyWith({
     String? brand,
     String? model,
     int? year,
     String? licensePlate,
-    String? color,
-    int? mileage,
+    Object? color = _unset,
+    Object? mileage = _unset,
   }) {
     return Car(
       id: id,
@@ -74,8 +76,8 @@ class Car {
       model: model ?? this.model,
       year: year ?? this.year,
       licensePlate: licensePlate ?? this.licensePlate,
-      color: color ?? this.color,
-      mileage: mileage ?? this.mileage,
+      color: identical(color, _unset) ? this.color : color as String?,
+      mileage: identical(mileage, _unset) ? this.mileage : mileage as int?,
     );
   }
 }

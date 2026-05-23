@@ -5,29 +5,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/car.dart';
 import '../services/api_service.dart';
 import '../services/connectivity_service.dart';
-import 'shared_preferences_provider.dart';
 
 typedef CarsState = ({
   List<Car> cars,
-  Object? syncError,
+  Exception? syncError,
   bool hasPendingSync,
 });
 
-final carsProvider = AsyncNotifierProvider<Cars, CarsState>(
-  () => throw UnimplementedError(),
-);
+final carsProvider =
+    AsyncNotifierProvider<CarsProvider, CarsState>(CarsProvider.new);
 
-class Cars extends AsyncNotifier<CarsState> {
+class CarsProvider extends AsyncNotifier<CarsState> {
   static const _carsStorageKey = 'cars';
   static const _pendingCarsKey = 'pending_cars';
 
-  final ApiService _apiService;
-  final ConnectivityService _connectivityService;
-
-  Cars(this._apiService, this._connectivityService);
+  late ApiService _apiService;
+  late ConnectivityService _connectivityService;
+  bool _isSyncing = false;
 
   @override
   Future<CarsState> build() async {
+    _apiService = ref.read(apiServiceProvider);
+    _connectivityService = ref.read(connectivityServiceProvider);
     _listenForConnectivityRestore();
 
     final isConnected = await _connectivityService.isConnected();
@@ -46,15 +45,19 @@ class Cars extends AsyncNotifier<CarsState> {
       final apiCars = await _apiService.getCars();
       final mergedCars = _mergeWithPending(apiCars, pendingCars);
       await _persistCars(mergedCars);
+      if (pendingCars.isNotEmpty) {
+        await syncPendingCars();
+      }
+      final remainingPendingCars = await _readPendingCars();
       return (
         cars: mergedCars,
         syncError: null,
-        hasPendingSync: pendingCars.isNotEmpty,
+        hasPendingSync: remainingPendingCars.isNotEmpty,
       );
     } catch (e) {
       return (
         cars: cachedCars,
-        syncError: e,
+        syncError: e is Exception ? e : Exception(e.toString()),
         hasPendingSync: pendingCars.isNotEmpty,
       );
     }
@@ -95,30 +98,36 @@ class Cars extends AsyncNotifier<CarsState> {
   }
 
   Future<void> syncPendingCars() async {
-    final pendingCars = await _readPendingCars();
-    if (pendingCars.isEmpty) return;
+    if (_isSyncing) return;
+    _isSyncing = true;
+    try {
+      final pendingCars = await _readPendingCars();
+      if (pendingCars.isEmpty) return;
 
-    final syncedIds = <String>[];
-    for (final pendingCar in pendingCars) {
-      try {
-        await _apiService.createCar(pendingCar);
-        syncedIds.add(pendingCar.id);
-      } catch (_) {
-        continue;
+      final syncedIds = <String>[];
+      for (final pendingCar in pendingCars) {
+        try {
+          await _apiService.createCar(pendingCar);
+          syncedIds.add(pendingCar.id);
+        } catch (_) {
+          continue;
+        }
       }
+
+      if (syncedIds.isEmpty) return;
+
+      await _removeSyncedPendingCars(syncedIds);
+      final remainingPendingCars = await _readPendingCars();
+      final currentState = state.valueOrNull;
+      if (currentState == null) return;
+      state = AsyncData((
+        cars: currentState.cars,
+        syncError: currentState.syncError,
+        hasPendingSync: remainingPendingCars.isNotEmpty,
+      ));
+    } finally {
+      _isSyncing = false;
     }
-
-    if (syncedIds.isEmpty) return;
-
-    await _removeSyncedPendingCars(syncedIds);
-    final remainingPendingCars = await _readPendingCars();
-    final currentState = state.valueOrNull;
-    if (currentState == null) return;
-    state = AsyncData((
-      cars: currentState.cars,
-      syncError: currentState.syncError,
-      hasPendingSync: remainingPendingCars.isNotEmpty,
-    ));
   }
 
   void _listenForConnectivityRestore() {
@@ -132,9 +141,8 @@ class Cars extends AsyncNotifier<CarsState> {
 
   List<Car> _mergeWithPending(List<Car> apiCars, List<Car> pendingCars) {
     final apiCarIds = apiCars.map((car) => car.id).toSet();
-    final localOnlyCars = pendingCars
-        .where((car) => !apiCarIds.contains(car.id))
-        .toList();
+    final localOnlyCars =
+        pendingCars.where((car) => !apiCarIds.contains(car.id)).toList();
     return [...apiCars, ...localOnlyCars];
   }
 
@@ -171,9 +179,8 @@ class Cars extends AsyncNotifier<CarsState> {
 
   Future<void> _removeSyncedPendingCars(List<String> syncedIds) async {
     final pendingCars = await _readPendingCars();
-    final remainingCars = pendingCars
-        .where((car) => !syncedIds.contains(car.id))
-        .toList();
+    final remainingCars =
+        pendingCars.where((car) => !syncedIds.contains(car.id)).toList();
     final preferences = await ref.read(sharedPreferencesProvider.future);
     if (remainingCars.isEmpty) {
       await preferences.remove(_pendingCarsKey);

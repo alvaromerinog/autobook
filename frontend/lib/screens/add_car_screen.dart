@@ -11,7 +11,8 @@ Future<Car?> showAddCarDialog(BuildContext context) {
     barrierColor: Colors.black.withValues(alpha: 0.3),
     pageBuilder: (_, __, ___) => const _AddCarDialog(),
     transitionBuilder: (_, animation, __, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      final curved =
+          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
       return BackdropFilter(
         filter: ImageFilter.blur(
           sigmaX: 6 * animation.value,
@@ -64,13 +65,17 @@ class _AddCarDialogState extends State<_AddCarDialog> {
       model: _modelController.text.trim(),
       year: int.parse(_yearController.text.trim()),
       licensePlate: _licensePlateController.text.trim().toUpperCase(),
-      color: _colorController.text.trim().isEmpty ? null : _colorController.text.trim(),
+      color: _colorController.text.trim().isEmpty
+          ? null
+          : _colorController.text.trim(),
       mileage: _mileageController.text.trim().isEmpty
           ? null
           : int.tryParse(_mileageController.text.trim()),
     );
     Navigator.of(context).pop(car);
   }
+
+  void _nextFocus(FocusNode node) => FocusScope.of(context).requestFocus(node);
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +105,8 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.directions_car, color: colorScheme.primary),
+                          Icon(Icons.directions_car,
+                              color: colorScheme.primary),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -133,8 +139,9 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                         label: 'Marca',
                         hint: 'Ej. Toyota, Ford, BMW...',
                         icon: Icons.sell_outlined,
-                        validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'La marca es obligatoria' : null,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'La marca es obligatoria'
+                            : null,
                       ),
                       const SizedBox(height: 14),
                       _buildField(
@@ -142,8 +149,9 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                         label: 'Modelo',
                         hint: 'Ej. Corolla, Focus, Serie 3...',
                         icon: Icons.car_repair,
-                        validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'El modelo es obligatorio' : null,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'El modelo es obligatorio'
+                            : null,
                       ),
                       const SizedBox(height: 14),
                       Row(
@@ -155,13 +163,17 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                               hint: 'Ej. 2020',
                               icon: Icons.calendar_today_outlined,
                               keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
                               validator: (v) {
-                                if (v == null || v.trim().isEmpty) return 'Obligatorio';
+                                if (v == null || v.trim().isEmpty)
+                                  return 'Obligatorio';
                                 final year = int.tryParse(v.trim());
                                 if (year == null) return 'Año inválido';
                                 final current = DateTime.now().year;
-                                if (year < 1886 || year > current + 1) return 'Fuera de rango';
+                                if (year < 1886 || year > current + 1)
+                                  return 'Fuera de rango';
                                 return null;
                               },
                             ),
@@ -174,8 +186,9 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                               hint: 'Ej. 1234 ABC',
                               icon: Icons.badge_outlined,
                               textCapitalization: TextCapitalization.characters,
-                              validator: (v) =>
-                                  (v == null || v.trim().isEmpty) ? 'Obligatoria' : null,
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Obligatoria'
+                                  : null,
                             ),
                           ),
                         ],
@@ -207,7 +220,11 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                               hint: 'Ej. 45000',
                               icon: Icons.speed_outlined,
                               keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly
+                              ],
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: _submit,
                             ),
                           ),
                         ],
@@ -238,18 +255,30 @@ class _AddCarDialogState extends State<_AddCarDialog> {
     required String label,
     required String hint,
     required IconData icon,
+    FocusNode? focusNode,
+    FocusNode? nextFocusNode,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     TextCapitalization textCapitalization = TextCapitalization.sentences,
+    TextInputAction textInputAction = TextInputAction.next,
     String? Function(String?)? validator,
+    VoidCallback? onSubmitted,
   }) {
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       textCapitalization: textCapitalization,
+      textInputAction: textInputAction,
       validator: validator,
-      onFieldSubmitted: (_) => _submit(),
+      onFieldSubmitted: (_) {
+        if (onSubmitted != null) {
+          onSubmitted();
+        } else if (nextFocusNode != null) {
+          _nextFocus(nextFocusNode);
+        }
+      },
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -259,7 +288,8 @@ class _AddCarDialogState extends State<_AddCarDialog> {
         ),
         filled: true,
         isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       ),
     );
   }
