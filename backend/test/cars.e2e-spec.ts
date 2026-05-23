@@ -27,7 +27,10 @@ function applyMigrations(dbPath: string): void {
     .filter((entry) => entry !== 'migration_lock.toml')
     .sort()
     .forEach((dir) => {
-      const sql = readFileSync(join(MIGRATIONS_DIR, dir, 'migration.sql'), 'utf8');
+      const sql = readFileSync(
+        join(MIGRATIONS_DIR, dir, 'migration.sql'),
+        'utf8',
+      );
       db.exec(sql);
     });
   db.close();
@@ -83,7 +86,9 @@ describe('CarsController (e2e)', () => {
         .expect(200);
 
       expect(response.body.cars).toEqual(
-        expect.arrayContaining([expect.objectContaining({ id: CAR_PAYLOAD.id })])
+        expect.arrayContaining([
+          expect.objectContaining({ id: CAR_PAYLOAD.id }),
+        ]),
       );
     });
   });

@@ -13,6 +13,11 @@ RUN pnpm exec prisma generate
 RUN pnpm run build
 
 
+FROM builder AS dev
+EXPOSE 3000
+CMD ["pnpm", "start:dev"]
+
+
 FROM base AS runner
 
 WORKDIR /app
