@@ -65,11 +65,17 @@ tasks:
   # ── Frontend ─────────────────────────────────────────────────────────────────
 
   frontend/lint:
-    desc: Analyze frontend Dart/Flutter code (flutter analyze + custom_lint)
+    desc: Analyze frontend Flutter code (flutter analyze + custom_lint)
     dir: frontend
     cmds:
       - fvm flutter analyze
       - fvm dart run custom_lint
+
+  frontend/format:
+    desc: Format frontend Flutter code
+    dir: frontend
+    cmds:
+      - fvm dart format .
 
   frontend/run:
     desc: Run the Flutter app

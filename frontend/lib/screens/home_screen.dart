@@ -2,6 +2,8 @@ import 'package:autobook/widgets/info_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../exceptions/create_car_exception.dart';
+import '../exceptions/get_cars_exception.dart';
 import '../models/car.dart';
 import '../providers/cars_provider.dart';
 import 'add_car_screen.dart' show showAddCarDialog;
@@ -38,6 +40,13 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  String _friendlyError(Exception error) {
+    if (error is GetCarsException || error is CreateCarException) {
+      return 'No se pudieron cargar los vehículos. Inténtalo de nuevo.';
+    }
+    return 'No se pudo conectar con el servidor.';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -48,10 +57,11 @@ class HomeScreen extends ConsumerWidget {
       final messenger = ScaffoldMessenger.of(context);
       next.whenData((carsState) {
         if (carsState.syncError != null) {
+          messenger.hideCurrentMaterialBanner();
           messenger.showMaterialBanner(
             MaterialBanner(
               content: Text(
-                'Error cargando vehículos: ${carsState.syncError}',
+                _friendlyError(carsState.syncError!),
                 style: TextStyle(color: colorScheme.onErrorContainer),
               ),
               backgroundColor: colorScheme.errorContainer,
@@ -70,6 +80,7 @@ class HomeScreen extends ConsumerWidget {
             ),
           );
         } else if (carsState.hasPendingSync) {
+          messenger.hideCurrentMaterialBanner();
           messenger.showMaterialBanner(
             MaterialBanner(
               content: Text(

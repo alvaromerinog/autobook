@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -11,12 +12,18 @@ import '../models/car.dart';
 part 'api_service.g.dart';
 
 @Riverpod(keepAlive: true)
-ApiService apiService(ApiServiceRef ref) => ApiService();
+ApiService apiService(Ref ref) {
+  final service = ApiService();
+  ref.onDispose(service.dispose);
+  return service;
+}
 
 class ApiService {
   final http.Client _client;
 
   ApiService({http.Client? client}) : _client = client ?? http.Client();
+
+  void dispose() => _client.close();
 
   Future<List<Car>> getCars() async {
     final response = await _client.get(
