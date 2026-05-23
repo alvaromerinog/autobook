@@ -1,8 +1,9 @@
-import { Controller, Get, Put, Body, NotFoundException } from '@nestjs/common';
-import { ApiOkResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Body, HttpCode, NotFoundException } from '@nestjs/common';
+import { ApiOkResponse, ApiCreatedResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { CarsService } from '../application/cars.service';
 import { CarDto } from './dto/car.dto';
 import { GetCarsResponseDto } from './dto/getCarsResponse.dto';
+import { CreateCarResponseDto } from './dto/createCarResponse.dto';
 import { UpdateCarResponseDto } from './dto/updateCarResponse.dto';
 
 @Controller('cars')
@@ -14,6 +15,14 @@ export class CarsController {
   async getCars(): Promise<GetCarsResponseDto> {
     const { cars } = await this.carsService.getCars();
     return new GetCarsResponseDto(cars.map(CarDto.fromDomain));
+  }
+
+  @Post()
+  @HttpCode(201)
+  @ApiCreatedResponse({ type: CreateCarResponseDto })
+  async createCar(@Body() body: CarDto): Promise<CreateCarResponseDto> {
+    const car = await this.carsService.createCar(CarDto.toDomain(body));
+    return new CreateCarResponseDto(car.id);
   }
 
   @Put()
