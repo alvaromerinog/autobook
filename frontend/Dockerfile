@@ -5,7 +5,8 @@ COPY pubspec.yaml pubspec.lock ./
 RUN flutter pub get
 COPY . .
 EXPOSE 80
-CMD ["flutter", "run", "-d", "web-server", "--web-port", "80", "--web-hostname", "0.0.0.0"]
+CMD flutter run -d web-server --web-port 80 --web-hostname 0.0.0.0 \
+    --dart-define=AUTOBOOK_API_URL=${AUTOBOOK_API_URL:-http://localhost:3000}
 
 
 FROM flutter_base AS builder
@@ -16,7 +17,8 @@ COPY pubspec.yaml pubspec.lock ./
 RUN flutter pub get
 
 COPY . .
-RUN flutter build web --release
+ARG AUTOBOOK_API_URL=http://localhost:3000
+RUN flutter build web --release --dart-define=AUTOBOOK_API_URL=${AUTOBOOK_API_URL}
 
 
 FROM nginx:alpine AS runner

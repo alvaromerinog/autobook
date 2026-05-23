@@ -22,6 +22,8 @@ services:
       - "80:80"
     volumes:
       - ./frontend/lib:/app/lib
+    environment:
+      AUTOBOOK_API_URL: ${AUTOBOOK_API_URL:-http://localhost:3000}
     depends_on:
       - backend
 
