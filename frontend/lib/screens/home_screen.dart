@@ -44,6 +44,63 @@ class HomeScreen extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final carsAsync = ref.watch(carsProvider);
 
+    ref.listen<AsyncValue<CarsState>>(carsProvider, (_, next) {
+      final messenger = ScaffoldMessenger.of(context);
+      next.whenData((carsState) {
+        if (carsState.syncError != null) {
+          messenger.showMaterialBanner(
+            MaterialBanner(
+              content: Text(
+                'Error cargando vehículos: ${carsState.syncError}',
+                style: TextStyle(color: colorScheme.onErrorContainer),
+              ),
+              backgroundColor: colorScheme.errorContainer,
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    messenger.hideCurrentMaterialBanner();
+                    ref.invalidate(carsProvider);
+                  },
+                  child: Text(
+                    'Reintentar',
+                    style: TextStyle(color: colorScheme.onErrorContainer),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else if (carsState.hasPendingSync) {
+          messenger.showMaterialBanner(
+            MaterialBanner(
+              content: Text(
+                'Vehículos pendientes de sincronización',
+                style: TextStyle(
+                  color: colorScheme.onSecondaryContainer,
+                ),
+              ),
+              backgroundColor: colorScheme.secondaryContainer,
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    messenger.hideCurrentMaterialBanner();
+                    ref.read(carsProvider.notifier).syncPendingCars();
+                  },
+                  child: Text(
+                    'Sincronizar',
+                    style: TextStyle(
+                      color: colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          messenger.hideCurrentMaterialBanner();
+        }
+      });
+    });
+
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
       appBar: AppBar(
@@ -70,9 +127,9 @@ class HomeScreen extends ConsumerWidget {
             child: Text('Error cargando vehículos: $error'),
           ),
         ),
-        data: (cars) => cars.isEmpty
+        data: (carsState) => carsState.cars.isEmpty
             ? _buildEmptyState(context, ref, theme)
-            : _buildCarList(theme, cars),
+            : _buildCarList(theme, carsState.cars),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openAddCar(context, ref),
