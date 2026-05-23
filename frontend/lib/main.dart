@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'providers/cars_provider.dart';
 import 'screens/home_screen.dart';
+import 'services/api_service.dart';
+import 'services/connectivity_service.dart';
 
 void main() {
-  runApp(const ProviderScope(child: AutobookApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        carsProvider.overrideWith(
+          () => Cars(ApiService(), ConnectivityService()),
+        ),
+      ],
+      child: const AutobookApp(),
+    ),
+  );
 }
 
 class AutobookApp extends StatelessWidget {
