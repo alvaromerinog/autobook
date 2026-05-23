@@ -4,6 +4,7 @@ import 'package:autobook/exceptions/create_car_exception.dart';
 import 'package:autobook/exceptions/get_cars_exception.dart';
 import 'package:autobook/models/car.dart';
 import 'package:autobook/providers/cars_provider.dart';
+import 'package:autobook/providers/connectivity_service_provider.dart';
 import 'package:autobook/services/api_service.dart';
 import 'package:autobook/services/connectivity_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,7 +36,8 @@ void main() {
   ProviderContainer buildContainer() {
     final container = ProviderContainer(
       overrides: [
-        carsProvider.overrideWith(() => Cars(mockApi, mockConnectivity)),
+        apiServiceProvider.overrideWithValue(mockApi),
+        connectivityServiceProvider.overrideWithValue(mockConnectivity),
       ],
     );
     addTearDown(container.dispose);
@@ -90,8 +92,7 @@ void main() {
           );
           when(() => mockConnectivity.isConnected())
               .thenAnswer((_) async => true);
-          when(() => mockApi.getCars())
-              .thenAnswer((_) async => [car1, car2]);
+          when(() => mockApi.getCars()).thenAnswer((_) async => [car1, car2]);
 
           // when
           final container = buildContainer();
@@ -128,8 +129,7 @@ void main() {
           });
           when(() => mockConnectivity.isConnected())
               .thenAnswer((_) async => true);
-          when(() => mockApi.getCars())
-              .thenThrow(const GetCarsException(503));
+          when(() => mockApi.getCars()).thenThrow(const GetCarsException(503));
 
           // when
           final container = buildContainer();
@@ -251,8 +251,7 @@ void main() {
           expect(state.syncError, isNull);
           verifyNever(() => mockApi.createCar(any()));
           final prefs = await SharedPreferences.getInstance();
-          final pending =
-              jsonDecode(prefs.getString('pending_cars')!) as List;
+          final pending = jsonDecode(prefs.getString('pending_cars')!) as List;
           expect(pending, hasLength(1));
         },
       );
@@ -291,8 +290,7 @@ void main() {
           expect(state.cars[0].id, 'f1');
           expect(state.hasPendingSync, isTrue);
           final prefs = await SharedPreferences.getInstance();
-          final pending =
-              jsonDecode(prefs.getString('pending_cars')!) as List;
+          final pending = jsonDecode(prefs.getString('pending_cars')!) as List;
           expect(pending, hasLength(1));
         },
       );
@@ -300,7 +298,7 @@ void main() {
 
     group('syncPendingCars', () {
       test(
-        'given there are pending cars, '
+        'given device was offline with pending cars and is now online, '
         'when syncPendingCars is called, '
         'then pending cars are sent to api and hasPendingSync is false',
         () async {
@@ -317,12 +315,10 @@ void main() {
             'pending_cars': jsonEncode([pendingCar.toJson()]),
           });
           when(() => mockConnectivity.isConnected())
-              .thenAnswer((_) async => true);
-          when(() => mockApi.getCars())
-              .thenAnswer((_) async => [pendingCar]);
-          when(() => mockApi.createCar(any())).thenAnswer((_) async {});
+              .thenAnswer((_) async => false);
           final container = buildContainer();
           await container.read(carsProvider.future);
+          when(() => mockApi.createCar(any())).thenAnswer((_) async {});
 
           // when
           await container.read(carsProvider.notifier).syncPendingCars();
@@ -331,6 +327,89 @@ void main() {
           // then
           expect(state.hasPendingSync, isFalse);
           verify(() => mockApi.createCar(any())).called(1);
+        },
+      );
+
+      test(
+        'given 2 pending cars and the second fails to sync, '
+        'when syncPendingCars is called, '
+        'then only the failed car remains pending and hasPendingSync is true',
+        () async {
+          // given
+          const car1 = Car(
+            id: 'pend1',
+            brand: 'Fiat',
+            model: '500',
+            year: 2019,
+            licensePlate: '4444 EEE',
+          );
+          const car2 = Car(
+            id: 'pend2',
+            brand: 'Alfa',
+            model: 'Giulia',
+            year: 2020,
+            licensePlate: '5555 FFF',
+          );
+          SharedPreferences.setMockInitialValues({
+            'cars': jsonEncode([car1.toJson(), car2.toJson()]),
+            'pending_cars': jsonEncode([car1.toJson(), car2.toJson()]),
+          });
+          when(() => mockConnectivity.isConnected())
+              .thenAnswer((_) async => false);
+          final container = buildContainer();
+          await container.read(carsProvider.future);
+          var callCount = 0;
+          when(() => mockApi.createCar(any())).thenAnswer((_) async {
+            callCount++;
+            if (callCount == 2) throw const CreateCarException(500);
+          });
+
+          // when
+          await container.read(carsProvider.notifier).syncPendingCars();
+          final state = await container.read(carsProvider.future);
+
+          // then
+          expect(state.hasPendingSync, isTrue);
+          final prefs = await SharedPreferences.getInstance();
+          final pending = jsonDecode(prefs.getString('pending_cars')!) as List;
+          expect(pending, hasLength(1));
+          expect(pending[0]['id'], 'pend2');
+        },
+      );
+
+      test(
+        'given all createCar calls fail, '
+        'when syncPendingCars is called, '
+        'then pending cars remain unchanged and hasPendingSync stays true',
+        () async {
+          // given
+          const pendingCar = Car(
+            id: 'pend1',
+            brand: 'Fiat',
+            model: '500',
+            year: 2019,
+            licensePlate: '4444 EEE',
+          );
+          SharedPreferences.setMockInitialValues({
+            'cars': jsonEncode([pendingCar.toJson()]),
+            'pending_cars': jsonEncode([pendingCar.toJson()]),
+          });
+          when(() => mockConnectivity.isConnected())
+              .thenAnswer((_) async => false);
+          final container = buildContainer();
+          await container.read(carsProvider.future);
+          when(() => mockApi.createCar(any()))
+              .thenThrow(const CreateCarException(500));
+
+          // when
+          await container.read(carsProvider.notifier).syncPendingCars();
+          final state = await container.read(carsProvider.future);
+
+          // then
+          expect(state.hasPendingSync, isTrue);
+          final prefs = await SharedPreferences.getInstance();
+          final pending = jsonDecode(prefs.getString('pending_cars')!) as List;
+          expect(pending, hasLength(1));
         },
       );
     });

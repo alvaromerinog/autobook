@@ -75,6 +75,8 @@ class _AddCarDialogState extends State<_AddCarDialog> {
     Navigator.of(context).pop(car);
   }
 
+  void _nextFocus(FocusNode node) => FocusScope.of(context).requestFocus(node);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -223,6 +225,8 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly
                               ],
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: _submit,
                             ),
                           ),
                         ],
@@ -253,18 +257,30 @@ class _AddCarDialogState extends State<_AddCarDialog> {
     required String label,
     required String hint,
     required IconData icon,
+    FocusNode? focusNode,
+    FocusNode? nextFocusNode,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     TextCapitalization textCapitalization = TextCapitalization.sentences,
+    TextInputAction textInputAction = TextInputAction.next,
     String? Function(String?)? validator,
+    VoidCallback? onSubmitted,
   }) {
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       textCapitalization: textCapitalization,
+      textInputAction: textInputAction,
       validator: validator,
-      onFieldSubmitted: (_) => _submit(),
+      onFieldSubmitted: (_) {
+        if (onSubmitted != null) {
+          onSubmitted();
+        } else if (nextFocusNode != null) {
+          _nextFocus(nextFocusNode);
+        }
+      },
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
