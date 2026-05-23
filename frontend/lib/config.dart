@@ -1,2 +1,4 @@
-// TODO: Usar una variable de entorno cuando la tengamos definida
-const String apiBaseUrl = 'http://localhost:3000';
+const String apiBaseUrl = String.fromEnvironment(
+  'AUTOBOOK_API_URL',
+  defaultValue: 'http://localhost:3000',
+);
