@@ -48,3 +48,6 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+
+# Generated Dart/Riverpod code (regenerate with: dart run build_runner build)
+lib/**/*.g.dart
