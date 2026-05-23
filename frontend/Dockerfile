@@ -1,4 +1,14 @@
-FROM ghcr.io/cirruslabs/flutter:3.41.9 AS builder
+FROM ghcr.io/cirruslabs/flutter:3.41.9 AS flutter_base
+FROM flutter_base AS dev
+WORKDIR /app
+COPY pubspec.yaml pubspec.lock ./
+RUN flutter pub get
+COPY . .
+EXPOSE 80
+CMD ["flutter", "run", "-d", "web-server", "--web-port", "80", "--web-hostname", "0.0.0.0"]
+
+
+FROM flutter_base AS builder
 
 WORKDIR /app
 
