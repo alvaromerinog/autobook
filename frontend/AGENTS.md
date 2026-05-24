@@ -42,7 +42,7 @@ dart run build_runner build --delete-conflicting-outputs     # One-shot generati
 dart run build_runner watch --delete-conflicting-outputs     # Watch mode (during development)
 ```
 
-Generated files (`*.g.dart`) are committed to the repository — do not delete them manually.
+Generated files (`*.g.dart`) are **gitignored** — do not commit them. They are regenerated on each build or via the `build_runner` commands below.
 
 ## Testing
 
@@ -62,6 +62,17 @@ Test files live in `test/` and follow the `*_test.dart` naming convention.
   nested groups per method (`build`, `add`, etc.).
 - Call `addTearDown(container.dispose)` immediately after creating any
   `ProviderContainer`.
+- Override service providers (`apiServiceProvider`,
+  `connectivityServiceProvider`) in `ProviderContainer` — do **not** override
+  `carsProvider` directly:
+  ```dart
+  ProviderContainer(
+    overrides: [
+      apiServiceProvider.overrideWithValue(mockApi),
+      connectivityServiceProvider.overrideWithValue(mockConnectivity),
+    ],
+  )
+  ```
 - Register mocktail fallback values in `setUpAll` for every non-primitive type
   passed to `any()`:
   ```dart
@@ -111,19 +122,33 @@ failure scenario — do not reuse generic `Exception`.
 
 ### Riverpod patterns
 
-- **Constructor injection** for `AsyncNotifier` subclasses: the notifier takes
-  its dependencies as constructor parameters. `carsProvider` is defined with
-  `() => throw UnimplementedError()` and overridden at the `ProviderScope` root
-  in `main.dart`:
+- **Provider-based DI** for `AsyncNotifier` subclasses: dependencies are read
+  from Riverpod providers at the start of `build()` and stored as `late` fields:
   ```dart
-  carsProvider.overrideWith(() => Cars(ApiService(), ConnectivityService()))
+  class CarsProvider extends AsyncNotifier<CarsState> {
+    late ApiService _apiService;
+    late ConnectivityService _connectivityService;
+
+    @override
+    Future<CarsState> build() async {
+      _apiService = ref.read(apiServiceProvider);
+      _connectivityService = ref.read(connectivityServiceProvider);
+      // ...
+    }
+  }
   ```
+  `main.dart` uses a plain `ProviderScope` with no overrides. Tests override
+  `apiServiceProvider` and `connectivityServiceProvider` directly in
+  `ProviderContainer`.
 - **Side effects** (banners, snackbars) triggered by state changes use
   `ref.listen` in `build()`, not widgets embedded in the tree.
 - **API calls must always be awaited.** Failures surface to the caller via
   `rethrow` so the UI can inform the user and offer a retry.
 - **Stream subscriptions** created inside a notifier must be cancelled via
   `ref.onDispose(subscription.cancel)` to avoid leaks.
+- **Service disposal**: providers that own resources (e.g. `ApiService` holding
+  an `http.Client`) call `ref.onDispose(service.dispose)` inside the provider
+  function so the resource is released when the provider is torn down.
 
 ### Offline-first & connectivity
 
@@ -142,22 +167,26 @@ returns.
 ```dart
 typedef CarsState = ({
   List<Car> cars,
-  Object? syncError,
+  Exception? syncError,
   bool hasPendingSync,
 });
 ```
 
-**`Cars.build()` strategy:**
+**`CarsProvider.build()` strategy:**
 
-1. Subscribe to `connectivityChanges` (cancel on dispose) to trigger background
-   sync when connectivity is restored.
-2. Read cached cars and the pending-car queue from `shared_preferences`.
-3. If offline → return cached cars immediately, no API call.
-4. If online → call `getCars()`; on success merge API cars with pending ones
-   (to prevent overwriting unsynced writes), persist, and return. On failure →
-   return cached cars with `syncError` set.
+1. Read `apiServiceProvider` and `connectivityServiceProvider` via `ref.read`
+   and assign to `late` fields.
+2. Subscribe to `connectivityChanges` (cancel on dispose) to trigger sync when
+   connectivity is restored at runtime.
+3. Read cached cars and the pending-car queue from `shared_preferences`.
+4. If offline → return cached cars immediately, no API call.
+5. If online → call `getCars()`; on success merge API cars with pending ones
+   (to prevent overwriting unsynced writes), persist, then call
+   `syncPendingCars()` if there are pending cars (auto-syncs on startup).
+   Return with `hasPendingSync` reflecting whether any cars are still pending
+   after the sync attempt. On failure → return cached cars with `syncError` set.
 
-**`Cars.add()` strategy:**
+**`CarsProvider.add()` strategy:**
 
 1. Optimistically append the car to the local list and persist.
 2. If offline → queue the car in `pending_cars`, set `hasPendingSync: true`,
@@ -165,12 +194,14 @@ typedef CarsState = ({
 3. If online → `await createCar(car)`. On failure → queue it, set
    `hasPendingSync: true`, and `rethrow` so the UI can show an error.
 
-**`Cars.syncPendingCars()` strategy:**
+**`CarsProvider.syncPendingCars()` strategy:**
 
-Iterate the `pending_cars` queue; for each car attempt `createCar()`. Collect
-successfully-synced IDs, remove them from the queue, and update
-`hasPendingSync`. Failures for individual cars are silently skipped so the rest
-of the queue is still processed.
+Guards against concurrent invocations with an `_isSyncing` flag (important
+because the method is called both from `build()` and from the connectivity
+stream listener). Iterates the `pending_cars` queue; for each car attempts
+`createCar()`. Collects successfully-synced IDs, removes them from the queue,
+and updates `hasPendingSync`. Failures for individual cars are silently skipped
+so the rest of the queue is still processed.
 
 **Merging pending cars with the API response:**
 
@@ -192,12 +223,23 @@ flutter build macos         # macOS desktop
 
 ```
 lib/
-├── main.dart               # Entry point, ProviderScope + provider overrides
-├── config.dart             # App-wide constants (e.g. apiBaseUrl)
+├── main.dart               # Entry point, plain ProviderScope (no overrides)
+├── config.dart             # App-wide constants; AUTOBOOK_API_URL read via --dart-define
 ├── exceptions/             # One file per typed exception (e.g. GetCarsException)
 ├── models/                 # Pure data classes (e.g. Car)
-├── providers/              # Riverpod providers + generated *.g.dart files
+├── providers/              # Riverpod providers (*.g.dart generated, gitignored)
 ├── screens/                # Full-page UI screens
 ├── services/               # External service classes (ApiService, ConnectivityService)
 └── widgets/                # Reusable UI components
+```
+
+### API base URL
+
+`config.dart` reads the API host from the `AUTOBOOK_API_URL` compile-time
+variable (default: `http://localhost:3000`). Pass it via `--dart-define` when
+running locally or via Docker build args / environment in Docker Compose:
+
+```bash
+flutter run --dart-define=AUTOBOOK_API_URL=http://10.0.2.2:3000   # Android emulator
+AUTOBOOK_API_URL=http://my-server task docker/dev                   # Docker dev
 ```
