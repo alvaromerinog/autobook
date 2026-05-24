@@ -1,4 +1,4 @@
-FROM ghcr.io/cirruslabs/flutter:3.41.9 AS flutter_base
+FROM ghcr.io/cirruslabs/flutter:3.44.0 AS flutter_base
 FROM flutter_base AS dev
 WORKDIR /app
 COPY pubspec.yaml pubspec.lock ./
