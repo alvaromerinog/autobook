@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/car.dart';
+import '../widgets/custom_form_field.dart';
 
 Future<Car?> showAddCarDialog(BuildContext context) {
   return showGeneralDialog<Car>(
@@ -75,7 +76,6 @@ class _AddCarDialogState extends State<_AddCarDialog> {
     Navigator.of(context).pop(car);
   }
 
-  void _nextFocus(FocusNode node) => FocusScope.of(context).requestFocus(node);
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +134,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _buildField(
+                      CustomFormField(
                         controller: _brandController,
                         label: 'Marca',
                         hint: 'Ej. Toyota, Ford, BMW...',
@@ -144,7 +144,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                             : null,
                       ),
                       const SizedBox(height: 14),
-                      _buildField(
+                      CustomFormField(
                         controller: _modelController,
                         label: 'Modelo',
                         hint: 'Ej. Corolla, Focus, Serie 3...',
@@ -157,7 +157,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                       Row(
                         children: [
                           Expanded(
-                            child: _buildField(
+                            child: CustomFormField(
                               controller: _yearController,
                               label: 'Año',
                               hint: 'Ej. 2020',
@@ -167,20 +167,22 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                                 FilteringTextInputFormatter.digitsOnly
                               ],
                               validator: (v) {
-                                if (v == null || v.trim().isEmpty)
+                                if (v == null || v.trim().isEmpty) {
                                   return 'Obligatorio';
+                                }
                                 final year = int.tryParse(v.trim());
                                 if (year == null) return 'Año inválido';
                                 final current = DateTime.now().year;
-                                if (year < 1886 || year > current + 1)
+                                if (year < 1886 || year > current + 1) {
                                   return 'Fuera de rango';
+                                }
                                 return null;
                               },
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: _buildField(
+                            child: CustomFormField(
                               controller: _licensePlateController,
                               label: 'Matrícula',
                               hint: 'Ej. 1234 ABC',
@@ -205,7 +207,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                       Row(
                         children: [
                           Expanded(
-                            child: _buildField(
+                            child: CustomFormField(
                               controller: _colorController,
                               label: 'Color',
                               hint: 'Ej. Blanco...',
@@ -214,7 +216,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: _buildField(
+                            child: CustomFormField(
                               controller: _mileageController,
                               label: 'Kilometraje',
                               hint: 'Ej. 45000',
@@ -250,47 +252,5 @@ class _AddCarDialogState extends State<_AddCarDialog> {
     );
   }
 
-  Widget _buildField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    FocusNode? focusNode,
-    FocusNode? nextFocusNode,
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-    TextCapitalization textCapitalization = TextCapitalization.sentences,
-    TextInputAction textInputAction = TextInputAction.next,
-    String? Function(String?)? validator,
-    VoidCallback? onSubmitted,
-  }) {
-    return TextFormField(
-      controller: controller,
-      focusNode: focusNode,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      textCapitalization: textCapitalization,
-      textInputAction: textInputAction,
-      validator: validator,
-      onFieldSubmitted: (_) {
-        if (onSubmitted != null) {
-          onSubmitted();
-        } else if (nextFocusNode != null) {
-          _nextFocus(nextFocusNode);
-        }
-      },
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: Icon(icon, size: 18),
-        border: const OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-        ),
-        filled: true,
-        isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      ),
-    );
-  }
 }
+
