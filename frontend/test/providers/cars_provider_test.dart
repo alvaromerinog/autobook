@@ -4,7 +4,6 @@ import 'package:autobook/exceptions/create_car_exception.dart';
 import 'package:autobook/exceptions/get_cars_exception.dart';
 import 'package:autobook/models/car.dart';
 import 'package:autobook/providers/cars_provider.dart';
-import 'package:autobook/providers/connectivity_service_provider.dart';
 import 'package:autobook/services/api_service.dart';
 import 'package:autobook/services/connectivity_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

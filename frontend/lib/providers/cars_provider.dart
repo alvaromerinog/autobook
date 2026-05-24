@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/car.dart';
 import '../services/api_service.dart';
 import '../services/connectivity_service.dart';
+import 'shared_preferences_provider.dart';
 
 typedef CarsState = ({
   List<Car> cars,
