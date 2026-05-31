@@ -1,7 +1,5 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
-import 'package:autobook/features/vehicles/domain/entities/car.dart';
-import 'package:autobook/features/vehicles/domain/repositories/car_repository.dart';
 import 'package:autobook/features/vehicles/domain/usecases/get_cars_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/has_pending_cars_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/refresh_cars_usecase.dart';
@@ -11,20 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockCarRepository extends Mock implements ICarRepository {}
+import '../../fixtures/car_fixtures.dart';
+import '../../helpers/car_mocks.dart';
 
 void main() {
   late MockCarRepository mockRepo;
-
-  const cars = [
-    Car(
-      id: '1',
-      brand: 'Toyota',
-      model: 'Corolla',
-      year: 2020,
-      licensePlate: '1234 ABC',
-    ),
-  ];
 
   setUp(() {
     mockRepo = MockCarRepository();
@@ -55,7 +44,7 @@ void main() {
       () async {
         // given
         when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
-        when(() => mockRepo.getAll()).thenAnswer((_) async => cars);
+        when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
 
         // when
@@ -63,7 +52,7 @@ void main() {
         final state = await container.read(carListProvider.future);
 
         // then
-        expect(state.cars, cars);
+        expect(state.cars, oneCarList);
         expect(state.syncError, isNull);
         expect(state.hasPendingSync, isFalse);
       },
@@ -123,7 +112,7 @@ void main() {
         // given
         when(() => mockRepo.refreshFromRemote())
             .thenThrow(const NetworkFailure());
-        when(() => mockRepo.getAll()).thenAnswer((_) async => cars);
+        when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
 
         // when
@@ -131,7 +120,7 @@ void main() {
         final state = await container.read(carListProvider.future);
 
         // then
-        expect(state.cars, cars);
+        expect(state.cars, oneCarList);
         expect(state.syncError, isA<NetworkFailure>());
         expect(state.hasPendingSync, isTrue);
       },
