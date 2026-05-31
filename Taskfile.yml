@@ -1,5 +1,13 @@
 version: '3'
 
+includes:
+  backend:
+    taskfile: ./backend/Taskfile.yml
+    dir: backend
+  frontend:
+    taskfile: ./frontend/Taskfile.yml
+    dir: frontend
+
 tasks:
   # ── Docker ───────────────────────────────────────────────────────────────────
 
@@ -17,86 +25,3 @@ tasks:
     desc: Build and start services in dev mode with source volumes for hot reload
     cmds:
       - docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
-
-  # ── Backend ──────────────────────────────────────────────────────────────────
-
-  backend/lint:
-    desc: Lint backend TypeScript sources with ESLint
-    dir: backend
-    cmds:
-      - pnpm lint
-
-  backend/format:
-    desc: Format backend sources with Prettier
-    dir: backend
-    cmds:
-      - pnpm format
-
-  backend/start:
-    desc: Start backend dev server with hot reload
-    dir: backend
-    cmds:
-      - pnpm start:dev
-
-  backend/test:
-    desc: Run backend unit tests
-    dir: backend
-    cmds:
-      - pnpm test
-
-  backend/test:watch:
-    desc: Run backend unit tests in watch mode
-    dir: backend
-    cmds:
-      - pnpm test:watch
-
-  backend/test:e2e:
-    desc: Run backend end-to-end tests
-    dir: backend
-    cmds:
-      - pnpm test:e2e
-
-  backend/test:cov:
-    desc: Run backend tests with coverage report
-    dir: backend
-    cmds:
-      - pnpm test:cov
-
-  # ── Frontend ─────────────────────────────────────────────────────────────────
-
-  frontend/lint:
-    desc: Analyze frontend Flutter code (flutter analyze + custom_lint)
-    dir: frontend
-    cmds:
-      - fvm flutter analyze
-      - fvm dart run custom_lint
-
-  frontend/format:
-    desc: Format frontend Flutter code
-    dir: frontend
-    cmds:
-      - fvm dart format .
-
-  frontend/run:
-    desc: Run the Flutter app
-    dir: frontend
-    cmds:
-      - fvm flutter run
-
-  frontend/test:
-    desc: Run Flutter unit and widget tests
-    dir: frontend
-    cmds:
-      - fvm flutter test
-
-  frontend/test:coverage:
-    desc: Run Flutter tests with coverage report
-    dir: frontend
-    cmds:
-      - fvm flutter test --coverage
-
-  frontend/build-runner:
-    desc: Run build_runner to generate Riverpod/JSON code
-    dir: frontend
-    cmds:
-      - fvm dart run build_runner build --delete-conflicting-outputs
