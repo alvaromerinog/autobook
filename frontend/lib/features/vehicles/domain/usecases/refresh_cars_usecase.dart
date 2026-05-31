@@ -1,0 +1,9 @@
+import 'package:autobook/features/vehicles/domain/repositories/car_repository.dart';
+
+class RefreshCarsUseCase {
+  const RefreshCarsUseCase(this._repo);
+
+  final ICarRepository _repo;
+
+  Future<void> call() => _repo.refreshFromRemote();
+}
