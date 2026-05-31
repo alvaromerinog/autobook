@@ -5,15 +5,17 @@ Flutter application for autobook. All commands must be run from the `frontend/` 
 ## Tech Stack
 
 - **Framework**: Flutter (stable channel, managed via FVM)
-- **Language**: Dart >=3.0.3
+- **Language**: Dart >=3.1.0
+- **Architecture**: DDD + Hexagonal, feature-based folder structure
 - **State management**: Riverpod (flutter_riverpod ^2.5.1) with code generation
-- **Code generation**: riverpod_generator + build_runner
+- **Code generation**: riverpod_generator + freezed + json_serializable + retrofit_generator + drift_dev + build_runner
 - **Linter**: flutter_lints + riverpod_lint + custom_lint
-- **Storage**: shared_preferences
-- **HTTP**: http
+- **Local storage**: Drift (SQLite via drift_flutter)
+- **HTTP**: Dio + Retrofit
+- **Routing**: go_router
 - **Connectivity**: connectivity_plus
 - **Testing mocks**: mocktail
-- **Other**: intl (i18n), uuid
+- **Other**: intl (i18n), uuid (only in `core/di/uuid_id_generator.dart`), freezed_annotation, json_annotation, shared_preferences
 
 ## Setup
 
@@ -43,55 +45,41 @@ If the variable is not provided, it defaults to `http://localhost:3000`.
 
 ## Code Generation
 
-Riverpod providers use code generation. After adding or modifying a provider annotated with `@riverpod`, regenerate the `.g.dart` files:
+After adding or modifying any annotated class (`@riverpod`, `@freezed`, `@RestApi`, `@DriftDatabase`), regenerate all output files:
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs     # One-shot generation
 dart run build_runner watch --delete-conflicting-outputs     # Watch mode (during development)
 ```
 
-Generated files (`*.g.dart`, `*.freezed.dart`) are **not** committed — they are ignored via `.gitignore`. Regenerate them with `dart run build_runner build --delete-conflicting-outputs` after cloning or pulling.
+Generated files (`*.g.dart`, `*.freezed.dart`) are **gitignored** — do not commit them. They are regenerated on each build or via the commands above.
 
 ## Testing
 
 ```bash
-flutter test                         # Run all widget and unit tests
-flutter test test/widget_test.dart   # Run a specific test file
+flutter test                    # Run all tests
+flutter test test/path/to/file  # Run a specific test file
 ```
 
-Test files live in `test/` and follow the `*_test.dart` naming convention.
+Test files live in `test/` mirroring the `lib/` structure: a file at `lib/a/b/foo.dart` has its test at `test/a/b/foo_test.dart`.
 
 ### Test conventions
 
-- Structure every test body with `// given`, `// when`, `// then` comment
-  blocks. Keep lines within each block together; separate blocks with one blank
-  line.
-- Group tests with `group()` — at minimum one top-level group per class, with
-  nested groups per method (`build`, `add`, etc.).
-- Call `addTearDown(container.dispose)` immediately after creating any
-  `ProviderContainer`.
-- Override service providers (`apiServiceProvider`,
-  `connectivityServiceProvider`) in `ProviderContainer` — do **not** override
-  `carsProvider` directly:
+- Structure every test body with `// given`, `// when`, `// then` comment blocks. Keep lines within each block together; separate blocks with one blank line.
+- Group tests with `group()` — at minimum one top-level group per class, with nested groups per method (`getAll`, `create`, `syncPending`, etc.).
+- Create a `setUp` that builds fresh mocks and the system-under-test; call `addTearDown(container.dispose)` immediately after creating any `ProviderContainer`.
+- Use cases and repositories are tested by injecting mocks through their constructor (no `ProviderContainer` needed) — e.g. `CreateCarUseCase(mockRepo, mockIds)` with `MockCarRepository`/`MockIdGenerator` implementing the ports. Their tests live in `test/features/vehicles/domain/usecases/`.
+- To test a notifier/provider whose graph depends on `ICarRepository`, override `carRepositoryProvider` in `ProviderContainer`:
   ```dart
   ProviderContainer(
     overrides: [
-      apiServiceProvider.overrideWithValue(mockApi),
-      connectivityServiceProvider.overrideWithValue(mockConnectivity),
+      carRepositoryProvider.overrideWithValue(mockCarRepository),
     ],
   )
   ```
-- Register mocktail fallback values in `setUpAll` for every non-primitive type
-  passed to `any()`:
-  ```dart
-  setUpAll(() {
-    registerFallbackValue(const Car(...));
-  });
-  ```
-- Assert on specific exception types (`isA<GetCarsException>()`) rather than
-  the base `Exception`.
-- Verify mock interactions with `verify(() => mock.method()).called(n)` where
-  the call count is meaningful.
+- Register mocktail fallback values in `setUpAll` for every non-primitive type passed to `any()` or `captureAny()`.
+- Assert on specific `Failure` subtypes (`isA<ServerFailure>()`, `isA<NetworkFailure>()`) rather than the base `Failure`.
+- Verify mock interactions with `verify(() => mock.method()).called(n)` where the call count is meaningful.
 
 ## Code Style
 
@@ -101,120 +89,61 @@ dart format lib/ test/  # Format Dart source files
 ```
 
 - Use Riverpod for all state — avoid `setState` in favor of `ConsumerWidget` / `ConsumerStatefulWidget`
-- Annotate providers with `@riverpod` and run build_runner to generate the `.g.dart` companion file
-- Keep screens in `lib/screens/`, reusable components in `lib/widgets/`, data classes in `lib/models/`, providers in `lib/providers/`, and API clients or external service integrations in `lib/services/`
-- Follow `flutter_lints` rules; riverpod_lint provides additional Riverpod-specific checks
+- Annotate providers with `@riverpod` or `@Riverpod(keepAlive: true)` and run build_runner to generate the `.g.dart` companion file
+- The whole `domain/` layer is pure Dart — **no** imports of Flutter, Riverpod, `uuid`, Dio/Drift, or the `data/` layer. Entities and ports use only `freezed_annotation` (compile-time code-gen). Dependencies point inward only: `data → domain` and `presentation → domain`.
+- Domain entities use `freezed` for value equality and `copyWith`; they carry no factories that pull in infrastructure (e.g. id generation goes through the `IdGenerator` port, see below)
 - Maximum line length is 80 characters
+
 ### Variable naming
 
 Name variables after what they contain, not their role in the flow:
 
-- ✅ `cachedCars`, `apiCars`, `updatedCars` — ❌ `current`, `data`, `result`
-- ✅ `cachedCarJsonList`, `carJson` — ❌ `decoded`, `c`, `item`
+- ✅ `cachedCars`, `remoteCars`, `pendingCars` — ❌ `current`, `data`, `result`
+- ✅ `carEntry`, `carDto`, `car` — ❌ `decoded`, `c`, `item`
 - ✅ `currentState` when holding a state record — ❌ `current`
 
-### Exceptions
+### Errors
 
-Every distinct API failure has its own exception class in `lib/exceptions/`:
+Domain failures are modelled as a `sealed class Failure` in `lib/core/error/failures.dart`:
 
 ```
-lib/exceptions/
-├── get_cars_exception.dart     # thrown by ApiService.getCars()
-└── create_car_exception.dart   # thrown by ApiService.createCar()
+sealed class Failure
+├── NetworkFailure       — no connectivity or connection refused
+├── ServerFailure(int statusCode)  — HTTP error from the backend
+└── CacheFailure(String message)   — local storage error
 ```
 
-Each class implements `Exception`, holds the HTTP `statusCode`, and
-overrides `toString()` with a readable message. Add a new file for each new
-failure scenario — do not reuse generic `Exception`.
+The repository layer converts low-level exceptions (DioException, Drift errors) into `Failure` subtypes before rethrowing. Presentation code uses a `switch` on `Failure` to show user-friendly messages.
+
+### Use cases & dependency wiring
+
+- Use case classes (`GetCarsUseCase`, `CreateCarUseCase`, `RefreshCarsUseCase`, `SyncPendingCarsUseCase`, `HasPendingCarsUseCase`) live in `domain/usecases/` as **pure** Dart with a single `call()`; they depend only on ports (`ICarRepository`, `IdGenerator`) and carry **no** `@riverpod` annotation.
+- The `@riverpod` functions that instantiate use cases with their concrete dependencies live in the composition layer at `features/vehicles/presentation/providers/usecase_providers.dart` — this is the only place in the feature that imports `data/` and `core/di/`.
+- `CreateCarUseCase` takes a `CarDraft` (a pure record typedef of the form fields), assembles the `Car` with an id from the injected `IdGenerator`, persists it via the repository, and returns it. Screens collect raw input (`AddCarScreen` returns a `CarDraft`); they never build entities or generate ids.
+- Presentation depends **only** on use case providers, never on `carRepositoryProvider` directly.
+
+### IdGenerator port
+
+- `IdGenerator` (`core/id/id_generator.dart`) is a pure-Dart port for producing unique ids.
+- `UuidIdGenerator` (`core/di/uuid_id_generator.dart`) is its only adapter and the only file importing `package:uuid`; expose it via the `idGeneratorProvider` (`@Riverpod(keepAlive: true)`).
 
 ### Riverpod patterns
 
-- **Provider-based DI** for `AsyncNotifier` subclasses: dependencies are read
-  from Riverpod providers at the start of `build()` and stored as `late` fields:
-  ```dart
-  class CarsProvider extends AsyncNotifier<CarsState> {
-    late ApiService _apiService;
-    late ConnectivityService _connectivityService;
-
-    @override
-    Future<CarsState> build() async {
-      _apiService = ref.read(apiServiceProvider);
-      _connectivityService = ref.read(connectivityServiceProvider);
-      // ...
-    }
-  }
-  ```
-  `main.dart` uses a plain `ProviderScope` with no overrides. Tests override
-  `apiServiceProvider` and `connectivityServiceProvider` directly in
-  `ProviderContainer`.
-- **Side effects** (banners, snackbars) triggered by state changes use
-  `ref.listen` in `build()`, not widgets embedded in the tree.
-- **API calls must always be awaited.** Failures surface to the caller via
-  `rethrow` so the UI can inform the user and offer a retry.
-- **Stream subscriptions** created inside a notifier must be cancelled via
-  `ref.onDispose(subscription.cancel)` to avoid leaks.
-- **Service disposal**: providers that own resources (e.g. `ApiService` holding
-  an `http.Client`) call `ref.onDispose(service.dispose)` inside the provider
-  function so the resource is released when the provider is torn down.
+- Infrastructure providers in `core/di/` use `@Riverpod(keepAlive: true)`.
+- Feature providers co-locate the `@riverpod`-annotated function or class with the implementation file (data-layer repository/datasource providers); use case providers are the exception and sit in `presentation/providers/` (see above).
+- `AsyncNotifier` subclasses expose `build()` returning the initial state; side-effect methods (`add`, `syncPendingCars`) update `state` directly.
+- Stream subscriptions created inside a notifier are cancelled via `ref.onDispose(subscription.cancel)`.
+- Side effects (banners, snackbars) triggered by state changes use `ref.listen` in `build()`, not widgets embedded in the tree.
 
 ### Offline-first & connectivity
 
-The app is offline-first: cached data is always preferred when the device has
-no connection, and writes are queued locally and synced when connectivity
-returns.
+The app is offline-first: local Drift DB is always the source of truth for reads.
 
-`ConnectivityService` (`lib/services/connectivity_service.dart`) wraps
-`connectivity_plus` and exposes:
-
-- `Future<bool> isConnected()` — one-shot check for the current state.
-- `Stream<bool> connectivityChanges` — emits `true`/`false` on every change.
-
-`CarsState` carries a `hasPendingSync` flag alongside `cars` and `syncError`:
-
-```dart
-typedef CarsState = ({
-  List<Car> cars,
-  Exception? syncError,
-  bool hasPendingSync,
-});
-```
-
-**`CarsProvider.build()` strategy:**
-
-1. Read `apiServiceProvider` and `connectivityServiceProvider` via `ref.read`
-   and assign to `late` fields.
-2. Subscribe to `connectivityChanges` (cancel on dispose) to trigger sync when
-   connectivity is restored at runtime.
-3. Read cached cars and the pending-car queue from `shared_preferences`.
-4. If offline → return cached cars immediately, no API call.
-5. If online → call `getCars()`; on success merge API cars with pending ones
-   (to prevent overwriting unsynced writes), persist, then call
-   `syncPendingCars()` if there are pending cars (auto-syncs on startup).
-   Return with `hasPendingSync` reflecting whether any cars are still pending
-   after the sync attempt. On failure → return cached cars with `syncError` set.
-
-**`CarsProvider.add()` strategy:**
-
-1. Optimistically append the car to the local list and persist.
-2. If offline → queue the car in `pending_cars`, set `hasPendingSync: true`,
-   return without error.
-3. If online → `await createCar(car)`. On failure → queue it, set
-   `hasPendingSync: true`, and `rethrow` so the UI can show an error.
-
-**`CarsProvider.syncPendingCars()` strategy:**
-
-Guards against concurrent invocations with an `_isSyncing` flag (important
-because the method is called both from `build()` and from the connectivity
-stream listener). Iterates the `pending_cars` queue; for each car attempts
-`createCar()`. Collects successfully-synced IDs, removes them from the queue,
-and updates `hasPendingSync`. Failures for individual cars are silently skipped
-so the rest of the queue is still processed.
-
-**Merging pending cars with the API response:**
-
-When `getCars()` returns, pending cars whose IDs are not yet in the API
-response are appended to avoid data loss. Cars that the server already knows
-about (same ID) are not duplicated.
+- `ConnectivityService` (`core/network/connectivity_service.dart`) wraps `connectivity_plus`.
+- `CarRepository.refreshFromRemote()` attempts to fetch from the backend and upsert into Drift; it silently returns if offline, and throws a `Failure` if the network call fails.
+- `CarRepository.create(Car)` always writes the car as pending to Drift first; if online it also pushes to the backend and marks the row as synced.
+- `CarRepository.syncPending()` retries all pending rows; individual failures are skipped so the rest of the queue is still processed.
+- `SyncCoordinator` (`core/sync/sync_coordinator.dart`) holds the connectivity stream subscription and invokes registered callbacks when connectivity is restored.
 
 ## Build
 
@@ -230,22 +159,44 @@ flutter build macos         # macOS desktop
 
 ```
 lib/
-├── main.dart               # Entry point, ProviderScope setup
-├── config.dart             # Build-time configuration (e.g. AUTOBOOK_API_URL)
-├── models/                 # Pure data classes (e.g. Car)
-├── providers/              # Riverpod providers (*.g.dart generated, gitignored)
-├── screens/                # Full-page UI screens
-├── services/               # API clients and external service integrations
-└── widgets/                # Reusable UI components
+├── main.dart               # Entry point: ProviderScope + MaterialApp.router
+├── config.dart             # App-wide constants (AUTOBOOK_API_URL via --dart-define)
+│
+├── core/                   # Cross-cutting infrastructure, no feature business logic
+│   ├── error/              # Sealed Failure hierarchy shared across features
+│   ├── id/                 # IdGenerator port (pure Dart)
+│   ├── network/            # HTTP client configuration and ConnectivityService
+│   ├── sync/               # SyncCoordinator: auto-sync on connectivity restore
+│   └── di/                 # Riverpod root providers for infrastructure deps (Dio, DB, UuidIdGenerator)
+│
+├── features/
+│   └── vehicles/           # All cars / vehicle functionality
+│       ├── domain/         # Pure Dart: entities, repository interfaces, use cases (NO riverpod/data imports)
+│       │   ├── entities/   # Car entity (freezed, no JSON)
+│       │   ├── repositories/ # ICarRepository abstract class (port)
+│       │   └── usecases/   # Get/Create/Refresh/SyncPending/HasPendingCars (pure call() wrappers); CarDraft typedef
+│       ├── data/           # Adapters: DTOs, datasources, repository implementation
+│       │   ├── models/     # CarDto (freezed + json_serializable) and response wrappers
+│       │   ├── datasources/
+│       │   │   ├── local/  # Drift AppDatabase schema + CarLocalDataSource
+│       │   │   └── remote/ # Retrofit CarRemoteDataSource (HTTP)
+│       │   └── repositories/ # CarRepository: implements ICarRepository, wires local + remote
+│       └── presentation/   # UI layer for the vehicles feature
+│           ├── providers/  # usecase_providers.dart (@riverpod wiring) + CarListNotifier consuming use cases
+│           ├── screens/    # Full-page screens (HomeScreen, AddCarScreen dialog returning CarDraft)
+│           └── widgets/    # Feature-scoped reusable widgets (InfoChip, CustomFormField)
+│
+└── app/
+    ├── router/             # GoRouter configuration (appRouterProvider)
+    └── theme/              # AppTheme (light/dark ThemeData)
+
+test/                       # Mirrors lib/ structure; each *_test.dart sits beside its subject
 ```
 
 ### API base URL
 
-`config.dart` reads the API host from the `AUTOBOOK_API_URL` compile-time
-variable (default: `http://localhost:3000`). Pass it via `--dart-define` when
-running locally or via Docker build args / environment in Docker Compose:
+`config.dart` reads the API host from the `AUTOBOOK_API_URL` compile-time variable (default: `http://localhost:3000`). Pass it via `--dart-define`:
 
 ```bash
 flutter run --dart-define=AUTOBOOK_API_URL=http://10.0.2.2:3000   # Android emulator
-AUTOBOOK_API_URL=http://my-server task docker/dev                   # Docker dev
 ```
