@@ -1,12 +1,11 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/id/id_generator.dart';
-import 'package:autobook/features/vehicles/domain/entities/car.dart';
-import 'package:autobook/features/vehicles/domain/repositories/car_repository.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockCarRepository extends Mock implements ICarRepository {}
+import '../../fixtures/car_fixtures.dart';
+import '../../helpers/car_mocks.dart';
 
 class MockIdGenerator extends Mock implements IdGenerator {}
 
@@ -25,9 +24,7 @@ void main() {
   );
 
   setUpAll(() {
-    registerFallbackValue(
-      const Car(id: '', brand: '', model: '', year: 0, licensePlate: ''),
-    );
+    registerCarFallbacks();
   });
 
   setUp(() {
@@ -50,12 +47,8 @@ void main() {
         final result = await useCase(draft);
 
         // then
-        const expectedCar = Car(
+        final expectedCar = buildCar(
           id: 'generated-id',
-          brand: 'Toyota',
-          model: 'Corolla',
-          year: 2020,
-          licensePlate: '1234 ABC',
           color: 'Blanco',
           mileage: 45000,
         );

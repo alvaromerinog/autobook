@@ -8,6 +8,9 @@ import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../fixtures/car_fixtures.dart';
+import '../../helpers/car_mocks.dart';
+
 class MockCarLocalDataSource extends Mock implements CarLocalDataSource {}
 
 class MockCarRemoteDataSource extends Mock implements CarRemoteDataSource {}
@@ -21,14 +24,7 @@ void main() {
   late CarRepository repo;
 
   setUpAll(() {
-    registerFallbackValue(
-      const Car(
-          id: '', brand: '', model: '', year: 0, licensePlate: ''),
-    );
-    registerFallbackValue(
-      const CarDto(
-          id: '', brand: '', model: '', year: 0, licensePlate: ''),
-    );
+    registerCarFallbacks();
   });
 
   setUp(() {
@@ -74,20 +70,8 @@ void main() {
         'then upserts both cars',
         () async {
           // given
-          const car1 = Car(
-            id: '1',
-            brand: 'Toyota',
-            model: 'Corolla',
-            year: 2020,
-            licensePlate: '1234 ABC',
-          );
-          const car2 = Car(
-            id: '2',
-            brand: 'Ford',
-            model: 'Focus',
-            year: 2019,
-            licensePlate: '5678 DEF',
-          );
+          const car1 = toyotaCorolla;
+          const car2 = fordFocus;
           when(() => mockConnectivity.isConnected())
               .thenAnswer((_) async => true);
           when(() => mockRemote.fetchAll()).thenAnswer(
@@ -156,13 +140,7 @@ void main() {
         'then inserts as pending, calls remote, and marks synced',
         () async {
           // given
-          const newCar = Car(
-            id: 'n1',
-            brand: 'Renault',
-            model: 'Megane',
-            year: 2022,
-            licensePlate: '1111 BBB',
-          );
+          const newCar = renaultMegane;
           when(() => mockConnectivity.isConnected())
               .thenAnswer((_) async => true);
           when(() => mockLocal.insertPending(any()))
@@ -188,13 +166,7 @@ void main() {
         'then inserts as pending and does not call remote',
         () async {
           // given
-          const newCar = Car(
-            id: 'p1',
-            brand: 'Peugeot',
-            model: '208',
-            year: 2021,
-            licensePlate: '2222 CCC',
-          );
+          const newCar = peugeot208;
           when(() => mockConnectivity.isConnected())
               .thenAnswer((_) async => false);
           when(() => mockLocal.insertPending(any()))
@@ -216,13 +188,7 @@ void main() {
         'then throws Failure and car stays as pending',
         () async {
           // given
-          const newCar = Car(
-            id: 'f1',
-            brand: 'Volkswagen',
-            model: 'Golf',
-            year: 2023,
-            licensePlate: '3333 DDD',
-          );
+          const newCar = volkswagenGolf;
           when(() => mockConnectivity.isConnected())
               .thenAnswer((_) async => true);
           when(() => mockLocal.insertPending(any()))
@@ -286,15 +252,8 @@ void main() {
         'then sends to api and marks synced',
         () async {
           // given
-          const pendingCar = Car(
-            id: 'pend1',
-            brand: 'Fiat',
-            model: '500',
-            year: 2019,
-            licensePlate: '4444 EEE',
-          );
           when(() => mockLocal.getPending())
-              .thenAnswer((_) async => [pendingCar]);
+              .thenAnswer((_) async => [fiat500]);
           when(() => mockRemote.create(any()))
               .thenAnswer((_) async {});
           when(() => mockLocal.markSynced(any()))
@@ -315,22 +274,8 @@ void main() {
         'then first is synced and second stays pending',
         () async {
           // given
-          const car1 = Car(
-            id: 'pend1',
-            brand: 'Fiat',
-            model: '500',
-            year: 2019,
-            licensePlate: '4444 EEE',
-          );
-          const car2 = Car(
-            id: 'pend2',
-            brand: 'Alfa',
-            model: 'Giulia',
-            year: 2020,
-            licensePlate: '5555 FFF',
-          );
           when(() => mockLocal.getPending())
-              .thenAnswer((_) async => [car1, car2]);
+              .thenAnswer((_) async => [fiat500, alfaGiulia]);
           var callCount = 0;
           when(() => mockRemote.create(any())).thenAnswer((_) async {
             callCount++;
@@ -354,15 +299,8 @@ void main() {
         'then all pending cars stay pending',
         () async {
           // given
-          const pendingCar = Car(
-            id: 'pend1',
-            brand: 'Fiat',
-            model: '500',
-            year: 2019,
-            licensePlate: '4444 EEE',
-          );
           when(() => mockLocal.getPending())
-              .thenAnswer((_) async => [pendingCar]);
+              .thenAnswer((_) async => [fiat500]);
           when(() => mockRemote.create(any()))
               .thenThrow(Exception('server error'));
 
