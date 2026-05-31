@@ -1,0 +1,33 @@
+version: '3'
+
+tasks:
+  lint:
+    desc: Analyze frontend Flutter code (flutter analyze + custom_lint)
+    cmds:
+      - fvm flutter analyze
+      - fvm dart run custom_lint
+
+  format:
+    desc: Format frontend Flutter code
+    cmds:
+      - fvm dart format .
+
+  run:
+    desc: Run the Flutter app
+    cmds:
+      - fvm flutter run
+
+  test:
+    desc: Run Flutter unit and widget tests
+    cmds:
+      - fvm flutter test
+
+  test:coverage:
+    desc: Run Flutter tests with coverage report
+    cmds:
+      - fvm flutter test --coverage
+
+  build-runner:
+    desc: Run build_runner to generate Riverpod/JSON code
+    cmds:
+      - fvm dart run build_runner build --delete-conflicting-outputs
