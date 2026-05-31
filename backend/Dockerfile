@@ -15,7 +15,7 @@ RUN pnpm run build
 
 FROM builder AS dev
 EXPOSE 3000
-CMD ["pnpm", "start:dev"]
+CMD ["sh", "-c", "pnpm exec prisma migrate deploy && pnpm start:dev"]
 
 
 FROM base AS runner
