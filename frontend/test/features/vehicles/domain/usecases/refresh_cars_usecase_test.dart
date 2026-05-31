@@ -1,10 +1,9 @@
 import 'package:autobook/core/error/failures.dart';
-import 'package:autobook/features/vehicles/domain/repositories/car_repository.dart';
 import 'package:autobook/features/vehicles/domain/usecases/refresh_cars_usecase.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockCarRepository extends Mock implements ICarRepository {}
+import '../../helpers/car_mocks.dart';
 
 void main() {
   late MockCarRepository mockRepo;
