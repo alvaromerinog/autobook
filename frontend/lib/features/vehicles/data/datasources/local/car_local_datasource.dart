@@ -47,6 +47,19 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
         updatedAt: Value(DateTime.now()),
       );
 
+  // Companion for upsert that omits isPending so existing pending rows keep
+  // their flag intact when server data is written over them.
+  CarsTableCompanion _toUpsertCompanion(Car car) => CarsTableCompanion(
+        id: Value(car.id),
+        brand: Value(car.brand),
+        model: Value(car.model),
+        year: Value(car.year),
+        licensePlate: Value(car.licensePlate),
+        color: Value(car.color),
+        mileage: Value(car.mileage),
+        updatedAt: Value(DateTime.now()),
+      );
+
   @override
   Future<List<Car>> getAll() async {
     final rows = await _db.select(_db.carsTable).get();
@@ -59,8 +72,8 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
       for (final car in cars) {
         batch.insert(
           _db.carsTable,
-          _toCompanion(car),
-          mode: InsertMode.insertOrReplace,
+          _toUpsertCompanion(car),
+          onConflict: DoUpdate((_) => _toUpsertCompanion(car)),
         );
       }
     });
