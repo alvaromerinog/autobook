@@ -28,6 +28,14 @@ class CarList extends _$CarList {
       syncError = f;
     }
 
+    // Drain pending writes that may have been missed while this provider was
+    // disposed (e.g. connectivity restored when user navigated away).
+    try {
+      await ref.read(syncPendingCarsUseCaseProvider).call();
+    } on Failure catch (f) {
+      syncError ??= f;
+    }
+
     var cars = <Car>[];
     var hasPendingSync = false;
     try {
@@ -48,8 +56,15 @@ class CarList extends _$CarList {
       syncError = f;
     }
 
-    final cars = await ref.read(getCarsUseCaseProvider).call();
-    final hasPendingSync = await ref.read(hasPendingCarsUseCaseProvider).call();
+    var cars = <Car>[];
+    var hasPendingSync = false;
+    try {
+      cars = await ref.read(getCarsUseCaseProvider).call();
+      hasPendingSync = await ref.read(hasPendingCarsUseCaseProvider).call();
+    } on Failure catch (f) {
+      syncError ??= f;
+    }
+
     state = AsyncData((
       cars: cars,
       syncError: syncError,
@@ -60,12 +75,25 @@ class CarList extends _$CarList {
   }
 
   Future<void> syncPendingCars() async {
-    await ref.read(syncPendingCarsUseCaseProvider).call();
-    final cars = await ref.read(getCarsUseCaseProvider).call();
-    final hasPendingSync = await ref.read(hasPendingCarsUseCaseProvider).call();
+    Failure? syncError;
+    try {
+      await ref.read(syncPendingCarsUseCaseProvider).call();
+    } on Failure catch (f) {
+      syncError = f;
+    }
+
+    var cars = <Car>[];
+    var hasPendingSync = false;
+    try {
+      cars = await ref.read(getCarsUseCaseProvider).call();
+      hasPendingSync = await ref.read(hasPendingCarsUseCaseProvider).call();
+    } on Failure catch (f) {
+      syncError ??= f;
+    }
+
     state = AsyncData((
       cars: cars,
-      syncError: null,
+      syncError: syncError,
       hasPendingSync: hasPendingSync,
     ));
   }
