@@ -12,7 +12,7 @@ SyncCoordinator syncCoordinator(Ref ref) {
       .read(connectivityServiceProvider)
       .connectivityChanges
       .listen((connected) {
-    if (connected) coordinator.flush();
+    if (connected) coordinator.flush().catchError((_) {});
   });
   ref.onDispose(sub.cancel);
   return coordinator;
@@ -20,6 +20,7 @@ SyncCoordinator syncCoordinator(Ref ref) {
 
 class SyncCoordinator {
   Future<void> Function()? _flushCallback;
+  bool _isFlushing = false;
 
   void register(Future<void> Function() callback) {
     _flushCallback = callback;
@@ -30,6 +31,12 @@ class SyncCoordinator {
   }
 
   Future<void> flush() async {
-    await _flushCallback?.call();
+    if (_isFlushing) return;
+    _isFlushing = true;
+    try {
+      await _flushCallback?.call();
+    } finally {
+      _isFlushing = false;
+    }
   }
 }
