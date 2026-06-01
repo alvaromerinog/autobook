@@ -5,6 +5,7 @@ import 'package:autobook/features/vehicles/data/datasources/remote/car_remote_da
 import 'package:autobook/features/vehicles/data/models/car_dto.dart';
 import 'package:autobook/features/vehicles/data/repositories/car_repository.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -43,7 +44,7 @@ void main() {
       test(
         'given api returns empty list, '
         'when refreshFromRemote runs, '
-        'then upserts empty list and hasPending is false',
+        'then upserts empty list',
         () async {
           // given
           when(() => mockConnectivity.isConnected())
@@ -53,14 +54,12 @@ void main() {
           );
           when(() => mockLocal.upsertAll(any()))
               .thenAnswer((_) async {});
-          when(() => mockLocal.getPending()).thenAnswer((_) async => []);
 
           // when
           await repo.refreshFromRemote();
 
           // then
           verify(() => mockLocal.upsertAll([])).called(1);
-          expect(await repo.hasPending(), isFalse);
         },
       );
 
@@ -97,9 +96,9 @@ void main() {
       );
 
       test(
-        'given api throws, '
+        'given api throws a generic exception, '
         'when refreshFromRemote runs, '
-        'then throws ServerFailure',
+        'then throws NetworkFailure',
         () async {
           // given
           when(() => mockConnectivity.isConnected())
@@ -111,6 +110,55 @@ void main() {
           await expectLater(
             () => repo.refreshFromRemote(),
             throwsA(isA<NetworkFailure>()),
+          );
+        },
+      );
+
+      test(
+        'given api throws a DioException, '
+        'when refreshFromRemote runs, '
+        'then throws ServerFailure with status code',
+        () async {
+          // given
+          when(() => mockConnectivity.isConnected())
+              .thenAnswer((_) async => true);
+          when(() => mockRemote.fetchAll()).thenThrow(
+            DioException(
+              requestOptions: RequestOptions(path: '/cars'),
+              response: Response(
+                statusCode: 500,
+                requestOptions: RequestOptions(path: '/cars'),
+              ),
+              type: DioExceptionType.badResponse,
+            ),
+          );
+
+          // when / then
+          await expectLater(
+            () => repo.refreshFromRemote(),
+            throwsA(isA<ServerFailure>()),
+          );
+        },
+      );
+
+      test(
+        'given upsertAll throws after a successful fetch, '
+        'when refreshFromRemote runs, '
+        'then throws CacheFailure',
+        () async {
+          // given
+          when(() => mockConnectivity.isConnected())
+              .thenAnswer((_) async => true);
+          when(() => mockRemote.fetchAll()).thenAnswer(
+            (_) async => const CarsListResponse(cars: []),
+          );
+          when(() => mockLocal.upsertAll(any()))
+              .thenThrow(StateError('db error'));
+
+          // when / then
+          await expectLater(
+            () => repo.refreshFromRemote(),
+            throwsA(isA<CacheFailure>()),
           );
         },
       );
@@ -309,6 +357,23 @@ void main() {
 
           // then
           verifyNever(() => mockLocal.markSynced(any()));
+        },
+      );
+
+      test(
+        'given getPending throws, '
+        'when syncPending is called, '
+        'then throws CacheFailure',
+        () async {
+          // given
+          when(() => mockLocal.getPending())
+              .thenThrow(StateError('database unavailable'));
+
+          // when / then
+          await expectLater(
+            () => repo.syncPending(),
+            throwsA(isA<CacheFailure>()),
+          );
         },
       );
     });

@@ -32,6 +32,10 @@ class CarRepository implements ICarRepository {
   final CarRemoteDataSource _remote;
   final ConnectivityService _connectivity;
 
+  // Tracks car IDs currently being posted by create() to prevent
+  // syncPending() from double-posting the same car in a concurrent flush.
+  final _syncingIds = <String>{};
+
   @override
   Future<List<Car>> getAll() async {
     try {
@@ -44,15 +48,19 @@ class CarRepository implements ICarRepository {
   @override
   Future<void> refreshFromRemote() async {
     if (!await _connectivity.isConnected()) return;
+    final List<Car> remoteCars;
     try {
       final response = await _remote.fetchAll();
-      await _local.upsertAll(
-        response.cars.map((dto) => dto.toDomain()).toList(),
-      );
+      remoteCars = response.cars.map((dto) => dto.toDomain()).toList();
     } on DioException catch (e) {
       throw ServerFailure(e.response?.statusCode ?? 0);
     } catch (_) {
       throw const NetworkFailure();
+    }
+    try {
+      await _local.upsertAll(remoteCars);
+    } catch (e) {
+      throw CacheFailure(e.toString());
     }
   }
 
@@ -60,6 +68,7 @@ class CarRepository implements ICarRepository {
   Future<void> create(Car car) async {
     await _local.insertPending(car);
     if (!await _connectivity.isConnected()) return;
+    _syncingIds.add(car.id);
     try {
       await _remote.create(CarDto.fromDomain(car));
       await _local.markSynced(car.id);
@@ -67,16 +76,28 @@ class CarRepository implements ICarRepository {
       throw ServerFailure(e.response?.statusCode ?? 0);
     } catch (_) {
       throw const NetworkFailure();
+    } finally {
+      _syncingIds.remove(car.id);
     }
   }
 
   @override
   Future<void> syncPending() async {
-    final pendingCars = await _local.getPending();
+    final List<Car> pendingCars;
+    try {
+      pendingCars = await _local.getPending();
+    } catch (e) {
+      throw CacheFailure(e.toString());
+    }
     for (final car in pendingCars) {
+      if (_syncingIds.contains(car.id)) continue;
       try {
         await _remote.create(CarDto.fromDomain(car));
         await _local.markSynced(car.id);
+      } on DioException catch (_) {
+        // Server or network error: skip this car, retry on next sync.
+        // TODO: distinguish 4xx permanent rejections for user feedback.
+        continue;
       } catch (_) {
         continue;
       }
