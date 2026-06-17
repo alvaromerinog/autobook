@@ -2,60 +2,40 @@ import '../../../../test-setup';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CarsService } from '../../../application/cars.service';
 import { CarsRepository } from '../../../domain/repositories/cars.repository';
-import { Car } from '../../../domain/entities/car.entity';
+import { TEST_CARS } from '../../fixtures/cars.fixtures';
 
-const TEST_CAR_1: Car = {
-  id: '00000000-0000-0000-0000-000000000001',
-  brand: 'Toyota',
-  model: 'Corolla',
-  year: 2020,
-  licensePlate: 'ABC-001',
-  color: 'White',
-  mileage: 30000,
-};
-
-const TEST_CAR_2: Car = {
-  id: '00000000-0000-0000-0000-000000000002',
-  brand: 'Honda',
-  model: 'Civic',
-  year: 2019,
-  licensePlate: 'DEF-002',
-  color: null,
-  mileage: null,
-};
-
-const TEST_CAR_3: Car = {
-  id: '00000000-0000-0000-0000-000000000003',
-  brand: 'Ford',
-  model: 'Focus',
-  year: 2021,
-  licensePlate: 'GHI-003',
-  color: 'Blue',
-  mileage: 15000,
-};
+const [TEST_CAR_1, TEST_CAR_2, TEST_CAR_3] = TEST_CARS;
 
 describe('CarsService (unit)', () => {
   let service: CarsService;
-  let repository: jest.Mocked<CarsRepository>;
+  let getAllMock: jest.MockedFunction<CarsRepository['getAll']>;
+  let createMock: jest.MockedFunction<CarsRepository['create']>;
+  let updateMock: jest.MockedFunction<CarsRepository['update']>;
 
   beforeEach(async () => {
+    getAllMock = jest.fn();
+    createMock = jest.fn();
+    updateMock = jest.fn();
+
     const mockRepository: jest.Mocked<CarsRepository> = {
-      getAll: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
+      getAll: getAllMock,
+      create: createMock,
+      update: updateMock,
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CarsService, { provide: CarsRepository, useValue: mockRepository }],
+      providers: [
+        CarsService,
+        { provide: CarsRepository, useValue: mockRepository },
+      ],
     }).compile();
 
     service = module.get<CarsService>(CarsService);
-    repository = module.get(CarsRepository);
   });
 
   describe('getCars', () => {
     it('given an empty repository when getCars then returns an empty list', async () => {
-      repository.getAll.mockResolvedValue([]);
+      getAllMock.mockResolvedValue([]);
 
       const result = await service.getCars();
 
@@ -64,7 +44,7 @@ describe('CarsService (unit)', () => {
 
     it('given three cars in the repository when getCars then returns all cars unchanged', async () => {
       const cars = [TEST_CAR_1, TEST_CAR_2, TEST_CAR_3];
-      repository.getAll.mockResolvedValue(cars);
+      getAllMock.mockResolvedValue(cars);
 
       const result = await service.getCars();
 
@@ -75,16 +55,16 @@ describe('CarsService (unit)', () => {
 
   describe('createCar', () => {
     it('given valid car data when createCar then delegates to the repository with the same car', async () => {
-      repository.create.mockResolvedValue(TEST_CAR_1);
+      createMock.mockResolvedValue(TEST_CAR_1);
 
       await service.createCar(TEST_CAR_1);
 
-      expect(repository.create).toHaveBeenCalledTimes(1);
-      expect(repository.create).toHaveBeenCalledWith(TEST_CAR_1);
+      expect(createMock).toHaveBeenCalledTimes(1);
+      expect(createMock).toHaveBeenCalledWith(TEST_CAR_1);
     });
 
     it('given a car with all fields when createCar then returns the created car unchanged', async () => {
-      repository.create.mockResolvedValue(TEST_CAR_1);
+      createMock.mockResolvedValue(TEST_CAR_1);
 
       const result = await service.createCar(TEST_CAR_1);
 
@@ -94,7 +74,7 @@ describe('CarsService (unit)', () => {
 
   describe('updateCar', () => {
     it('given an existing car when updateCar then returns its id', async () => {
-      repository.update.mockResolvedValue({ id: TEST_CAR_1.id });
+      updateMock.mockResolvedValue({ id: TEST_CAR_1.id });
 
       const result = await service.updateCar(TEST_CAR_1);
 
@@ -102,7 +82,7 @@ describe('CarsService (unit)', () => {
     });
 
     it('given a non-existing car when updateCar then returns null', async () => {
-      repository.update.mockResolvedValue(null);
+      updateMock.mockResolvedValue(null);
 
       const result = await service.updateCar(TEST_CAR_1);
 
