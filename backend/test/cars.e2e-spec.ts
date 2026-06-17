@@ -1,37 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaDatabase } from '../src/prisma/infrastructure/prisma.database';
 import { randomUUID } from 'crypto';
-import { unlinkSync, existsSync, readdirSync, readFileSync } from 'fs';
+import { unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import Database from 'better-sqlite3';
+import { applyMigrations } from '../src/test-utils/apply-migrations';
+import { TEST_CARS } from '../src/cars/tests/fixtures/cars.fixtures';
 
-const CAR_PAYLOAD = {
-  id: 'a0000000-0000-0000-0000-000000000001',
-  brand: 'Toyota',
-  model: 'Corolla',
-  year: 2020,
-  licensePlate: 'ABC-001',
-  color: 'White',
-  mileage: 30000,
-};
-
-const MIGRATIONS_DIR = join(__dirname, '../prisma/migrations');
-
-function applyMigrations(dbPath: string): void {
-  const db = new Database(dbPath);
-  readdirSync(MIGRATIONS_DIR)
-    .filter((entry) => entry !== 'migration_lock.toml')
-    .sort()
-    .forEach((dir) => {
-      const sql = readFileSync(join(MIGRATIONS_DIR, dir, 'migration.sql'), 'utf8');
-      db.exec(sql);
-    });
-  db.close();
-}
+const [CAR_PAYLOAD] = TEST_CARS;
 
 describe('CarsController (e2e)', () => {
   let app: INestApplication;
@@ -49,6 +28,7 @@ describe('CarsController (e2e)', () => {
 
     prisma = moduleFixture.get<PrismaDatabase>(PrismaDatabase);
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ transform: true }));
     await app.init();
   });
 
@@ -66,8 +46,7 @@ describe('CarsController (e2e)', () => {
         .post('/cars')
         .send(CAR_PAYLOAD)
         .expect(201)
-        .expect((res) => {
-          expect(res.body).toHaveProperty('id');
+        .expect((res: { body: { id: string } }) => {
           expect(res.body.id).toBe(CAR_PAYLOAD.id);
         });
     });
@@ -82,9 +61,21 @@ describe('CarsController (e2e)', () => {
         .get('/cars')
         .expect(200);
 
-      expect(response.body.cars).toEqual(
-        expect.arrayContaining([expect.objectContaining({ id: CAR_PAYLOAD.id })])
+      const body = response.body as { cars: Array<{ id: string }> };
+      expect(body.cars).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: CAR_PAYLOAD.id }),
+        ]),
       );
+    });
+
+    it('given an existing car with the same id when POST /cars then returns 409', async () => {
+      await prisma.car.create({ data: CAR_PAYLOAD });
+
+      return request(app.getHttpServer())
+        .post('/cars')
+        .send(CAR_PAYLOAD)
+        .expect(409);
     });
   });
 });

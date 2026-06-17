@@ -1,4 +1,4 @@
-import { Car } from "../entities/car.entity";
+import { Car } from '../entities/car.entity';
 
 export abstract class CarsRepository {
   abstract getAll(): Promise<Car[]>;

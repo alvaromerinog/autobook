@@ -28,7 +28,7 @@ class Cars extends _$Cars {
     final updatedCars = [...currentCars, newCar];
     state = AsyncData(updatedCars);
     await _persistCars(updatedCars);
-    ApiService.createCar(newCar).catchError((_) {});
+    await ApiService.createCar(newCar);
   }
 
   Future<void> _persistCars(List<Car> carsToPersist) async {
