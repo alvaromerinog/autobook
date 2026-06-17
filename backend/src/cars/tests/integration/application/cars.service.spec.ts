@@ -11,6 +11,7 @@ import { CarsRepository } from '../../../domain/repositories/cars.repository';
 import { PrismaCarsRepository } from '../../../infrastructure/repositories/cars.repository';
 import { applyMigrations } from '../../../../test-utils/apply-migrations';
 import { TEST_CARS } from '../../fixtures/cars.fixtures';
+import { Car } from '@prisma/client';
 
 describe('CarsService (integration)', () => {
   let service: CarsService;
@@ -119,7 +120,7 @@ describe('CarsService (integration)', () => {
     const invalidCar = {
       ...TEST_CARS[0],
       brand: undefined,
-    } as unknown as (typeof TEST_CARS)[0];
+    } as unknown as Car;
 
     await expect(service.createCar(invalidCar)).rejects.toThrow();
   });
