@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/car.dart';
+import '../services/api_service.dart';
 import 'shared_preferences_provider.dart';
 
 part 'cars_provider.g.dart';
@@ -27,6 +28,7 @@ class Cars extends _$Cars {
     final updatedCars = [...currentCars, newCar];
     state = AsyncData(updatedCars);
     await _persistCars(updatedCars);
+    await ApiService.createCar(newCar);
   }
 
   Future<void> _persistCars(List<Car> carsToPersist) async {

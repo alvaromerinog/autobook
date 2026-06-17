@@ -6,6 +6,9 @@ import { CarsRepository } from './domain/repositories/cars.repository';
 
 @Module({
   controllers: [CarsController],
-  providers: [CarsService, { provide: CarsRepository, useClass: PrismaCarsRepository }],
+  providers: [
+    CarsService,
+    { provide: CarsRepository, useClass: PrismaCarsRepository },
+  ],
 })
 export class CarsModule {}

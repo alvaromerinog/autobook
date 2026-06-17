@@ -30,6 +30,14 @@ flutter run -d <device_id>      # Run on a specific device
 flutter devices                 # List available devices
 ```
 
+The API base URL is read from the `AUTOBOOK_API_URL` environment variable at build time:
+
+```bash
+flutter run --dart-define=AUTOBOOK_API_URL=http://localhost:3000
+```
+
+If the variable is not provided, it defaults to `http://localhost:3000`.
+
 ## Code Generation
 
 Riverpod providers use code generation. After adding or modifying a provider annotated with `@riverpod`, regenerate the `.g.dart` files:
@@ -59,7 +67,7 @@ dart format lib/ test/  # Format Dart source files
 
 - Use Riverpod for all state — avoid `setState` in favor of `ConsumerWidget` / `ConsumerStatefulWidget`
 - Annotate providers with `@riverpod` and run build_runner to generate the `.g.dart` companion file
-- Keep screens in `lib/screens/`, reusable components in `lib/widgets/`, data classes in `lib/models/`, and providers in `lib/providers/`
+- Keep screens in `lib/screens/`, reusable components in `lib/widgets/`, data classes in `lib/models/`, providers in `lib/providers/`, and API clients or external service integrations in `lib/services/`
 - Follow `flutter_lints` rules; riverpod_lint provides additional Riverpod-specific checks
 
 ## Build
@@ -77,8 +85,10 @@ flutter build macos         # macOS desktop
 ```
 lib/
 ├── main.dart               # Entry point, ProviderScope setup
+├── config.dart             # Build-time configuration (e.g. AUTOBOOK_API_URL)
 ├── models/                 # Pure data classes (e.g. Car)
 ├── providers/              # Riverpod providers + generated *.g.dart files
 ├── screens/                # Full-page UI screens
+├── services/               # API clients and external service integrations
 └── widgets/                # Reusable UI components
 ```
