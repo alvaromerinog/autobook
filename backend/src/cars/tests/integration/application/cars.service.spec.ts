@@ -4,56 +4,14 @@ import { CarsService } from '../../../application/cars.service';
 import { PrismaModule } from '../../../../prisma/prisma.module';
 import { PrismaDatabase } from '../../../../prisma/infrastructure/prisma.database';
 import { randomUUID } from 'crypto';
-import { unlinkSync, existsSync, readdirSync, readFileSync } from 'fs';
+import { unlinkSync, existsSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import Database from 'better-sqlite3';
 import { CarsRepository } from '../../../domain/repositories/cars.repository';
 import { PrismaCarsRepository } from '../../../infrastructure/repositories/cars.repository';
-
-const TEST_CARS = [
-  {
-    id: '00000000-0000-0000-0000-000000000001',
-    brand: 'Toyota',
-    model: 'Corolla',
-    year: 2020,
-    licensePlate: 'ABC-001',
-    color: 'White',
-    mileage: 30000,
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000002',
-    brand: 'Honda',
-    model: 'Civic',
-    year: 2019,
-    licensePlate: 'DEF-002',
-    color: null,
-    mileage: null,
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000003',
-    brand: 'Ford',
-    model: 'Focus',
-    year: 2021,
-    licensePlate: 'GHI-003',
-    color: 'Blue',
-    mileage: 15000,
-  },
-];
-
-const MIGRATIONS_DIR = join(__dirname, '../../prisma/migrations');
-
-function applyMigrations(dbPath: string): void {
-  const db = new Database(dbPath);
-  readdirSync(MIGRATIONS_DIR)
-    .filter((entry) => entry !== 'migration_lock.toml')
-    .sort()
-    .forEach((dir) => {
-      const sql = readFileSync(join(MIGRATIONS_DIR, dir, 'migration.sql'), 'utf8');
-      db.exec(sql);
-    });
-  db.close();
-}
+import { applyMigrations } from '../../../../test-utils/apply-migrations';
+import { TEST_CARS } from '../../fixtures/cars.fixtures';
+import { Car } from '@prisma/client';
 
 describe('CarsService (integration)', () => {
   let service: CarsService;
@@ -67,7 +25,10 @@ describe('CarsService (integration)', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [PrismaModule],
-    providers: [CarsService, { provide: CarsRepository, useClass: PrismaCarsRepository }],
+      providers: [
+        CarsService,
+        { provide: CarsRepository, useClass: PrismaCarsRepository },
+      ],
     }).compile();
 
     service = module.get<CarsService>(CarsService);
@@ -91,12 +52,24 @@ describe('CarsService (integration)', () => {
     await prisma.car.createMany({ data: TEST_CARS });
 
     const { cars } = await service.getCars();
-    const sorted = [...cars].sort((a, b) => a.id.localeCompare(b.id));
 
-    expect(sorted).toHaveLength(3);
-    expect(sorted[0]).toMatchObject({ id: TEST_CARS[0].id, licensePlate: TEST_CARS[0].licensePlate });
-    expect(sorted[1]).toMatchObject({ id: TEST_CARS[1].id, licensePlate: TEST_CARS[1].licensePlate });
-    expect(sorted[2]).toMatchObject({ id: TEST_CARS[2].id, licensePlate: TEST_CARS[2].licensePlate });
+    expect(cars).toHaveLength(3);
+    expect(cars).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: TEST_CARS[0].id,
+          licensePlate: TEST_CARS[0].licensePlate,
+        }),
+        expect.objectContaining({
+          id: TEST_CARS[1].id,
+          licensePlate: TEST_CARS[1].licensePlate,
+        }),
+        expect.objectContaining({
+          id: TEST_CARS[2].id,
+          licensePlate: TEST_CARS[2].licensePlate,
+        }),
+      ]),
+    );
   });
 
   it('given a car exists when updateCar then returns the id and persists the new values', async () => {
@@ -114,5 +87,41 @@ describe('CarsService (integration)', () => {
     const result = await service.updateCar(TEST_CARS[0]);
 
     expect(result).toBeNull();
+  });
+
+  it('given not existing car and valid car data when createCar then persists and returns the created car', async () => {
+    const previous = await prisma.car.findUnique({
+      where: { id: TEST_CARS[0].id },
+    });
+    expect(previous).toBeNull();
+
+    const car = await service.createCar(TEST_CARS[0]);
+
+    expect(car).toMatchObject({
+      brand: 'Toyota',
+      model: 'Corolla',
+      year: 2020,
+    });
+    const persisted = await prisma.car.findUnique({ where: { id: car.id } });
+    expect(persisted).toMatchObject({ brand: 'Toyota', model: 'Corolla' });
+  });
+
+  it('given car data with null optional fields when createCar then persists null values', async () => {
+    const car = await service.createCar(TEST_CARS[1]);
+
+    expect(car.color).toBeNull();
+    expect(car.mileage).toBeNull();
+    const persisted = await prisma.car.findUnique({ where: { id: car.id } });
+    expect(persisted!.color).toBeNull();
+    expect(persisted!.mileage).toBeNull();
+  });
+
+  it('given car data without required fields when createCar then throws an error', async () => {
+    const invalidCar = {
+      ...TEST_CARS[0],
+      brand: undefined,
+    } as unknown as Car;
+
+    await expect(service.createCar(invalidCar)).rejects.toThrow();
   });
 });

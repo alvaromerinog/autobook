@@ -12,8 +12,30 @@ class HomeScreen extends ConsumerWidget {
   Future<void> _openAddCar(BuildContext context, WidgetRef ref) async {
     final car = await showAddCarDialog(context);
     if (car != null) {
-      await ref.read(carsProvider.notifier).add(car);
+      try {
+        await ref.read(carsProvider.notifier).add(car);
+      } catch (error) {
+        if (context.mounted) {
+          _showSyncErrorSnackBar(context, error);
+        }
+      }
     }
+  }
+
+  void _showSyncErrorSnackBar(BuildContext context, Object error) {
+    final message = error.toString();
+    final isOffline =
+        message.contains('No internet') || message.contains('SocketException');
+    final text = isOffline
+        ? 'Sin conexión. El coche se guardó localmente y se sincronizará cuando haya internet.'
+        : 'Error del servidor. El coche se guardó localmente e intentaremos sincronizarlo más tarde.';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
   }
 
   @override
@@ -60,7 +82,8 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, WidgetRef ref, ThemeData theme) {
+  Widget _buildEmptyState(
+      BuildContext context, WidgetRef ref, ThemeData theme) {
     final colorScheme = theme.colorScheme;
     return Center(
       child: Padding(
@@ -102,7 +125,8 @@ class HomeScreen extends ConsumerWidget {
               icon: const Icon(Icons.add),
               label: const Text('Añadir vehículo'),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               ),
             ),
           ],
@@ -184,7 +208,8 @@ class _CarCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          Icon(Icons.speed, size: 14, color: colorScheme.onSurfaceVariant),
+                          Icon(Icons.speed,
+                              size: 14, color: colorScheme.onSurfaceVariant),
                           const SizedBox(width: 4),
                           // TODO: Cambiar a km o mi según los ajustes del usuario
                           Text(
