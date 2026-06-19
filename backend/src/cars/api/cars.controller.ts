@@ -4,8 +4,9 @@ import {
   Post,
   Put,
   Body,
-  HttpCode,
   NotFoundException,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -19,6 +20,7 @@ import { CreateCarResponseDto } from './dto/createCarResponse.dto';
 import { UpdateCarResponseDto } from './dto/updateCarResponse.dto';
 
 @Controller('cars')
+@UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 export class CarsController {
   constructor(private readonly carsService: CarsService) {}
 
@@ -26,11 +28,10 @@ export class CarsController {
   @ApiOkResponse({ type: GetCarsResponseDto })
   async getCars(): Promise<GetCarsResponseDto> {
     const { cars } = await this.carsService.getCars();
-    return new GetCarsResponseDto(cars.map(CarDto.fromDomain));
+    return new GetCarsResponseDto(cars.map((car) => CarDto.fromDomain(car)));
   }
 
   @Post()
-  @HttpCode(201)
   @ApiCreatedResponse({ type: CreateCarResponseDto })
   async createCar(@Body() body: CarDto): Promise<CreateCarResponseDto> {
     const car = await this.carsService.createCar(CarDto.toDomain(body));
