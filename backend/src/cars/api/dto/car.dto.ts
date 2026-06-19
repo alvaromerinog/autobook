@@ -1,39 +1,55 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsInt, IsOptional, IsUUID } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { MaxModelYear } from './isModelYear.decorator';
 import { Car } from '../../domain/entities/car.entity';
 
 export class CarDto {
   @IsUUID()
   @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   id: string;
 
   @IsString()
   @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   brand: string;
 
   @IsString()
   @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   model: string;
 
   @IsInt()
   @Type(() => Number)
   @ApiProperty()
+  @IsInt()
+  @Min(1886)
+  @MaxModelYear()
   year: number;
 
   @IsString()
   @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   licensePlate: string;
 
   @IsOptional()
   @IsString()
   @ApiProperty({ type: String, nullable: true })
+  @IsOptional()
+  @IsString()
   color: string | null;
 
   @IsOptional()
   @IsInt()
   @Type(() => Number)
   @ApiProperty({ type: Number, nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
   mileage: number | null;
 
   constructor(car?: Car) {
