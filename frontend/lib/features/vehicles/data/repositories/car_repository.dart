@@ -24,9 +24,9 @@ class CarRepository implements ICarRepository {
     required CarLocalDataSource local,
     required CarRemoteDataSource remote,
     required ConnectivityService connectivity,
-  })  : _local = local,
-        _remote = remote,
-        _connectivity = connectivity;
+  }) : _local = local,
+       _remote = remote,
+       _connectivity = connectivity;
 
   final CarLocalDataSource _local;
   final CarRemoteDataSource _remote;
@@ -53,7 +53,10 @@ class CarRepository implements ICarRepository {
       final response = await _remote.fetchAll();
       remoteCars = response.cars.map((dto) => dto.toDomain()).toList();
     } on DioException catch (e) {
-      throw ServerFailure(e.response?.statusCode ?? 0);
+      if (e.response != null) {
+        throw ServerFailure(e.response?.statusCode ?? 0);
+      }
+      throw const NetworkFailure();
     } catch (_) {
       throw const NetworkFailure();
     }
@@ -68,12 +71,16 @@ class CarRepository implements ICarRepository {
   Future<void> create(Car car) async {
     await _local.insertPending(car);
     if (!await _connectivity.isConnected()) return;
-    _syncingIds.add(car.id);
+    // Guard against concurrent remote posts for the same car id.
+    if (!_syncingIds.add(car.id)) return;
     try {
       await _remote.create(CarDto.fromDomain(car));
       await _local.markSynced(car.id);
     } on DioException catch (e) {
-      throw ServerFailure(e.response?.statusCode ?? 0);
+      if (e.response != null) {
+        throw ServerFailure(e.response?.statusCode ?? 0);
+      }
+      throw const NetworkFailure();
     } catch (_) {
       throw const NetworkFailure();
     } finally {
@@ -90,16 +97,15 @@ class CarRepository implements ICarRepository {
       throw CacheFailure(e.toString());
     }
     for (final car in pendingCars) {
-      if (_syncingIds.contains(car.id)) continue;
+      if (!_syncingIds.add(car.id)) continue;
       try {
         await _remote.create(CarDto.fromDomain(car));
         await _local.markSynced(car.id);
-      } on DioException catch (_) {
-        // Server or network error: skip this car, retry on next sync.
+      } on Exception catch (_) {
         // TODO: distinguish 4xx permanent rejections for user feedback.
         continue;
-      } catch (_) {
-        continue;
+      } finally {
+        _syncingIds.remove(car.id);
       }
     }
   }
