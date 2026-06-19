@@ -14,20 +14,17 @@ void main() {
   });
 
   group('SyncPendingCarsUseCase', () {
-    test(
-      'given repository syncs successfully, '
-      'when call runs, '
-      'then delegates to syncPending',
-      () async {
-        // given
-        when(() => mockRepo.syncPending()).thenAnswer((_) async {});
+    test('given repository syncs successfully, '
+        'when call runs, '
+        'then delegates to syncPending', () async {
+      // given
+      when(() => mockRepo.syncPending()).thenAnswer((_) async {});
 
-        // when
-        await useCase();
+      // when
+      await useCase();
 
-        // then
-        verify(() => mockRepo.syncPending()).called(1);
-      },
-    );
+      // then
+      verify(() => mockRepo.syncPending()).called(1);
+    });
   });
 }

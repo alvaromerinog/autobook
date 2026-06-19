@@ -13,8 +13,10 @@ Future<CarDraft?> showAddCarDialog(BuildContext context) {
     barrierColor: Colors.black.withValues(alpha: 0.3),
     pageBuilder: (_, __, ___) => const _AddCarDialog(),
     transitionBuilder: (_, animation, __, child) {
-      final curved =
-          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      );
       return BackdropFilter(
         filter: ImageFilter.blur(
           sigmaX: 6 * animation.value,
@@ -62,10 +64,12 @@ class _AddCarDialogState extends State<_AddCarDialog> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    final year = int.tryParse(_yearController.text.trim());
+    if (year == null) return;
     final CarDraft draft = (
       brand: _brandController.text.trim(),
       model: _modelController.text.trim(),
-      year: int.parse(_yearController.text.trim()),
+      year: year,
       licensePlate: _licensePlateController.text.trim().toUpperCase(),
       color: _colorController.text.trim().isEmpty
           ? null
@@ -105,8 +109,10 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.directions_car,
-                              color: colorScheme.primary),
+                          Icon(
+                            Icons.directions_car,
+                            color: colorScheme.primary,
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -164,7 +170,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                               icon: Icons.calendar_today_outlined,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
+                                FilteringTextInputFormatter.digitsOnly,
                               ],
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
@@ -187,12 +193,10 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                               label: 'Matrícula',
                               hint: 'Ej. 1234 ABC',
                               icon: Icons.badge_outlined,
-                              textCapitalization:
-                                  TextCapitalization.characters,
-                              validator: (v) =>
-                                  (v == null || v.trim().isEmpty)
-                                      ? 'Obligatoria'
-                                      : null,
+                              textCapitalization: TextCapitalization.characters,
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'Obligatoria'
+                                  : null,
                             ),
                           ),
                         ],
@@ -225,9 +229,18 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                               icon: Icons.speed_outlined,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly
+                                FilteringTextInputFormatter.digitsOnly,
                               ],
                               textInputAction: TextInputAction.done,
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) {
+                                  return null;
+                                }
+                                if (int.tryParse(v.trim()) == null) {
+                                  return 'Kilometraje inválido';
+                                }
+                                return null;
+                              },
                               onSubmitted: _submit,
                             ),
                           ),
@@ -239,8 +252,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                         icon: const Icon(Icons.check),
                         label: const Text('Guardar vehículo'),
                         style: FilledButton.styleFrom(
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           textStyle: theme.textTheme.titleSmall,
                         ),
                       ),

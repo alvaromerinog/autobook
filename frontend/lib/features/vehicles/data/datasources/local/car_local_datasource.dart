@@ -25,14 +25,14 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
   final AppDatabase _db;
 
   Car _toEntity(CarEntry e) => Car(
-        id: e.id,
-        brand: e.brand,
-        model: e.model,
-        year: e.year,
-        licensePlate: e.licensePlate,
-        color: e.color,
-        mileage: e.mileage,
-      );
+    id: e.id,
+    brand: e.brand,
+    model: e.model,
+    year: e.year,
+    licensePlate: e.licensePlate,
+    color: e.color,
+    mileage: e.mileage,
+  );
 
   CarsTableCompanion _toCompanion(Car car, {bool isPending = false}) =>
       CarsTableCompanion(
@@ -50,15 +50,15 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
   // Companion for upsert that omits isPending so existing pending rows keep
   // their flag intact when server data is written over them.
   CarsTableCompanion _toUpsertCompanion(Car car) => CarsTableCompanion(
-        id: Value(car.id),
-        brand: Value(car.brand),
-        model: Value(car.model),
-        year: Value(car.year),
-        licensePlate: Value(car.licensePlate),
-        color: Value(car.color),
-        mileage: Value(car.mileage),
-        updatedAt: Value(DateTime.now()),
-      );
+    id: Value(car.id),
+    brand: Value(car.brand),
+    model: Value(car.model),
+    year: Value(car.year),
+    licensePlate: Value(car.licensePlate),
+    color: Value(car.color),
+    mileage: Value(car.mileage),
+    updatedAt: Value(DateTime.timestamp()),
+  );
 
   @override
   Future<List<Car>> getAll() async {
@@ -88,9 +88,9 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
 
   @override
   Future<List<Car>> getPending() async {
-    final rows = await (_db.select(_db.carsTable)
-          ..where((t) => t.isPending.equals(true)))
-        .get();
+    final rows = await (_db.select(
+      _db.carsTable,
+    )..where((t) => t.isPending.equals(true))).get();
     return rows.map(_toEntity).toList();
   }
 

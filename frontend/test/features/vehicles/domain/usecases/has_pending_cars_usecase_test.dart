@@ -14,38 +14,32 @@ void main() {
   });
 
   group('HasPendingCarsUseCase', () {
-    test(
-      'given repository has pending cars, '
-      'when call runs, '
-      'then returns true',
-      () async {
-        // given
-        when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
+    test('given repository has pending cars, '
+        'when call runs, '
+        'then returns true', () async {
+      // given
+      when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
 
-        // when
-        final result = await useCase();
+      // when
+      final result = await useCase();
 
-        // then
-        expect(result, isTrue);
-        verify(() => mockRepo.hasPending()).called(1);
-      },
-    );
+      // then
+      expect(result, isTrue);
+      verify(() => mockRepo.hasPending()).called(1);
+    });
 
-    test(
-      'given repository has no pending cars, '
-      'when call runs, '
-      'then returns false',
-      () async {
-        // given
-        when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
+    test('given repository has no pending cars, '
+        'when call runs, '
+        'then returns false', () async {
+      // given
+      when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
 
-        // when
-        final result = await useCase();
+      // when
+      final result = await useCase();
 
-        // then
-        expect(result, isFalse);
-        verify(() => mockRepo.hasPending()).called(1);
-      },
-    );
+      // then
+      expect(result, isFalse);
+      verify(() => mockRepo.hasPending()).called(1);
+    });
   });
 }

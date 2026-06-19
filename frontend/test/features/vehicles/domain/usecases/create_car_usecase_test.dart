@@ -58,22 +58,15 @@ void main() {
       },
     );
 
-    test(
-      'given the repository throws a Failure, '
-      'when call runs, '
-      'then the Failure propagates',
-      () async {
-        // given
-        when(() => mockIds.newId()).thenReturn('generated-id');
-        when(() => mockRepo.create(any()))
-            .thenThrow(const NetworkFailure());
+    test('given the repository throws a Failure, '
+        'when call runs, '
+        'then the Failure propagates', () async {
+      // given
+      when(() => mockIds.newId()).thenReturn('generated-id');
+      when(() => mockRepo.create(any())).thenThrow(const NetworkFailure());
 
-        // when / then
-        await expectLater(
-          () => useCase(draft),
-          throwsA(isA<NetworkFailure>()),
-        );
-      },
-    );
+      // when / then
+      await expectLater(() => useCase(draft), throwsA(isA<NetworkFailure>()));
+    });
   });
 }

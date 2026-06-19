@@ -51,3 +51,4 @@ app.*.map.json
 
 # Generated Dart/Riverpod code (regenerate with: dart run build_runner build)
 lib/**/*.g.dart
+lib/**/*.freezed.dart

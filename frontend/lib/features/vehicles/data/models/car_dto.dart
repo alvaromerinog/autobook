@@ -21,24 +21,24 @@ abstract class CarDto with _$CarDto {
   factory CarDto.fromJson(Map<String, dynamic> json) => _$CarDtoFromJson(json);
 
   factory CarDto.fromDomain(Car car) => CarDto(
-        id: car.id,
-        brand: car.brand,
-        model: car.model,
-        year: car.year,
-        licensePlate: car.licensePlate,
-        color: car.color,
-        mileage: car.mileage,
-      );
+    id: car.id,
+    brand: car.brand,
+    model: car.model,
+    year: car.year,
+    licensePlate: car.licensePlate,
+    color: car.color,
+    mileage: car.mileage,
+  );
 
   Car toDomain() => Car(
-        id: id,
-        brand: brand,
-        model: model,
-        year: year,
-        licensePlate: licensePlate,
-        color: color,
-        mileage: mileage,
-      );
+    id: id,
+    brand: brand,
+    model: model,
+    year: year,
+    licensePlate: licensePlate,
+    color: color,
+    mileage: mileage,
+  );
 }
 
 @freezed

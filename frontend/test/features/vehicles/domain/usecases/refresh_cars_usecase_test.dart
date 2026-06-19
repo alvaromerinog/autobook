@@ -15,37 +15,29 @@ void main() {
   });
 
   group('RefreshCarsUseCase', () {
-    test(
-      'given repository refreshes successfully, '
-      'when call runs, '
-      'then delegates to refreshFromRemote',
-      () async {
-        // given
-        when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+    test('given repository refreshes successfully, '
+        'when call runs, '
+        'then delegates to refreshFromRemote', () async {
+      // given
+      when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
 
-        // when
-        await useCase();
+      // when
+      await useCase();
 
-        // then
-        verify(() => mockRepo.refreshFromRemote()).called(1);
-      },
-    );
+      // then
+      verify(() => mockRepo.refreshFromRemote()).called(1);
+    });
 
-    test(
-      'given repository throws a Failure, '
-      'when call runs, '
-      'then the Failure propagates',
-      () async {
-        // given
-        when(() => mockRepo.refreshFromRemote())
-            .thenThrow(const ServerFailure(500));
+    test('given repository throws a Failure, '
+        'when call runs, '
+        'then the Failure propagates', () async {
+      // given
+      when(
+        () => mockRepo.refreshFromRemote(),
+      ).thenThrow(const ServerFailure(500));
 
-        // when / then
-        await expectLater(
-          () => useCase(),
-          throwsA(isA<ServerFailure>()),
-        );
-      },
-    );
+      // when / then
+      await expectLater(() => useCase(), throwsA(isA<ServerFailure>()));
+    });
   });
 }
