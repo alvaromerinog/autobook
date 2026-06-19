@@ -4,9 +4,9 @@ import {
   Post,
   Put,
   Body,
-  HttpCode,
   NotFoundException,
-  ConflictException,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -22,6 +22,7 @@ import { UpdateCarResponseDto } from './dto/updateCarResponse.dto';
 import { CarConflictError } from '../domain/errors/car-conflict.error';
 
 @Controller('cars')
+@UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 export class CarsController {
   constructor(private readonly carsService: CarsService) {}
 
@@ -33,7 +34,6 @@ export class CarsController {
   }
 
   @Post()
-  @HttpCode(201)
   @ApiCreatedResponse({ type: CreateCarResponseDto })
   @ApiConflictResponse()
   async createCar(@Body() body: CarDto): Promise<CreateCarResponseDto> {
