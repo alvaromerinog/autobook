@@ -14,10 +14,8 @@ class CarsTable extends Table {
   TextColumn get licensePlate => text()();
   TextColumn get color => text().nullable()();
   IntColumn get mileage => integer().nullable()();
-  BoolColumn get isPending =>
-      boolean().withDefault(const Constant(false))();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isPending => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
   Set<Column> get primaryKey => {id};

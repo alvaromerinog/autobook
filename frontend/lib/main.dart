@@ -12,11 +12,7 @@ void main() {
     return true;
   };
 
-  runApp(
-    const ProviderScope(
-      child: AutobookApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: AutobookApp()));
 }
 
 class AutobookApp extends ConsumerWidget {

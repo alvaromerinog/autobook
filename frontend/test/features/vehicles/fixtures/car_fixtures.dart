@@ -79,13 +79,12 @@ Car buildCar({
   String licensePlate = '1234 ABC',
   String? color,
   int? mileage,
-}) =>
-    Car(
-      id: id,
-      brand: brand,
-      model: model,
-      year: year,
-      licensePlate: licensePlate,
-      color: color,
-      mileage: mileage,
-    );
+}) => Car(
+  id: id,
+  brand: brand,
+  model: model,
+  year: year,
+  licensePlate: licensePlate,
+  color: color,
+  mileage: mileage,
+);

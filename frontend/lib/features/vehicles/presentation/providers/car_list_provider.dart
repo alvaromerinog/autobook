@@ -18,8 +18,8 @@ class CarList extends _$CarList {
   @override
   Future<CarListState> build() async {
     final coordinator = ref.read(syncCoordinatorProvider);
-    coordinator.register(syncPendingCars);
-    ref.onDispose(coordinator.unregister);
+    final unregister = coordinator.register(syncPendingCars);
+    ref.onDispose(unregister);
 
     Failure? syncError;
     try {

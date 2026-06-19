@@ -15,9 +15,9 @@ GetCarsUseCase getCarsUseCase(Ref ref) =>
 
 @riverpod
 CreateCarUseCase createCarUseCase(Ref ref) => CreateCarUseCase(
-      ref.watch(carRepositoryProvider),
-      ref.watch(idGeneratorProvider),
-    );
+  ref.watch(carRepositoryProvider),
+  ref.watch(idGeneratorProvider),
+);
 
 @riverpod
 RefreshCarsUseCase refreshCarsUseCase(Ref ref) =>
