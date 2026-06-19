@@ -1,55 +1,47 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { MaxModelYear } from './isModelYear.decorator';
 import { Car } from '../../domain/entities/car.entity';
 
 export class CarDto {
-  @IsUUID()
-  @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   id: string;
 
   @IsString()
-  @ApiProperty()
-  @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   brand: string;
 
   @IsString()
-  @ApiProperty()
-  @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   model: string;
 
   @IsInt()
   @Type(() => Number)
-  @ApiProperty()
-  @IsInt()
   @Min(1886)
   @MaxModelYear()
+  @ApiProperty()
   year: number;
 
   @IsString()
-  @ApiProperty()
-  @IsString()
   @IsNotEmpty()
+  @ApiProperty()
   licensePlate: string;
 
   @IsOptional()
   @IsString()
   @ApiProperty({ type: String, nullable: true })
-  @IsOptional()
-  @IsString()
   color: string | null;
 
   @IsOptional()
   @IsInt()
   @Type(() => Number)
-  @ApiProperty({ type: Number, nullable: true })
-  @IsOptional()
-  @IsInt()
   @Min(0)
+  @ApiProperty({ type: Number, nullable: true })
   mileage: number | null;
 
   constructor(car?: Car) {
@@ -68,7 +60,7 @@ export class CarDto {
     return new CarDto(car);
   }
 
-  toDomain = (): Car => {
+  toDomain(): Car {
     return {
       id: this.id,
       brand: this.brand,
@@ -78,5 +70,5 @@ export class CarDto {
       color: this.color,
       mileage: this.mileage,
     };
-  };
+  }
 }
