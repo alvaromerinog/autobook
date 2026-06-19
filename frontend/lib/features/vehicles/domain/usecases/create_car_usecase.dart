@@ -2,7 +2,6 @@ import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/repositories/car_repository.dart';
 
-/// Raw form input for creating a [Car]; the id is assigned by the use case.
 typedef CarDraft = ({
   String brand,
   String model,

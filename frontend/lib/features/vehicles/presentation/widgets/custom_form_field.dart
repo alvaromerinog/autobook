@@ -40,9 +40,7 @@ class CustomFormField extends StatelessWidget {
       textInputAction: textInputAction,
       validator: validator,
       onFieldSubmitted: (_) {
-        if (onSubmitted != null) {
-          onSubmitted!();
-        }
+        onSubmitted?.call();
       },
       decoration: InputDecoration(
         labelText: label,
@@ -53,8 +51,10 @@ class CustomFormField extends StatelessWidget {
         ),
         filled: true,
         isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
+        ),
       ),
     );
   }

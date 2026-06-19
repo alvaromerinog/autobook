@@ -7,11 +7,6 @@ part 'app_router.g.dart';
 @Riverpod(keepAlive: true)
 GoRouter appRouter(Ref ref) {
   return GoRouter(
-    routes: [
-      GoRoute(
-        path: '/',
-        builder: (_, __) => const HomeScreen(),
-      ),
-    ],
+    routes: [GoRoute(path: '/', builder: (_, __) => const HomeScreen())],
   );
 }

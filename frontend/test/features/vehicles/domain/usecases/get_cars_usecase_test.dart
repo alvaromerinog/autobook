@@ -15,21 +15,18 @@ void main() {
   });
 
   group('GetCarsUseCase', () {
-    test(
-      'given repository returns cars, '
-      'when call runs, '
-      'then delegates to getAll and returns the list',
-      () async {
-        // given
-        when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+    test('given repository returns cars, '
+        'when call runs, '
+        'then delegates to getAll and returns the list', () async {
+      // given
+      when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
 
-        // when
-        final result = await useCase();
+      // when
+      final result = await useCase();
 
-        // then
-        expect(result, oneCarList);
-        verify(() => mockRepo.getAll()).called(1);
-      },
-    );
+      // then
+      expect(result, oneCarList);
+      verify(() => mockRepo.getAll()).called(1);
+    });
   });
 }

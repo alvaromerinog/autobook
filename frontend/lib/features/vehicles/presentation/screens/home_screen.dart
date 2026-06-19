@@ -23,8 +23,9 @@ class HomeScreen extends ConsumerWidget {
           content: const Text('Error al crear el vehículo'),
           action: SnackBarAction(
             label: 'Reintentar',
-            onPressed: () =>
-                ref.read(carListProvider.notifier).syncPendingCars(),
+            onPressed: () async {
+              await ref.read(carListProvider.notifier).syncPendingCars();
+            },
           ),
         ),
       );
@@ -32,11 +33,11 @@ class HomeScreen extends ConsumerWidget {
   }
 
   String _friendlyError(Failure failure) => switch (failure) {
-        NetworkFailure() => 'No se pudo conectar con el servidor.',
-        ServerFailure() =>
-          'No se pudieron cargar los vehículos. Inténtalo de nuevo.',
-        CacheFailure() => 'Error al acceder al almacenamiento local.',
-      };
+    NetworkFailure() => 'No se pudo conectar con el servidor.',
+    ServerFailure() =>
+      'No se pudieron cargar los vehículos. Inténtalo de nuevo.',
+    CacheFailure() => 'Error al acceder al almacenamiento local.',
+  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,15 +45,37 @@ class HomeScreen extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final carsAsync = ref.watch(carListProvider);
 
-    ref.listen<AsyncValue<CarListState>>(carListProvider, (_, next) {
+    String? bannerKind(CarListState? state) {
+      if (state?.syncError != null) return 'error';
+      if (state?.hasPendingSync == true) return 'pending';
+      return null;
+    }
+
+    String? bannerSignature(CarListState? state) {
+      if (state?.syncError != null) {
+        return 'error:${state!.syncError.runtimeType}:${state.hasPendingSync}';
+      }
+      if (state?.hasPendingSync == true) return 'pending';
+      return null;
+    }
+
+    ref.listen<AsyncValue<CarListState>>(carListProvider, (prev, next) {
       final messenger = ScaffoldMessenger.of(context);
       next.whenData((carsState) {
-        if (carsState.syncError != null) {
-          messenger.hideCurrentMaterialBanner();
+        final prevSig = bannerSignature(prev?.value);
+        final nextSig = bannerSignature(carsState);
+        if (prevSig == nextSig) return;
+        final nextKind = bannerKind(carsState);
+
+        messenger.hideCurrentMaterialBanner();
+        if (nextKind == 'error') {
+          final pendingSuffix = carsState.hasPendingSync
+              ? ' Hay vehículos pendientes de sincronización.'
+              : '';
           messenger.showMaterialBanner(
             MaterialBanner(
               content: Text(
-                _friendlyError(carsState.syncError!),
+                '${_friendlyError(carsState.syncError!)}$pendingSuffix',
                 style: TextStyle(color: colorScheme.onErrorContainer),
               ),
               backgroundColor: colorScheme.errorContainer,
@@ -64,44 +87,34 @@ class HomeScreen extends ConsumerWidget {
                   },
                   child: Text(
                     'Reintentar',
-                    style:
-                        TextStyle(color: colorScheme.onErrorContainer),
+                    style: TextStyle(color: colorScheme.onErrorContainer),
                   ),
                 ),
               ],
             ),
           );
-        } else if (carsState.hasPendingSync) {
-          messenger.hideCurrentMaterialBanner();
+        } else if (nextKind == 'pending') {
           messenger.showMaterialBanner(
             MaterialBanner(
               content: Text(
                 'Vehículos pendientes de sincronización',
-                style: TextStyle(
-                  color: colorScheme.onSecondaryContainer,
-                ),
+                style: TextStyle(color: colorScheme.onSecondaryContainer),
               ),
               backgroundColor: colorScheme.secondaryContainer,
               actions: [
                 TextButton(
                   onPressed: () {
                     messenger.hideCurrentMaterialBanner();
-                    ref
-                        .read(carListProvider.notifier)
-                        .syncPendingCars();
+                    ref.read(carListProvider.notifier).syncPendingCars();
                   },
                   child: Text(
                     'Sincronizar',
-                    style: TextStyle(
-                      color: colorScheme.onSecondaryContainer,
-                    ),
+                    style: TextStyle(color: colorScheme.onSecondaryContainer),
                   ),
                 ),
               ],
             ),
           );
-        } else {
-          messenger.hideCurrentMaterialBanner();
         }
       });
     });
@@ -140,7 +153,11 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildError(
-      BuildContext context, WidgetRef ref, ThemeData theme, Object error) {
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    Object error,
+  ) {
     final colorScheme = theme.colorScheme;
     final message = error is Failure
         ? _friendlyError(error)
@@ -171,7 +188,10 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(
-      BuildContext context, WidgetRef ref, ThemeData theme) {
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+  ) {
     final colorScheme = theme.colorScheme;
     return Center(
       child: Padding(
@@ -207,16 +227,6 @@ class HomeScreen extends ConsumerWidget {
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 32),
-            FilledButton.icon(
-              onPressed: () => _openAddCar(context, ref),
-              icon: const Icon(Icons.add),
-              label: const Text('Añadir vehículo'),
-              style: FilledButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              ),
-            ),
           ],
         ),
       ),
@@ -249,73 +259,71 @@ class _CarCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: colorScheme.outlineVariant),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {},
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.directions_car,
-                  color: colorScheme.onPrimaryContainer,
-                  size: 28,
-                ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${car.brand} ${car.model}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+              child: Icon(
+                Icons.directions_car,
+                color: colorScheme.onPrimaryContainer,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${car.brand} ${car.model}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 4),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      InfoChip(label: car.year.toString()),
+                      const SizedBox(width: 8),
+                      InfoChip(label: car.licensePlate),
+                      if (car.color != null) ...[
+                        const SizedBox(width: 8),
+                        InfoChip(label: car.color!),
+                      ],
+                    ],
+                  ),
+                  if (car.mileage != null) ...[
+                    const SizedBox(height: 6),
                     Row(
                       children: [
-                        InfoChip(label: car.year.toString()),
-                        const SizedBox(width: 8),
-                        InfoChip(label: car.licensePlate),
-                        if (car.color != null) ...[
-                          const SizedBox(width: 8),
-                          InfoChip(label: car.color!),
-                        ],
+                        Icon(
+                          Icons.speed,
+                          size: 14,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        // TODO: Cambiar a km o mi según los ajustes del usuario
+                        Text(
+                          '${_formatMileage(context, car.mileage!)} km',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ],
                     ),
-                    if (car.mileage != null) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Icon(Icons.speed,
-                              size: 14, color: colorScheme.onSurfaceVariant),
-                          const SizedBox(width: 4),
-                          // TODO: Cambiar a km o mi según los ajustes del usuario
-                          Text(
-                            '${_formatMileage(context, car.mileage!)} km',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
                   ],
-                ),
+                ],
               ),
-              Icon(Icons.chevron_right,
-                  color: colorScheme.onSurfaceVariant),
-            ],
-          ),
+            ),
+            Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+          ],
         ),
       ),
     );

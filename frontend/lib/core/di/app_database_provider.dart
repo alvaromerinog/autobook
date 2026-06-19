@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:autobook/features/vehicles/data/datasources/local/app_database.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -15,6 +16,8 @@ AppDatabase appDatabase(Ref ref) {
       ),
     ),
   );
-  ref.onDispose(db.close);
+  ref.onDispose(() {
+    unawaited(db.close());
+  });
   return db;
 }
