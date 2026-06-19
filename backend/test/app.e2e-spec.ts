@@ -16,10 +16,13 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/cars (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/cars')
       .expect(200)
-      .expect('Hello World!');
+      .expect((res: { body: { cars?: unknown } }) => {
+        expect(res.body).toHaveProperty('cars');
+        expect(Array.isArray(res.body.cars)).toBe(true);
+      });
   });
 });
