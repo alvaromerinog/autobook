@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
@@ -123,7 +125,8 @@ void main() {
       test(
         'given the remote refresh fails with a Failure, '
         'when build runs, '
-        'then cars still load and the failure is surfaced as syncError',
+        'then local data renders first without sync error, '
+        'and eventual state captures the failure',
         () async {
           // given
           when(
@@ -135,12 +138,59 @@ void main() {
 
           // when
           final container = makeContainer();
-          final state = await container.read(carListProvider.future);
+          final initial = await container.read(carListProvider.future);
 
-          // then
-          expect(state.cars, oneCarList);
-          expect(state.syncError, isA<NetworkFailure>());
-          expect(state.hasPendingSync, isTrue);
+          // then — local data emitted without waiting for remote
+          expect(initial.cars, oneCarList);
+          expect(initial.syncError, isNull);
+          expect(initial.hasPendingSync, isTrue);
+
+          // when — let background sync complete
+          for (var i = 0; i < 10; i++) {
+            await Future.delayed(Duration.zero);
+          }
+
+          // then — eventual state has the sync error
+          final eventual = container.read(carListProvider).requireValue;
+          expect(eventual.cars, oneCarList);
+          expect(eventual.syncError, isA<NetworkFailure>());
+          expect(eventual.hasPendingSync, isTrue);
+        },
+      );
+
+      test(
+        'given a slow remote, '
+        'when build runs, '
+        'then local data is emitted before remote completes',
+        () async {
+          // given
+          final remoteCompleter = Completer<void>();
+          when(
+            () => mockRepo.refreshFromRemote(),
+          ).thenAnswer((_) => remoteCompleter.future);
+          when(() => mockRepo.syncPending()).thenAnswer((_) async {});
+          when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+          when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
+
+          // when
+          final container = makeContainer();
+          final initial = await container.read(carListProvider.future);
+
+          // then — local data returned, remote still pending
+          expect(initial.cars, oneCarList);
+          expect(initial.syncError, isNull);
+
+          // complete remote and flush
+          remoteCompleter.complete();
+          for (var i = 0; i < 10; i++) {
+            await Future.delayed(Duration.zero);
+          }
+
+          // then — background sync completed without error
+          final eventual = container.read(carListProvider).requireValue;
+          expect(eventual.cars, oneCarList);
+          expect(eventual.syncError, isNull);
+          verify(() => mockRepo.refreshFromRemote()).called(1);
         },
       );
     });
