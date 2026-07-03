@@ -77,6 +77,10 @@ class CarRepository implements ICarRepository {
       await _remote.create(CarDto.fromDomain(car));
       await _local.markSynced(car.id);
     } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        await _local.markSynced(car.id);
+        return;
+      }
       if (e.response != null) {
         throw ServerFailure(e.response?.statusCode ?? 0);
       }
@@ -101,8 +105,12 @@ class CarRepository implements ICarRepository {
       try {
         await _remote.create(CarDto.fromDomain(car));
         await _local.markSynced(car.id);
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 409) {
+          await _local.markSynced(car.id);
+        }
+        continue;
       } on Exception catch (_) {
-        // TODO: distinguish 4xx permanent rejections for user feedback.
         continue;
       } finally {
         _syncingIds.remove(car.id);
