@@ -28,8 +28,6 @@ class CarList extends _$CarList {
       syncError = f;
     }
 
-    // Drain pending writes that may have been missed while this provider was
-    // disposed (e.g. connectivity restored when user navigated away).
     try {
       await ref.read(syncPendingCarsUseCaseProvider).call();
     } on Failure catch (f) {
