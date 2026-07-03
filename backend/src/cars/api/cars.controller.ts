@@ -6,8 +6,7 @@ import {
   Body,
   ConflictException,
   NotFoundException,
-  UsePipes,
-  ValidationPipe,
+  Param,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -23,7 +22,6 @@ import { UpdateCarResponseDto } from './dto/updateCarResponse.dto';
 import { CarConflictError } from '../domain/errors/car-conflict.error';
 
 @Controller('cars')
-@UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 export class CarsController {
   constructor(private readonly carsService: CarsService) {}
 
@@ -49,12 +47,15 @@ export class CarsController {
     }
   }
 
-  @Put()
+  @Put(':id')
   @ApiOkResponse({ type: UpdateCarResponseDto })
   @ApiNotFoundResponse()
-  async updateCar(@Body() body: CarDto): Promise<UpdateCarResponseDto> {
+  async updateCar(
+    @Param('id') id: string,
+    @Body() body: CarDto,
+  ): Promise<UpdateCarResponseDto> {
     const carData = body.toDomain();
-    const result = await this.carsService.updateCar(carData);
+    const result = await this.carsService.updateCar({ ...carData, id });
     if (!result) throw new NotFoundException();
     return new UpdateCarResponseDto(result.id);
   }
