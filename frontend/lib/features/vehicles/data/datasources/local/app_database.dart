@@ -15,6 +15,8 @@ class CarsTable extends Table {
   TextColumn get color => text().nullable()();
   IntColumn get mileage => integer().nullable()();
   BoolColumn get isPending => boolean().withDefault(const Constant(false))();
+  BoolColumn get wasCreated => boolean().withDefault(const Constant(false))();
+  BoolColumn get wasUpdated => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
 
   @override
@@ -26,5 +28,21 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) async {
+      await m.createAll();
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(carsTable, carsTable.wasCreated);
+        await m.addColumn(carsTable, carsTable.wasUpdated);
+        await customUpdate(
+          "UPDATE cars SET wasCreated = isPending WHERE isPending = 1",
+        );
+      }
+    },
+  );
 }

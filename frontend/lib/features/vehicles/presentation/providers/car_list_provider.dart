@@ -130,6 +130,32 @@ class CarList extends _$CarList {
     if (syncError != null) throw syncError;
   }
 
+  Future<void> updateCar(Car car) async {
+    Failure? syncError;
+    try {
+      await ref.read(updateCarUseCaseProvider).call(car);
+    } on Failure catch (f) {
+      syncError = f;
+    }
+
+    var cars = <Car>[];
+    var hasPendingSync = false;
+    try {
+      cars = await ref.read(getCarsUseCaseProvider).call();
+      hasPendingSync = await ref.read(hasPendingCarsUseCaseProvider).call();
+    } on Failure catch (f) {
+      syncError ??= f;
+    }
+
+    state = AsyncData((
+      cars: cars,
+      syncError: syncError,
+      hasPendingSync: hasPendingSync,
+    ));
+
+    if (syncError != null) throw syncError;
+  }
+
   Future<void> syncPendingCars() async {
     Failure? syncError;
     try {

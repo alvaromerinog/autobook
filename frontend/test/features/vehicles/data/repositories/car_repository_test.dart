@@ -308,12 +308,145 @@ void main() {
       });
     });
 
+    group('update', () {
+      test('given device is online, '
+          'when update is called, '
+          'then upserts as pending update, calls remote update, '
+          'and marks synced', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockLocal.upsertPending(
+            any(),
+            wasCreated: any(named: 'wasCreated'),
+            wasUpdated: any(named: 'wasUpdated'),
+          ),
+        ).thenAnswer((_) async {});
+        when(() => mockRemote.update(any(), any())).thenAnswer((_) async {});
+        when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.update(toyotaCorolla);
+
+        // then
+        verify(
+          () => mockLocal.upsertPending(
+            toyotaCorolla,
+            wasCreated: false,
+            wasUpdated: true,
+          ),
+        ).called(1);
+        verify(() => mockRemote.update('1', any())).called(1);
+        verify(() => mockLocal.markSynced('1')).called(1);
+      });
+
+      test('given device is offline, '
+          'when update is called, '
+          'then upserts as pending update and does not call remote', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => false);
+        when(
+          () => mockLocal.upsertPending(
+            any(),
+            wasCreated: any(named: 'wasCreated'),
+            wasUpdated: any(named: 'wasUpdated'),
+          ),
+        ).thenAnswer((_) async {});
+
+        // when
+        await repo.update(toyotaCorolla);
+
+        // then
+        verify(
+          () => mockLocal.upsertPending(
+            toyotaCorolla,
+            wasCreated: false,
+            wasUpdated: true,
+          ),
+        ).called(1);
+        verifyNever(() => mockRemote.update(any(), any()));
+        verifyNever(() => mockLocal.markSynced(any()));
+      });
+
+      test('given remote update returns 404, '
+          'when update is called, '
+          'then marks synced and does not throw', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockLocal.upsertPending(
+            any(),
+            wasCreated: any(named: 'wasCreated'),
+            wasUpdated: any(named: 'wasUpdated'),
+          ),
+        ).thenAnswer((_) async {});
+        when(() => mockRemote.update(any(), any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/1'),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: '/cars/1'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.update(toyotaCorolla);
+
+        // then
+        verify(() => mockLocal.markSynced('1')).called(1);
+      });
+
+      test('given remote update returns a server error, '
+          'when update is called, '
+          'then throws ServerFailure and car stays pending', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockLocal.upsertPending(
+            any(),
+            wasCreated: any(named: 'wasCreated'),
+            wasUpdated: any(named: 'wasUpdated'),
+          ),
+        ).thenAnswer((_) async {});
+        when(() => mockRemote.update(any(), any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/1'),
+            response: Response(
+              statusCode: 500,
+              requestOptions: RequestOptions(path: '/cars/1'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+
+        // when / then
+        await expectLater(
+          () => repo.update(toyotaCorolla),
+          throwsA(isA<ServerFailure>()),
+        );
+        verifyNever(() => mockLocal.markSynced(any()));
+      });
+    });
+
     group('syncPending', () {
       test('given one pending car and device is online, '
           'when syncPending is called, '
           'then sends to api and marks synced', () async {
         // given
-        when(() => mockLocal.getPending()).thenAnswer((_) async => [fiat500]);
+        when(() => mockLocal.getPendingWithFlags()).thenAnswer(
+          (_) async => [(car: fiat500, wasCreated: true, wasUpdated: false)],
+        );
         when(() => mockRemote.create(any())).thenAnswer((_) async {});
         when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
 
@@ -329,9 +462,12 @@ void main() {
           'when syncPending is called, '
           'then first is synced and second stays pending', () async {
         // given
-        when(
-          () => mockLocal.getPending(),
-        ).thenAnswer((_) async => [fiat500, alfaGiulia]);
+        when(() => mockLocal.getPendingWithFlags()).thenAnswer(
+          (_) async => [
+            (car: fiat500, wasCreated: true, wasUpdated: false),
+            (car: alfaGiulia, wasCreated: true, wasUpdated: false),
+          ],
+        );
         var callCount = 0;
         when(() => mockRemote.create(any())).thenAnswer((_) async {
           callCount++;
@@ -351,7 +487,9 @@ void main() {
           'when syncPending is called, '
           'then all pending cars stay pending', () async {
         // given
-        when(() => mockLocal.getPending()).thenAnswer((_) async => [fiat500]);
+        when(() => mockLocal.getPendingWithFlags()).thenAnswer(
+          (_) async => [(car: fiat500, wasCreated: true, wasUpdated: false)],
+        );
         when(
           () => mockRemote.create(any()),
         ).thenThrow(Exception('server error'));
@@ -363,12 +501,12 @@ void main() {
         verifyNever(() => mockLocal.markSynced(any()));
       });
 
-      test('given getPending throws, '
+      test('given getPendingWithFlags throws, '
           'when syncPending is called, '
           'then throws CacheFailure', () async {
         // given
         when(
-          () => mockLocal.getPending(),
+          () => mockLocal.getPendingWithFlags(),
         ).thenThrow(StateError('database unavailable'));
 
         // when / then
@@ -376,6 +514,69 @@ void main() {
           () => repo.syncPending(),
           throwsA(isA<CacheFailure>()),
         );
+      });
+
+      test('given one updated pending car and device is online, '
+          'when syncPending is called, '
+          'then calls remote update and marks synced', () async {
+        // given
+        when(() => mockLocal.getPendingWithFlags()).thenAnswer(
+          (_) async => [(car: fiat500, wasCreated: false, wasUpdated: true)],
+        );
+        when(() => mockRemote.update(any(), any())).thenAnswer((_) async {});
+        when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.syncPending();
+
+        // then
+        verify(() => mockRemote.update('pend1', any())).called(1);
+        verifyNever(() => mockRemote.create(any()));
+        verify(() => mockLocal.markSynced('pend1')).called(1);
+      });
+
+      test('given one pending car created and updated offline, '
+          'when syncPending is called, '
+          'then prefers create over update', () async {
+        // given
+        when(() => mockLocal.getPendingWithFlags()).thenAnswer(
+          (_) async => [(car: fiat500, wasCreated: true, wasUpdated: true)],
+        );
+        when(() => mockRemote.create(any())).thenAnswer((_) async {});
+        when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.syncPending();
+
+        // then
+        verify(() => mockRemote.create(any())).called(1);
+        verifyNever(() => mockRemote.update(any(), any()));
+      });
+
+      test('given remote update returns 404, '
+          'when syncPending is called, '
+          'then marks synced to stop retrying', () async {
+        // given
+        when(() => mockLocal.getPendingWithFlags()).thenAnswer(
+          (_) async => [(car: fiat500, wasCreated: false, wasUpdated: true)],
+        );
+        when(() => mockRemote.update(any(), any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/pend1'),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: '/cars/pend1'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.syncPending();
+
+        // then
+        verify(() => mockLocal.markSynced('pend1')).called(1);
       });
     });
   });

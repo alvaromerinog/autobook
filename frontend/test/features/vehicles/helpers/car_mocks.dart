@@ -13,8 +13,10 @@ const _emptyCarDto = CarDto(
   year: 0,
   licensePlate: '',
 );
+const _emptyPendingCar = (car: _emptyCar, wasCreated: false, wasUpdated: false);
 
 void registerCarFallbacks() {
   registerFallbackValue(_emptyCar);
   registerFallbackValue(_emptyCarDto);
+  registerFallbackValue(_emptyPendingCar);
 }

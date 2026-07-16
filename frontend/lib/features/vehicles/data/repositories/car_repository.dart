@@ -93,20 +93,50 @@ class CarRepository implements ICarRepository {
   }
 
   @override
-  Future<void> syncPending() async {
-    final List<Car> pendingCars;
+  Future<void> update(Car car) async {
+    await _local.upsertPending(car, wasCreated: false, wasUpdated: true);
+    if (!await _connectivity.isConnected()) return;
+    if (!_syncingIds.add(car.id)) return;
     try {
-      pendingCars = await _local.getPending();
+      await _remote.update(car.id, CarDto.fromDomain(car));
+      await _local.markSynced(car.id);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        // Car was deleted remotely; stop retrying.
+        await _local.markSynced(car.id);
+        return;
+      }
+      if (e.response != null) {
+        throw ServerFailure(e.response?.statusCode ?? 0);
+      }
+      throw const NetworkFailure();
+    } catch (_) {
+      throw const NetworkFailure();
+    } finally {
+      _syncingIds.remove(car.id);
+    }
+  }
+
+  @override
+  Future<void> syncPending() async {
+    final List<PendingCar> pendingCars;
+    try {
+      pendingCars = await _local.getPendingWithFlags();
     } catch (e) {
       throw CacheFailure(e.toString());
     }
-    for (final car in pendingCars) {
+    for (final pending in pendingCars) {
+      final car = pending.car;
       if (!_syncingIds.add(car.id)) continue;
       try {
-        await _remote.create(CarDto.fromDomain(car));
+        if (pending.wasCreated) {
+          await _remote.create(CarDto.fromDomain(car));
+        } else if (pending.wasUpdated) {
+          await _remote.update(car.id, CarDto.fromDomain(car));
+        }
         await _local.markSynced(car.id);
       } on DioException catch (e) {
-        if (e.response?.statusCode == 409) {
+        if (e.response?.statusCode == 409 || e.response?.statusCode == 404) {
           await _local.markSynced(car.id);
         }
         continue;

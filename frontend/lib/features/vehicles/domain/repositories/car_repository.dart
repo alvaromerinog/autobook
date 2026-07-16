@@ -4,6 +4,7 @@ abstract class ICarRepository {
   Future<List<Car>> getAll();
   Future<void> refreshFromRemote();
   Future<void> create(Car car);
+  Future<void> update(Car car);
   Future<void> syncPending();
   Future<bool> hasPending();
 }
