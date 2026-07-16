@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - backend_data:/data
+      - ./backend/src:/app/src
+    environment:
+      DATABASE_URL: file:/data/autobook.db
+      NODE_ENV: development
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend/lib:/app/lib
+    environment:
+      AUTOBOOK_API_URL: ${AUTOBOOK_API_URL:-http://localhost:3000}
+    depends_on:
+      - backend
+
+volumes:
+  backend_data:

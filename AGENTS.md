@@ -25,12 +25,5 @@ When looking up library APIs, configuration options, or version-specific behavio
 ```
 autobook/
 ├── backend/          # NestJS REST API
-│   ├── src/          # Application source (modules, controllers, services)
-│   └── test/         # e2e tests
 └── frontend/         # Flutter application
-    └── lib/
-        ├── models/   # Data models
-        ├── providers/ # Riverpod state providers
-        ├── screens/  # Full-page screens
-        └── widgets/  # Reusable UI components
 ```
