@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/custom_form_field.dart';
 import 'package:flutter/material.dart';
@@ -35,8 +36,40 @@ Future<CarDraft?> showAddCarDialog(BuildContext context) {
   );
 }
 
+Future<CarDraft?> showEditCarDialog(BuildContext context, Car car) {
+  return showGeneralDialog<CarDraft>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Cerrar',
+    barrierColor: Colors.black.withValues(alpha: 0.3),
+    pageBuilder: (_, __, ___) => _AddCarDialog(car: car),
+    transitionBuilder: (_, animation, __, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      );
+      return BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: 6 * animation.value,
+          sigmaY: 6 * animation.value,
+        ),
+        child: FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+    transitionDuration: const Duration(milliseconds: 250),
+  );
+}
+
 class _AddCarDialog extends StatefulWidget {
-  const _AddCarDialog();
+  const _AddCarDialog({this.car});
+
+  final Car? car;
 
   @override
   State<_AddCarDialog> createState() => _AddCarDialogState();
@@ -50,6 +83,20 @@ class _AddCarDialogState extends State<_AddCarDialog> {
   final _licensePlateController = TextEditingController();
   final _colorController = TextEditingController();
   final _mileageController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final car = widget.car;
+    if (car != null) {
+      _brandController.text = car.brand;
+      _modelController.text = car.model;
+      _yearController.text = car.year.toString();
+      _licensePlateController.text = car.licensePlate;
+      _colorController.text = car.color ?? '';
+      _mileageController.text = car.mileage?.toString() ?? '';
+    }
+  }
 
   @override
   void dispose() {
@@ -85,6 +132,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isEditing = widget.car != null;
 
     return Center(
       child: ConstrainedBox(
@@ -116,7 +164,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'Añadir vehículo',
+                              isEditing ? 'Editar vehículo' : 'Añadir vehículo',
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -250,7 +298,9 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                       FilledButton.icon(
                         onPressed: _submit,
                         icon: const Icon(Icons.check),
-                        label: const Text('Guardar vehículo'),
+                        label: Text(
+                          isEditing ? 'Guardar cambios' : 'Guardar vehículo',
+                        ),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           textStyle: theme.textTheme.titleSmall,

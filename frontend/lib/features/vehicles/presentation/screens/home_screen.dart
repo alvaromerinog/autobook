@@ -2,7 +2,7 @@ import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/presentation/providers/car_list_provider.dart';
 import 'package:autobook/features/vehicles/presentation/screens/add_car_screen.dart'
-    show showAddCarDialog;
+    show showAddCarDialog, showEditCarDialog;
 import 'package:autobook/features/vehicles/presentation/widgets/info_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -242,13 +242,13 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _CarCard extends StatelessWidget {
+class _CarCard extends ConsumerWidget {
   final Car car;
 
   const _CarCard({required this.car});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -322,6 +322,11 @@ class _CarCard extends StatelessWidget {
                 ],
               ),
             ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Editar vehículo',
+              onPressed: () => _openEditCar(context, ref, car),
+            ),
             Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
           ],
         ),
@@ -332,5 +337,34 @@ class _CarCard extends StatelessWidget {
   String _formatMileage(BuildContext context, int mileage) {
     final locale = Localizations.localeOf(context).toString();
     return NumberFormat.decimalPattern(locale).format(mileage);
+  }
+}
+
+Future<void> _openEditCar(BuildContext context, WidgetRef ref, Car car) async {
+  final draft = await showEditCarDialog(context, car);
+  if (draft == null) return;
+  final updatedCar = car.copyWith(
+    brand: draft.brand,
+    model: draft.model,
+    year: draft.year,
+    licensePlate: draft.licensePlate,
+    color: draft.color,
+    mileage: draft.mileage,
+  );
+  try {
+    await ref.read(carListProvider.notifier).updateCar(updatedCar);
+  } on Failure catch (_) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Error al actualizar el vehículo'),
+        action: SnackBarAction(
+          label: 'Reintentar',
+          onPressed: () async {
+            await ref.read(carListProvider.notifier).syncPendingCars();
+          },
+        ),
+      ),
+    );
   }
 }
