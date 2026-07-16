@@ -4,9 +4,9 @@ import {
   Post,
   Put,
   Body,
-  HttpCode,
-  NotFoundException,
   ConflictException,
+  NotFoundException,
+  Param,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
@@ -33,7 +33,6 @@ export class CarsController {
   }
 
   @Post()
-  @HttpCode(201)
   @ApiCreatedResponse({ type: CreateCarResponseDto })
   @ApiConflictResponse()
   async createCar(@Body() body: CarDto): Promise<CreateCarResponseDto> {
@@ -48,12 +47,15 @@ export class CarsController {
     }
   }
 
-  @Put()
+  @Put(':id')
   @ApiOkResponse({ type: UpdateCarResponseDto })
   @ApiNotFoundResponse()
-  async updateCar(@Body() body: CarDto): Promise<UpdateCarResponseDto> {
+  async updateCar(
+    @Param('id') id: string,
+    @Body() body: CarDto,
+  ): Promise<UpdateCarResponseDto> {
     const carData = body.toDomain();
-    const result = await this.carsService.updateCar(carData);
+    const result = await this.carsService.updateCar({ ...carData, id });
     if (!result) throw new NotFoundException();
     return new UpdateCarResponseDto(result.id);
   }

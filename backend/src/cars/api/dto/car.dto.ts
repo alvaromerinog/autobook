@@ -1,27 +1,34 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsInt, IsOptional, IsUUID } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { MaxModelYear } from './isModelYear.decorator';
 import { Car } from '../../domain/entities/car.entity';
 
 export class CarDto {
-  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
   @ApiProperty()
   id: string;
 
   @IsString()
+  @IsNotEmpty()
   @ApiProperty()
   brand: string;
 
   @IsString()
+  @IsNotEmpty()
   @ApiProperty()
   model: string;
 
   @IsInt()
   @Type(() => Number)
+  @Min(1886)
+  @MaxModelYear()
   @ApiProperty()
   year: number;
 
   @IsString()
+  @IsNotEmpty()
   @ApiProperty()
   licensePlate: string;
 
@@ -33,6 +40,7 @@ export class CarDto {
   @IsOptional()
   @IsInt()
   @Type(() => Number)
+  @Min(0)
   @ApiProperty({ type: Number, nullable: true })
   mileage: number | null;
 
@@ -52,7 +60,7 @@ export class CarDto {
     return new CarDto(car);
   }
 
-  toDomain = (): Car => {
+  toDomain(): Car {
     return {
       id: this.id,
       brand: this.brand,
@@ -62,5 +70,5 @@ export class CarDto {
       color: this.color,
       mileage: this.mileage,
     };
-  };
+  }
 }

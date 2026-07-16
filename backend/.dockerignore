@@ -12,7 +12,7 @@ coverage/
 .env.*
 
 # Tests (not needed in the runtime image)
-test/
+tests/
 
 # VCS and IDE
 .git/
