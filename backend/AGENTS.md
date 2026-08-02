@@ -116,7 +116,7 @@ src/
 └── cars/                             # Cars feature (layered: api / application / domain / infrastructure)
     ├── cars.module.ts                # Cars feature module (wires controller, service, repository)
     ├── api/
-    │   ├── cars.controller.ts        # HTTP layer — GET /cars, PUT /cars
+    │   ├── cars.controller.ts        # HTTP layer — GET /cars, POST /cars, PUT /cars/:id, DELETE /cars/:id
     │   └── dto/
     │       ├── car.dto.ts            # Car request/response DTO (+ domain mappers)
     │       ├── getCarsResponse.dto.ts
