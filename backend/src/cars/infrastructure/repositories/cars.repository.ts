@@ -9,7 +9,9 @@ export class PrismaCarsRepository implements CarsRepository {
   constructor(private readonly prisma: PrismaDatabase) {}
 
   async getAll(): Promise<Car[]> {
-    const cars = await this.prisma.car.findMany();
+    const cars = await this.prisma.car.findMany({
+      where: { deletedAt: null },
+    });
     return cars;
   }
 
@@ -23,7 +25,7 @@ export class PrismaCarsRepository implements CarsRepository {
 
   async update(input: Car): Promise<{ id: string } | null> {
     const existing = await this.prisma.car.findUnique({
-      where: { id: input.id },
+      where: { id: input.id, deletedAt: null },
     });
     if (!existing) return null;
     const car = await this.prisma.car.update({
@@ -31,5 +33,17 @@ export class PrismaCarsRepository implements CarsRepository {
       data: input,
     });
     return { id: car.id };
+  }
+
+  async delete(id: string): Promise<{ id: string } | null> {
+    const existing = await this.prisma.car.findUnique({
+      where: { id, deletedAt: null },
+    });
+    if (!existing) return null;
+    await this.prisma.car.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+    return { id };
   }
 }
