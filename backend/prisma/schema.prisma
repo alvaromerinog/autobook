@@ -7,11 +7,12 @@ datasource db {
 }
 
 model Car {
-  id           String  @id @default(uuid())
+  id           String    @id @default(uuid())
   brand        String
   model        String
   year         Int
   licensePlate String
   color        String?
   mileage      Int?
+  deletedAt    DateTime?
 }
