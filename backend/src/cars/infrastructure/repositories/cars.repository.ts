@@ -28,9 +28,10 @@ export class PrismaCarsRepository implements CarsRepository {
       where: { id: input.id, deletedAt: null },
     });
     if (!existing) return null;
+    const { deletedAt: _, ...updateData } = input;
     const car = await this.prisma.car.update({
       where: { id: input.id },
-      data: input,
+      data: updateData,
     });
     return { id: car.id };
   }
