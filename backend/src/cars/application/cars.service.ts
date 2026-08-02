@@ -16,8 +16,7 @@ export class CarsService {
   }
 
   async updateCar(input: Car): Promise<{ id: string } | null> {
-    const updateCar = await this.carsRepository.update(input);
-    return updateCar;
+    return this.carsRepository.update(input);
   }
 
   async deleteCar(id: string): Promise<{ id: string } | null> {
