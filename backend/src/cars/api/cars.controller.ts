@@ -3,14 +3,18 @@ import {
   Get,
   Post,
   Put,
+  Delete,
   Body,
   ConflictException,
   NotFoundException,
   Param,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiOkResponse,
   ApiCreatedResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiConflictResponse,
 } from '@nestjs/swagger';
@@ -58,5 +62,14 @@ export class CarsController {
     const result = await this.carsService.updateCar({ ...carData, id });
     if (!result) throw new NotFoundException();
     return new UpdateCarResponseDto(result.id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse()
+  @ApiNotFoundResponse()
+  async deleteCar(@Param('id') id: string): Promise<void> {
+    const result = await this.carsService.deleteCar(id);
+    if (!result) throw new NotFoundException();
   }
 }
