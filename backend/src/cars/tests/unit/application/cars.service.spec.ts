@@ -11,16 +11,19 @@ describe('CarsService (unit)', () => {
   let getAllMock: jest.MockedFunction<CarsRepository['getAll']>;
   let createMock: jest.MockedFunction<CarsRepository['create']>;
   let updateMock: jest.MockedFunction<CarsRepository['update']>;
+  let deleteMock: jest.MockedFunction<CarsRepository['delete']>;
 
   beforeEach(async () => {
     getAllMock = jest.fn();
     createMock = jest.fn();
     updateMock = jest.fn();
+    deleteMock = jest.fn();
 
     const mockRepository: jest.Mocked<CarsRepository> = {
       getAll: getAllMock,
       create: createMock,
       update: updateMock,
+      delete: deleteMock,
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -85,6 +88,26 @@ describe('CarsService (unit)', () => {
       updateMock.mockResolvedValue(null);
 
       const result = await service.updateCar(TEST_CAR_1);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('deleteCar', () => {
+    it('given an existing car when deleteCar then delegates to the repository and returns its id', async () => {
+      deleteMock.mockResolvedValue({ id: TEST_CAR_1.id });
+
+      const result = await service.deleteCar(TEST_CAR_1.id);
+
+      expect(deleteMock).toHaveBeenCalledTimes(1);
+      expect(deleteMock).toHaveBeenCalledWith(TEST_CAR_1.id);
+      expect(result).toEqual({ id: TEST_CAR_1.id });
+    });
+
+    it('given a non-existing car when deleteCar then returns null', async () => {
+      deleteMock.mockResolvedValue(null);
+
+      const result = await service.deleteCar(TEST_CAR_1.id);
 
       expect(result).toBeNull();
     });
