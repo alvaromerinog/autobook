@@ -11,19 +11,15 @@ CarLocalDataSource carLocalDatasource(Ref ref) {
   return CarLocalDatasourceImpl(ref.watch(appDatabaseProvider));
 }
 
-typedef PendingCar = ({Car car, bool wasCreated, bool wasUpdated});
+typedef PendingCar = ({Car car, SyncStateEnum syncState});
 
 abstract class CarLocalDataSource {
   Future<List<Car>> getAll();
   Future<void> upsertAll(List<Car> cars);
   Future<void> insertPending(Car car);
-  Future<void> upsertPending(
-    Car car, {
-    required bool wasCreated,
-    required bool wasUpdated,
-  });
-  Future<List<Car>> getPending();
-  Future<List<PendingCar>> getPendingWithFlags();
+  Future<void> upsertPending(Car car, {required SyncStateEnum syncState});
+  Future<List<PendingCar>> getPending();
+  Future<int> countPending();
   Future<void> markSynced(String id);
 }
 
@@ -43,26 +39,20 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
   );
 
   PendingCar _toPendingCar(CarEntry e) =>
-      (car: _toEntity(e), wasCreated: e.wasCreated, wasUpdated: e.wasUpdated);
+      (car: _toEntity(e), syncState: e.syncState);
 
-  CarsTableCompanion _toCompanion(
-    Car car, {
-    bool isPending = false,
-    bool wasCreated = false,
-    bool wasUpdated = false,
-  }) => CarsTableCompanion(
-    id: Value(car.id),
-    brand: Value(car.brand),
-    model: Value(car.model),
-    year: Value(car.year),
-    licensePlate: Value(car.licensePlate),
-    color: Value(car.color),
-    mileage: Value(car.mileage),
-    isPending: Value(isPending),
-    wasCreated: Value(wasCreated),
-    wasUpdated: Value(wasUpdated),
-    updatedAt: Value(DateTime.now()),
-  );
+  CarsTableCompanion _toCompanion(Car car, SyncStateEnum syncState) =>
+      CarsTableCompanion(
+        id: Value(car.id),
+        brand: Value(car.brand),
+        model: Value(car.model),
+        year: Value(car.year),
+        licensePlate: Value(car.licensePlate),
+        color: Value(car.color),
+        mileage: Value(car.mileage),
+        syncState: Value(syncState),
+        updatedAt: Value(DateTime.now()),
+      );
 
   CarsTableCompanion _toUpsertCompanion(Car car) => CarsTableCompanion(
     id: Value(car.id),
@@ -98,53 +88,41 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
   Future<void> insertPending(Car car) async {
     await _db
         .into(_db.carsTable)
-        .insertOnConflictUpdate(
-          _toCompanion(car, isPending: true, wasCreated: true),
-        );
+        .insertOnConflictUpdate(_toCompanion(car, SyncStateEnum.pendingCreate));
   }
 
   @override
   Future<void> upsertPending(
     Car car, {
-    required bool wasCreated,
-    required bool wasUpdated,
+    required SyncStateEnum syncState,
   }) async {
     await _db
         .into(_db.carsTable)
-        .insertOnConflictUpdate(
-          _toCompanion(
-            car,
-            isPending: true,
-            wasCreated: wasCreated,
-            wasUpdated: wasUpdated,
-          ),
-        );
+        .insertOnConflictUpdate(_toCompanion(car, syncState));
   }
 
   @override
-  Future<List<Car>> getPending() async {
+  Future<List<PendingCar>> getPending() async {
     final rows = await (_db.select(
       _db.carsTable,
-    )..where((t) => t.isPending.equals(true))).get();
-    return rows.map(_toEntity).toList();
-  }
-
-  @override
-  Future<List<PendingCar>> getPendingWithFlags() async {
-    final rows = await (_db.select(
-      _db.carsTable,
-    )..where((t) => t.isPending.equals(true))).get();
+    )..where((t) => t.syncState.isNotInValues([SyncStateEnum.synced]))).get();
     return rows.map(_toPendingCar).toList();
+  }
+
+  @override
+  Future<int> countPending() async {
+    final countExpression = countAll();
+    final query = _db.selectOnly(_db.carsTable)
+      ..addColumns([countExpression])
+      ..where(_db.carsTable.syncState.isNotInValues([SyncStateEnum.synced]));
+    final row = await query.getSingle();
+    return row.read(countExpression) ?? 0;
   }
 
   @override
   Future<void> markSynced(String id) async {
     await (_db.update(_db.carsTable)..where((t) => t.id.equals(id))).write(
-      const CarsTableCompanion(
-        isPending: Value(false),
-        wasCreated: Value(false),
-        wasUpdated: Value(false),
-      ),
+      const CarsTableCompanion(syncState: Value(SyncStateEnum.synced)),
     );
   }
 }

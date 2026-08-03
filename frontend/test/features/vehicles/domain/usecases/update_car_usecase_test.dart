@@ -20,18 +20,25 @@ void main() {
   });
 
   group('UpdateCarUseCase', () {
-    test('given a car, '
+    test('given a draft and an existing car, '
         'when call runs, '
-        'then persists it and returns it', () async {
+        'then persists and returns the merged car', () async {
       // given
+      final mergedCar = buildCar(
+        model: 'Corolla Hybrid',
+        year: 2021,
+        licensePlate: '9999 XXX',
+        color: 'Red',
+        mileage: 45000,
+      );
       when(() => mockRepo.update(any())).thenAnswer((_) async {});
 
       // when
-      final result = await useCase(toyotaCorolla);
+      final result = await useCase(corollaDraft, toyotaCorolla);
 
       // then
-      expect(result, toyotaCorolla);
-      verify(() => mockRepo.update(toyotaCorolla)).called(1);
+      expect(result, mergedCar);
+      verify(() => mockRepo.update(mergedCar)).called(1);
     });
 
     test('given the repository throws a Failure, '
@@ -42,7 +49,7 @@ void main() {
 
       // when / then
       await expectLater(
-        () => useCase(toyotaCorolla),
+        () => useCase(corollaDraft, toyotaCorolla),
         throwsA(isA<NetworkFailure>()),
       );
     });
