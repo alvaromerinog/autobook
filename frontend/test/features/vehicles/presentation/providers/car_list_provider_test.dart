@@ -271,6 +271,13 @@ void main() {
           when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
           when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
           when(() => mockRepo.update(any())).thenAnswer((_) async {});
+          final mergedCar = buildCar(
+            model: 'Corolla Hybrid',
+            year: 2021,
+            licensePlate: '9999 XXX',
+            color: 'Red',
+            mileage: 45000,
+          );
 
           final container = makeContainer();
           await container.read(carListProvider.future);
@@ -278,12 +285,12 @@ void main() {
           // when
           await container
               .read(carListProvider.notifier)
-              .updateCar(toyotaCorolla);
+              .updateCar(corollaDraft, toyotaCorolla);
 
           // then
           final state = await container.read(carListProvider.future);
           expect(state.syncError, isNull);
-          verify(() => mockRepo.update(toyotaCorolla)).called(1);
+          verify(() => mockRepo.update(mergedCar)).called(1);
         },
       );
 
@@ -303,8 +310,9 @@ void main() {
 
         // when / then
         await expectLater(
-          () =>
-              container.read(carListProvider.notifier).updateCar(toyotaCorolla),
+          () => container
+              .read(carListProvider.notifier)
+              .updateCar(corollaDraft, toyotaCorolla),
           throwsA(isA<NetworkFailure>()),
         );
 
@@ -341,6 +349,36 @@ void main() {
         expect(state.syncError, isNull);
         verify(() => mockRepo.syncPending()).called(1);
       });
+
+      test(
+        'given syncPending fails, '
+        'when syncPendingCars is called, '
+        'then state captures the syncError and no error is rethrown',
+        () async {
+          // given
+          when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+          when(() => mockRepo.syncPending()).thenAnswer((_) async {});
+          when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+          when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
+
+          final container = makeContainer();
+          await container.read(carListProvider.future);
+          clearInteractions(mockRepo);
+
+          when(() => mockRepo.syncPending()).thenThrow(const NetworkFailure());
+          when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+          when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
+
+          // when — syncPendingCars swallows the error (rethrowError: false)
+          await container.read(carListProvider.notifier).syncPendingCars();
+
+          // then — the error is captured in state, not rethrown
+          final state = await container.read(carListProvider.future);
+          expect(state.syncError, isA<NetworkFailure>());
+          expect(state.hasPendingSync, isTrue);
+          verify(() => mockRepo.syncPending()).called(1);
+        },
+      );
     });
   });
 }
