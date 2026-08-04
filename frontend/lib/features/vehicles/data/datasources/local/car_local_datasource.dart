@@ -11,11 +11,15 @@ CarLocalDataSource carLocalDatasource(Ref ref) {
   return CarLocalDatasourceImpl(ref.watch(appDatabaseProvider));
 }
 
+typedef PendingCar = ({Car car, SyncStateEnum syncState});
+
 abstract class CarLocalDataSource {
   Future<List<Car>> getAll();
   Future<void> upsertAll(List<Car> cars);
   Future<void> insertPending(Car car);
-  Future<List<Car>> getPending();
+  Future<void> upsertPending(Car car, {required SyncStateEnum syncState});
+  Future<List<PendingCar>> getPending();
+  Future<int> countPending();
   Future<void> markSynced(String id);
 }
 
@@ -34,7 +38,10 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
     mileage: e.mileage,
   );
 
-  CarsTableCompanion _toCompanion(Car car, {bool isPending = false}) =>
+  PendingCar _toPendingCar(CarEntry e) =>
+      (car: _toEntity(e), syncState: e.syncState);
+
+  CarsTableCompanion _toCompanion(Car car, SyncStateEnum syncState) =>
       CarsTableCompanion(
         id: Value(car.id),
         brand: Value(car.brand),
@@ -43,12 +50,10 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
         licensePlate: Value(car.licensePlate),
         color: Value(car.color),
         mileage: Value(car.mileage),
-        isPending: Value(isPending),
+        syncState: Value(syncState),
         updatedAt: Value(DateTime.now()),
       );
 
-  // Companion for upsert that omits isPending so existing pending rows keep
-  // their flag intact when server data is written over them.
   CarsTableCompanion _toUpsertCompanion(Car car) => CarsTableCompanion(
     id: Value(car.id),
     brand: Value(car.brand),
@@ -83,21 +88,41 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
   Future<void> insertPending(Car car) async {
     await _db
         .into(_db.carsTable)
-        .insertOnConflictUpdate(_toCompanion(car, isPending: true));
+        .insertOnConflictUpdate(_toCompanion(car, SyncStateEnum.pendingCreate));
   }
 
   @override
-  Future<List<Car>> getPending() async {
+  Future<void> upsertPending(
+    Car car, {
+    required SyncStateEnum syncState,
+  }) async {
+    await _db
+        .into(_db.carsTable)
+        .insertOnConflictUpdate(_toCompanion(car, syncState));
+  }
+
+  @override
+  Future<List<PendingCar>> getPending() async {
     final rows = await (_db.select(
       _db.carsTable,
-    )..where((t) => t.isPending.equals(true))).get();
-    return rows.map(_toEntity).toList();
+    )..where((t) => t.syncState.isNotInValues([SyncStateEnum.synced]))).get();
+    return rows.map(_toPendingCar).toList();
+  }
+
+  @override
+  Future<int> countPending() async {
+    final countExpression = countAll();
+    final query = _db.selectOnly(_db.carsTable)
+      ..addColumns([countExpression])
+      ..where(_db.carsTable.syncState.isNotInValues([SyncStateEnum.synced]));
+    final row = await query.getSingle();
+    return row.read(countExpression) ?? 0;
   }
 
   @override
   Future<void> markSynced(String id) async {
     await (_db.update(_db.carsTable)..where((t) => t.id.equals(id))).write(
-      const CarsTableCompanion(isPending: Value(false)),
+      const CarsTableCompanion(syncState: Value(SyncStateEnum.synced)),
     );
   }
 }

@@ -31,3 +31,13 @@ tasks:
     desc: Run build_runner to generate Riverpod/JSON code
     cmds:
       - fvm dart run build_runner build --delete-conflicting-outputs
+
+  build:web:
+    desc: Build Flutter web app with source maps for debugging
+    cmds:
+      - fvm flutter build web --release --source-maps
+        --dart-define=AUTOBOOK_API_URL=${AUTOBOOK_API_URL:-http://localhost:3000}
+      # The framework ships flutter.js.map alongside the SDK's flutter.js but
+      # `flutter build web` does not deploy it to build/web/. Copy it manually
+      # so the sourceMappingURL comment in flutter.js resolves instead of 404.
+      - cp "$(readlink .fvm/flutter_sdk)/bin/cache/flutter_web_sdk/flutter_js/flutter.js.map" build/web/flutter.js.map

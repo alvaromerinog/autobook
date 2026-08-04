@@ -5,6 +5,7 @@ import 'package:autobook/features/vehicles/domain/usecases/get_cars_usecase.dart
 import 'package:autobook/features/vehicles/domain/usecases/has_pending_cars_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/refresh_cars_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/sync_pending_cars_usecase.dart';
+import 'package:autobook/features/vehicles/domain/usecases/update_car_usecase.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'usecase_providers.g.dart';
@@ -30,3 +31,7 @@ SyncPendingCarsUseCase syncPendingCarsUseCase(Ref ref) =>
 @riverpod
 HasPendingCarsUseCase hasPendingCarsUseCase(Ref ref) =>
     HasPendingCarsUseCase(ref.watch(carRepositoryProvider));
+
+@riverpod
+UpdateCarUseCase updateCarUseCase(Ref ref) =>
+    UpdateCarUseCase(ref.watch(carRepositoryProvider));
