@@ -1,48 +1,17 @@
 import 'dart:ui';
 
-import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/custom_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-Future<CarDraft?> showAddCarDialog(BuildContext context) {
+Future<CarDraft?> showCarDialog(BuildContext context, {CarDraft? initial}) {
   return showGeneralDialog<CarDraft>(
     context: context,
     barrierDismissible: true,
     barrierLabel: 'Cerrar',
     barrierColor: Colors.black.withValues(alpha: 0.3),
-    pageBuilder: (_, __, ___) => const _AddCarDialog(),
-    transitionBuilder: (_, animation, __, child) {
-      final curved = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-      );
-      return BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: 6 * animation.value,
-          sigmaY: 6 * animation.value,
-        ),
-        child: FadeTransition(
-          opacity: curved,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
-    transitionDuration: const Duration(milliseconds: 250),
-  );
-}
-
-Future<CarDraft?> showEditCarDialog(BuildContext context, Car car) {
-  return showGeneralDialog<CarDraft>(
-    context: context,
-    barrierDismissible: true,
-    barrierLabel: 'Cerrar',
-    barrierColor: Colors.black.withValues(alpha: 0.3),
-    pageBuilder: (_, __, ___) => _AddCarDialog(car: car),
+    pageBuilder: (_, __, ___) => _AddCarDialog(initial: initial),
     transitionBuilder: (_, animation, __, child) {
       final curved = CurvedAnimation(
         parent: animation,
@@ -67,9 +36,9 @@ Future<CarDraft?> showEditCarDialog(BuildContext context, Car car) {
 }
 
 class _AddCarDialog extends StatefulWidget {
-  const _AddCarDialog({this.car});
+  const _AddCarDialog({this.initial});
 
-  final Car? car;
+  final CarDraft? initial;
 
   @override
   State<_AddCarDialog> createState() => _AddCarDialogState();
@@ -87,14 +56,14 @@ class _AddCarDialogState extends State<_AddCarDialog> {
   @override
   void initState() {
     super.initState();
-    final car = widget.car;
-    if (car != null) {
-      _brandController.text = car.brand;
-      _modelController.text = car.model;
-      _yearController.text = car.year.toString();
-      _licensePlateController.text = car.licensePlate;
-      _colorController.text = car.color ?? '';
-      _mileageController.text = car.mileage?.toString() ?? '';
+    final initial = widget.initial;
+    if (initial != null) {
+      _brandController.text = initial.brand;
+      _modelController.text = initial.model;
+      _yearController.text = initial.year.toString();
+      _licensePlateController.text = initial.licensePlate;
+      _colorController.text = initial.color ?? '';
+      _mileageController.text = initial.mileage?.toString() ?? '';
     }
   }
 
@@ -132,7 +101,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isEditing = widget.car != null;
+    final isEditing = widget.initial != null;
 
     return Center(
       child: ConstrainedBox(

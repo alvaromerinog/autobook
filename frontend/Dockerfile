@@ -20,8 +20,7 @@ RUN flutter pub get
 COPY . .
 RUN dart run build_runner build --delete-conflicting-outputs
 ARG AUTOBOOK_API_URL=http://localhost:3000
-RUN flutter build web --release --dart-define=AUTOBOOK_API_URL=${AUTOBOOK_API_URL}
-
+RUN flutter build web --release --source-maps --dart-define=AUTOBOOK_API_URL=${AUTOBOOK_API_URL}
 
 FROM nginx:alpine AS runner
 
