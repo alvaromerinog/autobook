@@ -1,35 +1,51 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:autobook/features/vehicles/presentation/providers/car_list_provider.dart';
 import 'package:autobook/features/vehicles/presentation/screens/add_car_screen.dart'
-    show showAddCarDialog;
+    show showCarDialog;
 import 'package:autobook/features/vehicles/presentation/widgets/info_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+Future<void> _runCarMutation(
+  BuildContext context,
+  WidgetRef ref,
+  Future<void> Function() mutation, {
+  required String errorText,
+}) async {
+  try {
+    await mutation();
+  } on Failure catch (_) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(errorText),
+        action: SnackBarAction(
+          label: 'Reintentar',
+          onPressed: () async {
+            await ref.read(carListProvider.notifier).syncPendingCars();
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   Future<void> _openAddCar(BuildContext context, WidgetRef ref) async {
-    final draft = await showAddCarDialog(context);
+    final draft = await showCarDialog(context);
     if (draft == null) return;
-    try {
-      await ref.read(carListProvider.notifier).add(draft);
-    } on Failure catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Error al crear el vehículo'),
-          action: SnackBarAction(
-            label: 'Reintentar',
-            onPressed: () async {
-              await ref.read(carListProvider.notifier).syncPendingCars();
-            },
-          ),
-        ),
-      );
-    }
+    if (!context.mounted) return;
+    await _runCarMutation(
+      context,
+      ref,
+      () => ref.read(carListProvider.notifier).add(draft),
+      errorText: 'Error al crear el vehículo',
+    );
   }
 
   String _friendlyError(Failure failure) => switch (failure) {
@@ -242,13 +258,13 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _CarCard extends StatelessWidget {
+class _CarCard extends ConsumerWidget {
   final Car car;
 
   const _CarCard({required this.car});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -322,6 +338,11 @@ class _CarCard extends StatelessWidget {
                 ],
               ),
             ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Editar vehículo',
+              onPressed: () => _openEditCar(context, ref, car),
+            ),
             Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
           ],
         ),
@@ -333,4 +354,24 @@ class _CarCard extends StatelessWidget {
     final locale = Localizations.localeOf(context).toString();
     return NumberFormat.decimalPattern(locale).format(mileage);
   }
+}
+
+Future<void> _openEditCar(BuildContext context, WidgetRef ref, Car car) async {
+  final CarDraft draft = (
+    brand: car.brand,
+    model: car.model,
+    year: car.year,
+    licensePlate: car.licensePlate,
+    color: car.color,
+    mileage: car.mileage,
+  );
+  final updatedDraft = await showCarDialog(context, initial: draft);
+  if (updatedDraft == null) return;
+  if (!context.mounted) return;
+  await _runCarMutation(
+    context,
+    ref,
+    () => ref.read(carListProvider.notifier).updateCar(updatedDraft, car),
+    errorText: 'Error al actualizar el vehículo',
+  );
 }

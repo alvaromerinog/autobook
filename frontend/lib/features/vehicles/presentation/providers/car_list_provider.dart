@@ -27,8 +27,7 @@ class CarList extends _$CarList {
     var cachedCars = <Car>[];
     var hasPendingSync = false;
     try {
-      cachedCars = await ref.read(getCarsUseCaseProvider).call();
-      hasPendingSync = await ref.read(hasPendingCarsUseCaseProvider).call();
+      (cachedCars, hasPendingSync) = await _readCarsWithPending();
     } on Failure catch (f) {
       syncError = f;
     }
@@ -42,21 +41,51 @@ class CarList extends _$CarList {
     );
   }
 
+  Future<(List<Car>, bool)> _readCarsWithPending() async {
+    final getCars = ref.read(getCarsUseCaseProvider);
+    final hasPending = ref.read(hasPendingCarsUseCaseProvider);
+    return await (getCars.call(), hasPending.call()).wait;
+  }
+
+  Future<void> _emitAfter(
+    Future<void> Function() mutation, {
+    bool rethrowError = true,
+  }) async {
+    Failure? syncError;
+    try {
+      await mutation();
+    } on Failure catch (f) {
+      syncError = f;
+    }
+
+    var cars = <Car>[];
+    var hasPendingSync = false;
+    try {
+      (cars, hasPendingSync) = await _readCarsWithPending();
+    } on Failure catch (f) {
+      syncError ??= f;
+    }
+
+    state = AsyncData((
+      cars: cars,
+      syncError: syncError,
+      hasPendingSync: hasPendingSync,
+    ));
+
+    if (rethrowError && syncError != null) throw syncError;
+  }
+
   void _syncInBackground({Failure? existingError}) {
     var cancelled = false;
     ref.onDispose(() => cancelled = true);
     final refreshCars = ref.read(refreshCarsUseCaseProvider);
     final syncPending = ref.read(syncPendingCarsUseCaseProvider);
-    final getCars = ref.read(getCarsUseCaseProvider);
-    final hasPending = ref.read(hasPendingCarsUseCaseProvider);
     unawaited(
       _refreshAndSync(
         existingError: existingError,
         isCancelled: () => cancelled,
         refreshCars: () => refreshCars.call(),
         syncPendingCars: () => syncPending.call(),
-        getCars: () => getCars.call(),
-        hasPending: () => hasPending.call(),
       ),
     );
   }
@@ -66,8 +95,6 @@ class CarList extends _$CarList {
     required bool Function() isCancelled,
     required Future<void> Function() refreshCars,
     required Future<void> Function() syncPendingCars,
-    required Future<List<Car>> Function() getCars,
-    required Future<bool> Function() hasPending,
   }) async {
     Failure? syncError = existingError;
     try {
@@ -89,8 +116,7 @@ class CarList extends _$CarList {
     var refreshedCars = <Car>[];
     var hasPendingSync = false;
     try {
-      refreshedCars = await getCars();
-      hasPendingSync = await hasPending();
+      (refreshedCars, hasPendingSync) = await _readCarsWithPending();
     } on Failure catch (f) {
       syncError ??= f;
     }
@@ -104,53 +130,15 @@ class CarList extends _$CarList {
     ));
   }
 
-  Future<void> add(CarDraft draft) async {
-    Failure? syncError;
-    try {
-      await ref.read(createCarUseCaseProvider).call(draft);
-    } on Failure catch (f) {
-      syncError = f;
-    }
+  Future<void> add(CarDraft draft) =>
+      _emitAfter(() => ref.read(createCarUseCaseProvider).call(draft));
 
-    var cars = <Car>[];
-    var hasPendingSync = false;
-    try {
-      cars = await ref.read(getCarsUseCaseProvider).call();
-      hasPendingSync = await ref.read(hasPendingCarsUseCaseProvider).call();
-    } on Failure catch (f) {
-      syncError ??= f;
-    }
+  Future<void> updateCar(CarDraft draft, Car existing) => _emitAfter(
+    () => ref.read(updateCarUseCaseProvider).call(draft, existing),
+  );
 
-    state = AsyncData((
-      cars: cars,
-      syncError: syncError,
-      hasPendingSync: hasPendingSync,
-    ));
-
-    if (syncError != null) throw syncError;
-  }
-
-  Future<void> syncPendingCars() async {
-    Failure? syncError;
-    try {
-      await ref.read(syncPendingCarsUseCaseProvider).call();
-    } on Failure catch (f) {
-      syncError = f;
-    }
-
-    var cars = <Car>[];
-    var hasPendingSync = false;
-    try {
-      cars = await ref.read(getCarsUseCaseProvider).call();
-      hasPendingSync = await ref.read(hasPendingCarsUseCaseProvider).call();
-    } on Failure catch (f) {
-      syncError ??= f;
-    }
-
-    state = AsyncData((
-      cars: cars,
-      syncError: syncError,
-      hasPendingSync: hasPendingSync,
-    ));
-  }
+  Future<void> syncPendingCars() => _emitAfter(
+    () => ref.read(syncPendingCarsUseCaseProvider).call(),
+    rethrowError: false,
+  );
 }
