@@ -1,4 +1,5 @@
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 
 // ---------------------------------------------------------------------------
 // Named canonical instances
@@ -64,6 +65,16 @@ const alfaGiulia = Car(
 
 /// Canonical single-element list, shared across tests that need one Car.
 const oneCarList = [toyotaCorolla];
+
+/// Canonical CarDraft, used by update/create flows to exercise draft input.
+const CarDraft corollaDraft = (
+  brand: 'Toyota',
+  model: 'Corolla Hybrid',
+  year: 2021,
+  licensePlate: '9999 XXX',
+  color: 'Red',
+  mileage: 45000,
+);
 
 // ---------------------------------------------------------------------------
 // Factory builder
