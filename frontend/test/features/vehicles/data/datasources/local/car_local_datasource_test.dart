@@ -1,5 +1,6 @@
 import 'package:autobook/features/vehicles/data/datasources/local/app_database.dart';
 import 'package:autobook/features/vehicles/data/datasources/local/car_local_datasource.dart';
+import 'package:autobook/features/vehicles/domain/entities/sync_state.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
