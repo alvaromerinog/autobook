@@ -13,6 +13,8 @@ typedef CarListState = ({
   List<Car> cars,
   Failure? syncError,
   bool hasPendingSync,
+  Set<String> pendingDeleteIds,
+  List<String> remoteChangeMessages,
 });
 
 @riverpod
@@ -26,8 +28,10 @@ class CarList extends _$CarList {
     Failure? syncError;
     var cachedCars = <Car>[];
     var hasPendingSync = false;
+    var pendingDeleteIds = <String>{};
     try {
-      (cachedCars, hasPendingSync) = await _readCarsWithPending();
+      (cachedCars, hasPendingSync, pendingDeleteIds) =
+          await _readCarsWithPending();
     } on Failure catch (f) {
       syncError = f;
     }
@@ -38,13 +42,21 @@ class CarList extends _$CarList {
       cars: cachedCars,
       syncError: syncError,
       hasPendingSync: hasPendingSync,
+      pendingDeleteIds: pendingDeleteIds,
+      remoteChangeMessages: const <String>[],
     );
   }
 
-  Future<(List<Car>, bool)> _readCarsWithPending() async {
+  Future<(List<Car>, bool, Set<String>)> _readCarsWithPending() async {
     final getCars = ref.read(getCarsUseCaseProvider);
     final hasPending = ref.read(hasPendingCarsUseCaseProvider);
-    return await (getCars.call(), hasPending.call()).wait;
+    final pendingDeleteIds = ref.read(pendingDeleteIdsUseCaseProvider);
+    final (cars, pending, pendingIds) = await (
+      getCars.call(),
+      hasPending.call(),
+      pendingDeleteIds.call(),
+    ).wait;
+    return (cars, pending, pendingIds);
   }
 
   Future<void> _emitAfter(
@@ -60,8 +72,9 @@ class CarList extends _$CarList {
 
     var cars = <Car>[];
     var hasPendingSync = false;
+    var pendingDeleteIds = <String>{};
     try {
-      (cars, hasPendingSync) = await _readCarsWithPending();
+      (cars, hasPendingSync, pendingDeleteIds) = await _readCarsWithPending();
     } on Failure catch (f) {
       syncError ??= f;
     }
@@ -70,6 +83,8 @@ class CarList extends _$CarList {
       cars: cars,
       syncError: syncError,
       hasPendingSync: hasPendingSync,
+      pendingDeleteIds: pendingDeleteIds,
+      remoteChangeMessages: const [],
     ));
 
     if (rethrowError && syncError != null) throw syncError;
@@ -93,12 +108,13 @@ class CarList extends _$CarList {
   Future<void> _refreshAndSync({
     Failure? existingError,
     required bool Function() isCancelled,
-    required Future<void> Function() refreshCars,
+    required Future<List<String>> Function() refreshCars,
     required Future<void> Function() syncPendingCars,
   }) async {
     Failure? syncError = existingError;
+    var remoteChangeMessages = <String>[];
     try {
-      await refreshCars();
+      remoteChangeMessages = await refreshCars();
     } on Failure catch (f) {
       syncError = f;
     }
@@ -115,8 +131,10 @@ class CarList extends _$CarList {
 
     var refreshedCars = <Car>[];
     var hasPendingSync = false;
+    var pendingDeleteIds = <String>{};
     try {
-      (refreshedCars, hasPendingSync) = await _readCarsWithPending();
+      (refreshedCars, hasPendingSync, pendingDeleteIds) =
+          await _readCarsWithPending();
     } on Failure catch (f) {
       syncError ??= f;
     }
@@ -127,6 +145,8 @@ class CarList extends _$CarList {
       cars: refreshedCars,
       syncError: syncError,
       hasPendingSync: hasPendingSync,
+      pendingDeleteIds: pendingDeleteIds,
+      remoteChangeMessages: remoteChangeMessages,
     ));
   }
 
@@ -136,6 +156,21 @@ class CarList extends _$CarList {
   Future<void> updateCar(CarDraft draft, Car existing) => _emitAfter(
     () => ref.read(updateCarUseCaseProvider).call(draft, existing),
   );
+
+  Future<void> deleteCar(Car car) =>
+      _emitAfter(() => ref.read(deleteCarUseCaseProvider).call(car));
+
+  void clearRemoteChangeBanner() {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData((
+      cars: current.cars,
+      syncError: current.syncError,
+      hasPendingSync: current.hasPendingSync,
+      pendingDeleteIds: current.pendingDeleteIds,
+      remoteChangeMessages: const [],
+    ));
+  }
 
   Future<void> syncPendingCars() => _emitAfter(
     () => ref.read(syncPendingCarsUseCaseProvider).call(),

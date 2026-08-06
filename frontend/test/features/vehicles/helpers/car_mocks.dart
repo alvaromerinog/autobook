@@ -21,4 +21,6 @@ void registerCarFallbacks() {
   registerFallbackValue(_emptyCarDto);
   registerFallbackValue(_emptyPendingCar);
   registerFallbackValue(SyncStateEnum.synced);
+  registerFallbackValue(const <String>[]);
+  registerFallbackValue(const <String>{});
 }

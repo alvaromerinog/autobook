@@ -5,5 +5,5 @@ class RefreshCarsUseCase {
 
   final ICarRepository _repo;
 
-  Future<void> call() => _repo.refreshFromRemote();
+  Future<List<String>> call() => _repo.refreshFromRemote();
 }

@@ -22,6 +22,12 @@ abstract class CarLocalDataSource {
   Future<List<PendingCar>> getPending();
   Future<int> countPending();
   Future<void> markSynced(String id);
+  Future<void> markPendingDelete(String id);
+  Future<void> hardDelete(String id);
+  Future<Set<String>> pendingDeleteIds();
+  Future<SyncStateEnum?> syncStateOf(String id);
+  Future<void> hardDeleteMany(Iterable<String> ids);
+  Future<List<PendingCar>> getAllWithStates();
 }
 
 class CarLocalDatasourceImpl implements CarLocalDataSource {
@@ -125,5 +131,49 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
     await (_db.update(_db.carsTable)..where((t) => t.id.equals(id))).write(
       const CarsTableCompanion(syncState: Value(SyncStateEnum.synced)),
     );
+  }
+
+  @override
+  Future<void> markPendingDelete(String id) async {
+    await (_db.update(_db.carsTable)..where((t) => t.id.equals(id))).write(
+      const CarsTableCompanion(syncState: Value(SyncStateEnum.pendingDelete)),
+    );
+  }
+
+  @override
+  Future<void> hardDelete(String id) async {
+    await (_db.delete(_db.carsTable)..where((t) => t.id.equals(id))).go();
+  }
+
+  @override
+  Future<Set<String>> pendingDeleteIds() async {
+    final rows = await (_db.select(
+      _db.carsTable,
+    )..where(
+      (t) => t.syncState.isInValues([SyncStateEnum.pendingDelete]),
+    )).get();
+    return rows.map((e) => e.id).toSet();
+  }
+
+  @override
+  Future<SyncStateEnum?> syncStateOf(String id) async {
+    final rows = await (_db.select(
+      _db.carsTable,
+    )..where((t) => t.id.equals(id))).get();
+    final first = rows.firstOrNull;
+    return first?.syncState;
+  }
+
+  @override
+  Future<void> hardDeleteMany(Iterable<String> ids) async {
+    final idSet = ids.toSet();
+    if (idSet.isEmpty) return;
+    await (_db.delete(_db.carsTable)..where((t) => t.id.isIn(idSet))).go();
+  }
+
+  @override
+  Future<List<PendingCar>> getAllWithStates() async {
+    final rows = await _db.select(_db.carsTable).get();
+    return rows.map(_toPendingCar).toList();
   }
 }

@@ -24,4 +24,7 @@ abstract class CarRemoteDataSource {
 
   @PUT('/cars/{id}')
   Future<void> update(@Path('id') String id, @Body() CarDto dto);
+
+  @DELETE('/cars/{id}')
+  Future<void> delete(@Path('id') String id);
 }

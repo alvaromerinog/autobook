@@ -72,8 +72,8 @@ class CarRepository implements ICarRepository {
   }
 
   @override
-  Future<void> refreshFromRemote() async {
-    if (!await _connectivity.isConnected()) return;
+  Future<List<String>> refreshFromRemote() async {
+    if (!await _connectivity.isConnected()) return [];
     final List<Car> remoteCars;
     try {
       final response = await _remote.fetchAll();
@@ -86,11 +86,40 @@ class CarRepository implements ICarRepository {
     } catch (_) {
       throw const NetworkFailure();
     }
+    final List<PendingCar> localRows;
     try {
-      await _local.upsertAll(remoteCars);
+      localRows = await _local.getAllWithStates();
     } catch (e) {
       throw CacheFailure(e.toString());
     }
+    final remoteIds = remoteCars.map((c) => c.id).toSet();
+    final toHardDelete = <String>[];
+    final events = <String>[];
+    for (final row in localRows) {
+      if (remoteIds.contains(row.car.id)) continue;
+      switch (row.syncState) {
+        case SyncStateEnum.pendingDelete:
+          toHardDelete.add(row.car.id);
+        case SyncStateEnum.synced:
+          toHardDelete.add(row.car.id);
+          events.add('Coche ${row.car.brand} ${row.car.model} eliminado');
+        case SyncStateEnum.pendingUpdate:
+          toHardDelete.add(row.car.id);
+          events.add(
+            'Coche ${row.car.brand} ${row.car.model} eliminado, '
+            'edición descartada',
+          );
+        case SyncStateEnum.pendingCreate:
+          break;
+      }
+    }
+    try {
+      await _local.upsertAll(remoteCars);
+      await _local.hardDeleteMany(toHardDelete);
+    } catch (e) {
+      throw CacheFailure(e.toString());
+    }
+    return events;
   }
 
   @override
@@ -110,6 +139,48 @@ class CarRepository implements ICarRepository {
       car,
       remoteCall: () => _remote.update(car.id, CarDto.fromDomain(car)),
     );
+  }
+
+  @override
+  Future<void> delete(Car car) async {
+    final state = await _local.syncStateOf(car.id);
+    if (state == SyncStateEnum.pendingCreate) {
+      await _local.hardDelete(car.id);
+      return;
+    }
+    await _local.markPendingDelete(car.id);
+    await _pushDelete(car);
+  }
+
+  Future<void> _pushDelete(Car car) async {
+    if (!await _connectivity.isConnected()) return;
+    if (!_syncingIds.add(car.id)) return;
+    try {
+      await _remote.delete(car.id);
+      await _local.hardDelete(car.id);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        await _local.hardDelete(car.id);
+        return;
+      }
+      if (e.response != null) {
+        throw ServerFailure(e.response?.statusCode ?? 0);
+      }
+      throw const NetworkFailure();
+    } catch (_) {
+      throw const NetworkFailure();
+    } finally {
+      _syncingIds.remove(car.id);
+    }
+  }
+
+  @override
+  Future<Set<String>> pendingDeleteIds() async {
+    try {
+      return await _local.pendingDeleteIds();
+    } catch (e) {
+      throw CacheFailure(e.toString());
+    }
   }
 
   @override
@@ -138,7 +209,7 @@ class CarRepository implements ICarRepository {
               ),
             );
           case SyncStateEnum.pendingDelete:
-            break;
+            await _pushDelete(pending.car);
           case SyncStateEnum.synced:
             assert(false);
         }
