@@ -188,17 +188,171 @@ void main() {
 
       test('given device is offline, '
           'when refreshFromRemote runs, '
-          'then skips remote call', () async {
+          'then skips remote call and returns no events', () async {
         // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => false);
 
         // when
-        await repo.refreshFromRemote();
+        final events = await repo.refreshFromRemote();
 
         // then
+        expect(events, isEmpty);
         verifyNever(() => mockRemote.fetchAll());
+      });
+
+      test('given a synced car missing from the remote list, '
+          'when refreshFromRemote runs, '
+          'then hard deletes it and emits an eliminated event', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockRemote.fetchAll(),
+        ).thenAnswer((_) async => const CarsListResponse(cars: []));
+        when(() => mockLocal.getAllWithStates()).thenAnswer(
+          (_) async => [(car: toyotaCorolla, syncState: SyncStateEnum.synced)],
+        );
+        when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDeleteMany(any())).thenAnswer((_) async {});
+
+        // when
+        final events = await repo.refreshFromRemote();
+
+        // then
+        verify(() => mockLocal.hardDeleteMany(['1'])).called(1);
+        expect(events, ['Coche Toyota Corolla eliminado']);
+      });
+
+      test('given a pendingUpdate car missing from the remote list, '
+          'when refreshFromRemote runs, '
+          'then hard deletes it and emits a discarded-edit event', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockRemote.fetchAll(),
+        ).thenAnswer((_) async => const CarsListResponse(cars: []));
+        when(() => mockLocal.getAllWithStates()).thenAnswer(
+          (_) async => [
+            (car: toyotaCorolla, syncState: SyncStateEnum.pendingUpdate),
+          ],
+        );
+        when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDeleteMany(any())).thenAnswer((_) async {});
+
+        // when
+        final events = await repo.refreshFromRemote();
+
+        // then
+        verify(() => mockLocal.hardDeleteMany(['1'])).called(1);
+        expect(events, ['Coche Toyota Corolla eliminado, edición descartada']);
+      });
+
+      test('given a pendingDelete car missing from the remote list, '
+          'when refreshFromRemote runs, '
+          'then hard deletes it without an event', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockRemote.fetchAll(),
+        ).thenAnswer((_) async => const CarsListResponse(cars: []));
+        when(() => mockLocal.getAllWithStates()).thenAnswer(
+          (_) async => [
+            (car: toyotaCorolla, syncState: SyncStateEnum.pendingDelete),
+          ],
+        );
+        when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDeleteMany(any())).thenAnswer((_) async {});
+
+        // when
+        final events = await repo.refreshFromRemote();
+
+        // then
+        verify(() => mockLocal.hardDeleteMany(['1'])).called(1);
+        expect(events, isEmpty);
+      });
+
+      test('given a pendingDelete car still present in the remote list, '
+          'when refreshFromRemote runs, '
+          'then it is not reconciled and no event is emitted', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.fetchAll()).thenAnswer(
+          (_) async =>
+              CarsListResponse(cars: [CarDto.fromDomain(toyotaCorolla)]),
+        );
+        when(() => mockLocal.getAllWithStates()).thenAnswer(
+          (_) async => [
+            (car: toyotaCorolla, syncState: SyncStateEnum.pendingDelete),
+          ],
+        );
+        when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDeleteMany(any())).thenAnswer((_) async {});
+
+        // when
+        final events = await repo.refreshFromRemote();
+
+        // then
+        verify(() => mockLocal.hardDeleteMany([])).called(1);
+        expect(events, isEmpty);
+      });
+
+      test('given a pendingCreate car missing from the remote list, '
+          'when refreshFromRemote runs, '
+          'then it is left intact and no event is emitted', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockRemote.fetchAll(),
+        ).thenAnswer((_) async => const CarsListResponse(cars: []));
+        when(() => mockLocal.getAllWithStates()).thenAnswer(
+          (_) async => [(car: fiat500, syncState: SyncStateEnum.pendingCreate)],
+        );
+        when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDeleteMany(any())).thenAnswer((_) async {});
+
+        // when
+        final events = await repo.refreshFromRemote();
+
+        // then
+        verify(() => mockLocal.hardDeleteMany([])).called(1);
+        expect(events, isEmpty);
+      });
+
+      test('given a known car in the remote list, '
+          'when refreshFromRemote runs, '
+          'then upsertAll updates it and no row is deleted', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.fetchAll()).thenAnswer(
+          (_) async =>
+              CarsListResponse(cars: [CarDto.fromDomain(toyotaCorolla)]),
+        );
+        when(() => mockLocal.getAllWithStates()).thenAnswer(
+          (_) async => [(car: toyotaCorolla, syncState: SyncStateEnum.synced)],
+        );
+        when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDeleteMany(any())).thenAnswer((_) async {});
+
+        // when
+        final events = await repo.refreshFromRemote();
+
+        // then
+        verify(() => mockLocal.hardDeleteMany([])).called(1);
+        verify(() => mockLocal.upsertAll([toyotaCorolla])).called(1);
+        expect(events, isEmpty);
       });
     });
 
@@ -502,6 +656,224 @@ void main() {
       });
     });
 
+    group('delete', () {
+      test(
+        'given device is online and car is synced, '
+        'when delete is called, '
+        'then marks pending delete, calls remote delete and hard deletes',
+        () async {
+          // given
+          when(
+            () => mockLocal.syncStateOf('1'),
+          ).thenAnswer((_) async => SyncStateEnum.synced);
+          when(
+            () => mockLocal.markPendingDelete(any()),
+          ).thenAnswer((_) async {});
+          when(
+            () => mockConnectivity.isConnected(),
+          ).thenAnswer((_) async => true);
+          when(() => mockRemote.delete(any())).thenAnswer((_) async {});
+          when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+          // when
+          await repo.delete(toyotaCorolla);
+
+          // then
+          verify(() => mockLocal.markPendingDelete('1')).called(1);
+          verify(() => mockRemote.delete('1')).called(1);
+          verify(() => mockLocal.hardDelete('1')).called(1);
+        },
+      );
+
+      test(
+        'given device is online and car is pendingUpdate, '
+        'when delete is called, '
+        'then marks pending delete without a remote update and hard deletes',
+        () async {
+          // given
+          when(
+            () => mockLocal.syncStateOf('1'),
+          ).thenAnswer((_) async => SyncStateEnum.pendingUpdate);
+          when(
+            () => mockLocal.markPendingDelete(any()),
+          ).thenAnswer((_) async {});
+          when(
+            () => mockConnectivity.isConnected(),
+          ).thenAnswer((_) async => true);
+          when(() => mockRemote.delete(any())).thenAnswer((_) async {});
+          when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+          // when
+          await repo.delete(toyotaCorolla);
+
+          // then
+          verify(() => mockLocal.markPendingDelete('1')).called(1);
+          verifyNever(() => mockRemote.update(any(), any()));
+          verify(() => mockRemote.delete('1')).called(1);
+          verify(() => mockLocal.hardDelete('1')).called(1);
+        },
+      );
+
+      test('given device is online and car is pendingCreate, '
+          'when delete is called, '
+          'then hard deletes locally and never calls remote', () async {
+        // given
+        when(
+          () => mockLocal.syncStateOf('pend1'),
+        ).thenAnswer((_) async => SyncStateEnum.pendingCreate);
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.delete(fiat500);
+
+        // then
+        verify(() => mockLocal.hardDelete('pend1')).called(1);
+        verifyNever(() => mockRemote.delete(any()));
+        verifyNever(() => mockLocal.markPendingDelete(any()));
+      });
+
+      test('given device is offline and car is synced, '
+          'when delete is called, '
+          'then marks pending delete and never calls remote', () async {
+        // given
+        when(
+          () => mockLocal.syncStateOf('1'),
+        ).thenAnswer((_) async => SyncStateEnum.synced);
+        when(() => mockLocal.markPendingDelete(any())).thenAnswer((_) async {});
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => false);
+
+        // when
+        await repo.delete(toyotaCorolla);
+
+        // then
+        verify(() => mockLocal.markPendingDelete('1')).called(1);
+        verifyNever(() => mockRemote.delete(any()));
+        verifyNever(() => mockLocal.hardDelete(any()));
+      });
+
+      test('given remote delete returns 404, '
+          'when delete is called, '
+          'then treats it as success and hard deletes', () async {
+        // given
+        when(
+          () => mockLocal.syncStateOf('1'),
+        ).thenAnswer((_) async => SyncStateEnum.synced);
+        when(() => mockLocal.markPendingDelete(any())).thenAnswer((_) async {});
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.delete(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/1'),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: '/cars/1'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.delete(toyotaCorolla);
+
+        // then
+        verify(() => mockLocal.hardDelete('1')).called(1);
+      });
+
+      test('given remote delete returns 500, '
+          'when delete is called, '
+          'then throws ServerFailure and row stays pending delete', () async {
+        // given
+        when(
+          () => mockLocal.syncStateOf('1'),
+        ).thenAnswer((_) async => SyncStateEnum.synced);
+        when(() => mockLocal.markPendingDelete(any())).thenAnswer((_) async {});
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.delete(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/1'),
+            response: Response(
+              statusCode: 500,
+              requestOptions: RequestOptions(path: '/cars/1'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+
+        // when / then
+        await expectLater(
+          () => repo.delete(toyotaCorolla),
+          throwsA(isA<ServerFailure>()),
+        );
+        verifyNever(() => mockLocal.hardDelete(any()));
+        verify(() => mockLocal.markPendingDelete('1')).called(1);
+      });
+
+      test('given remote delete times out, '
+          'when delete is called, '
+          'then throws NetworkFailure and row stays pending delete', () async {
+        // given
+        when(
+          () => mockLocal.syncStateOf('1'),
+        ).thenAnswer((_) async => SyncStateEnum.synced);
+        when(() => mockLocal.markPendingDelete(any())).thenAnswer((_) async {});
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.delete(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/1'),
+            type: DioExceptionType.connectionTimeout,
+          ),
+        );
+
+        // when / then
+        await expectLater(
+          () => repo.delete(toyotaCorolla),
+          throwsA(isA<NetworkFailure>()),
+        );
+        verifyNever(() => mockLocal.hardDelete(any()));
+        verify(() => mockLocal.markPendingDelete('1')).called(1);
+      });
+    });
+
+    group('pendingDeleteIds', () {
+      test('given the local data source returns ids, '
+          'when pendingDeleteIds is called, '
+          'then returns the same set', () async {
+        // given
+        when(
+          () => mockLocal.pendingDeleteIds(),
+        ).thenAnswer((_) async => {'a', 'b'});
+
+        // when
+        final ids = await repo.pendingDeleteIds();
+
+        // then
+        expect(ids, {'a', 'b'});
+      });
+
+      test('given the local data source throws, '
+          'when pendingDeleteIds is called, '
+          'then maps the error to a CacheFailure', () async {
+        // given
+        when(
+          () => mockLocal.pendingDeleteIds(),
+        ).thenThrow(StateError('database unavailable'));
+
+        // when / then
+        await expectLater(
+          () => repo.pendingDeleteIds(),
+          throwsA(isA<CacheFailure>()),
+        );
+      });
+    });
+
     group('syncPending', () {
       test('given one pending car and device is online, '
           'when syncPending is called, '
@@ -665,6 +1037,119 @@ void main() {
 
         // then
         verifyNever(() => mockLocal.markSynced(any()));
+      });
+
+      test('given a pendingDelete row and device is online, '
+          'when syncPending is called, '
+          'then calls remote delete and hard deletes', () async {
+        // given
+        when(() => mockLocal.getPending()).thenAnswer(
+          (_) async => [(car: fiat500, syncState: SyncStateEnum.pendingDelete)],
+        );
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.delete(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.syncPending();
+
+        // then
+        verify(() => mockRemote.delete('pend1')).called(1);
+        verify(() => mockLocal.hardDelete('pend1')).called(1);
+      });
+
+      test('given a pendingDelete row receives a 404, '
+          'when syncPending is called, '
+          'then hard deletes without throwing', () async {
+        // given
+        when(() => mockLocal.getPending()).thenAnswer(
+          (_) async => [(car: fiat500, syncState: SyncStateEnum.pendingDelete)],
+        );
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.delete(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/pend1'),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: '/cars/pend1'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.syncPending();
+
+        // then
+        verify(() => mockLocal.hardDelete('pend1')).called(1);
+      });
+
+      test('given a pendingDelete row fails with a 500, '
+          'when syncPending is called, '
+          'then hard delete is not called and the row stays pending', () async {
+        // given
+        when(() => mockLocal.getPending()).thenAnswer(
+          (_) async => [(car: fiat500, syncState: SyncStateEnum.pendingDelete)],
+        );
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.delete(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/pend1'),
+            response: Response(
+              statusCode: 500,
+              requestOptions: RequestOptions(path: '/cars/pend1'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+
+        // when
+        await repo.syncPending();
+
+        // then
+        verifyNever(() => mockLocal.hardDelete(any()));
+      });
+
+      test('given a mixed queue of pendingCreate and pendingDelete, '
+          'when syncPending is called, '
+          'then both are processed in order and one failure does not abort '
+          'the other', () async {
+        // given
+        when(() => mockLocal.getPending()).thenAnswer(
+          (_) async => [
+            (car: fiat500, syncState: SyncStateEnum.pendingCreate),
+            (car: alfaGiulia, syncState: SyncStateEnum.pendingDelete),
+          ],
+        );
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.create(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars'),
+            response: Response(
+              statusCode: 500,
+              requestOptions: RequestOptions(path: '/cars'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        when(() => mockRemote.delete(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.syncPending();
+
+        // then
+        verify(() => mockRemote.delete('pend2')).called(1);
+        verify(() => mockLocal.hardDelete('pend2')).called(1);
       });
     });
   });
