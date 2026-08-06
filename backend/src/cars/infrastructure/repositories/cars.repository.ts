@@ -24,27 +24,26 @@ export class PrismaCarsRepository implements CarsRepository {
   }
 
   async update(input: Car): Promise<{ id: string } | null> {
-    const existing = await this.prisma.car.findUnique({
+    const updateData = {
+      brand: input.brand,
+      model: input.model,
+      year: input.year,
+      licensePlate: input.licensePlate,
+      color: input.color,
+      mileage: input.mileage,
+    };
+    const { count } = await this.prisma.car.updateMany({
       where: { id: input.id, deletedAt: null },
-    });
-    if (!existing) return null;
-    const { deletedAt: _, ...updateData } = input;
-    const car = await this.prisma.car.update({
-      where: { id: input.id },
       data: updateData,
     });
-    return { id: car.id };
+    return count === 1 ? { id: input.id } : null;
   }
 
   async delete(id: string): Promise<{ id: string } | null> {
-    const existing = await this.prisma.car.findUnique({
+    const { count } = await this.prisma.car.updateMany({
       where: { id, deletedAt: null },
-    });
-    if (!existing) return null;
-    await this.prisma.car.update({
-      where: { id },
       data: { deletedAt: new Date() },
     });
-    return { id };
+    return count === 1 ? { id } : null;
   }
 }
