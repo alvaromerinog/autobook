@@ -148,6 +148,9 @@ class CarRepository implements ICarRepository {
   Future<void> delete(Car car) async {
     final state = await _local.syncStateOf(car.id);
     if (state == SyncStateEnum.pendingCreate) {
+      if (_syncingIds.contains(car.id)) {
+        throw const CacheFailure('delete while sync in flight');
+      }
       await _local.hardDelete(car.id);
       return;
     }
