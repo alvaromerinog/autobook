@@ -1,5 +1,6 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:autobook/features/vehicles/presentation/providers/car_list_provider.dart';
 import 'package:autobook/features/vehicles/presentation/screens/add_car_screen.dart'
@@ -56,6 +57,13 @@ class HomeScreen extends ConsumerWidget {
     CacheFailure() => 'Error al acceder al almacenamiento local.',
   };
 
+  String _remoteEventMessage(RemoteSyncEvent event) => switch (event) {
+    RemoteDeleted(car: final car) =>
+      'Coche ${car.brand} ${car.model} eliminado',
+    RemoteDeletedWithPendingUpdate(car: final car) =>
+      'Coche ${car.brand} ${car.model} eliminado, edición descartada',
+  };
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -79,11 +87,13 @@ class HomeScreen extends ConsumerWidget {
     ref.listen<AsyncValue<CarListState>>(carListProvider, (prev, next) {
       final messenger = ScaffoldMessenger.of(context);
       next.whenData((carsState) {
-        final prevMessages = prev?.value?.remoteChangeMessages;
-        final nextMessages = carsState.remoteChangeMessages;
+        final prevMessages = prev?.value?.remoteSyncEvents;
+        final nextMessages = carsState.remoteSyncEvents;
         if (prevMessages != nextMessages && nextMessages.isNotEmpty) {
           messenger.showSnackBar(
-            SnackBar(content: Text(nextMessages.join('\n'))),
+            SnackBar(
+              content: Text(nextMessages.map(_remoteEventMessage).join('\n')),
+            ),
           );
           ref.read(carListProvider.notifier).clearRemoteChangeBanner();
           return;

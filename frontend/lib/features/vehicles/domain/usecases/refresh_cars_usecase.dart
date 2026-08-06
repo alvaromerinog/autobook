@@ -1,3 +1,4 @@
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/repositories/car_repository.dart';
 
 class RefreshCarsUseCase {
@@ -5,5 +6,5 @@ class RefreshCarsUseCase {
 
   final ICarRepository _repo;
 
-  Future<List<String>> call() => _repo.refreshFromRemote();
+  Future<List<RemoteSyncEvent>> call() => _repo.refreshFromRemote();
 }

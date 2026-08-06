@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:autobook/features/vehicles/presentation/providers/usecase_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -14,7 +15,7 @@ typedef CarListState = ({
   Failure? syncError,
   bool hasPendingSync,
   Set<String> pendingDeleteIds,
-  List<String> remoteChangeMessages,
+  List<RemoteSyncEvent> remoteSyncEvents,
 });
 
 @riverpod
@@ -43,7 +44,7 @@ class CarList extends _$CarList {
       syncError: syncError,
       hasPendingSync: hasPendingSync,
       pendingDeleteIds: pendingDeleteIds,
-      remoteChangeMessages: const <String>[],
+      remoteSyncEvents: const <RemoteSyncEvent>[],
     );
   }
 
@@ -84,7 +85,7 @@ class CarList extends _$CarList {
       syncError: syncError,
       hasPendingSync: hasPendingSync,
       pendingDeleteIds: pendingDeleteIds,
-      remoteChangeMessages: const [],
+      remoteSyncEvents: const [],
     ));
 
     if (rethrowError && syncError != null) throw syncError;
@@ -108,13 +109,13 @@ class CarList extends _$CarList {
   Future<void> _refreshAndSync({
     Failure? existingError,
     required bool Function() isCancelled,
-    required Future<List<String>> Function() refreshCars,
+    required Future<List<RemoteSyncEvent>> Function() refreshCars,
     required Future<void> Function() syncPendingCars,
   }) async {
     Failure? syncError = existingError;
-    var remoteChangeMessages = <String>[];
+    var remoteSyncEvents = <RemoteSyncEvent>[];
     try {
-      remoteChangeMessages = await refreshCars();
+      remoteSyncEvents = await refreshCars();
     } on Failure catch (f) {
       syncError = f;
     }
@@ -146,7 +147,7 @@ class CarList extends _$CarList {
       syncError: syncError,
       hasPendingSync: hasPendingSync,
       pendingDeleteIds: pendingDeleteIds,
-      remoteChangeMessages: remoteChangeMessages,
+      remoteSyncEvents: remoteSyncEvents,
     ));
   }
 
@@ -168,7 +169,7 @@ class CarList extends _$CarList {
       syncError: current.syncError,
       hasPendingSync: current.hasPendingSync,
       pendingDeleteIds: current.pendingDeleteIds,
-      remoteChangeMessages: const [],
+      remoteSyncEvents: const [],
     ));
   }
 

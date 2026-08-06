@@ -1,6 +1,7 @@
 import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/delete_car_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/get_cars_usecase.dart';
@@ -59,7 +60,9 @@ void stubSyncDefaults(
   MockCarRepository mockRepo, {
   List<Car> cars = oneCarList,
 }) {
-  when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async => []);
+  when(
+    () => mockRepo.refreshFromRemote(),
+  ).thenAnswer((_) async => <RemoteSyncEvent>[]);
   when(() => mockRepo.syncPending()).thenAnswer((_) async {});
   when(() => mockRepo.getAll()).thenAnswer((_) async => cars);
   when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -150,9 +153,9 @@ void main() {
           'the banner is cleared', (tester) async {
         // given
         stubSyncDefaults(mockRepo);
-        when(
-          () => mockRepo.refreshFromRemote(),
-        ).thenAnswer((_) async => ['Coche Toyota Corolla eliminado']);
+        when(() => mockRepo.refreshFromRemote()).thenAnswer(
+          (_) async => [const RemoteSyncEvent.remoteDeleted(toyotaCorolla)],
+        );
 
         // when
         await pumpHomeScreen(tester, mockRepo);

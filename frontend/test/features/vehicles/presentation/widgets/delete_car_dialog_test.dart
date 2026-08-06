@@ -7,7 +7,11 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../fixtures/car_fixtures.dart';
 
 void main() {
-  Future<void> pumpDialog(WidgetTester tester, Car car, List<bool?> result) async {
+  Future<void> pumpDialog(
+    WidgetTester tester,
+    Car car,
+    List<bool?> result,
+  ) async {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
