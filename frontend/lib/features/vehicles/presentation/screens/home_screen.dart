@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
@@ -78,6 +80,16 @@ class HomeScreen extends ConsumerWidget {
     ref.listen<AsyncValue<CarListState>>(carListProvider, (prev, next) {
       final messenger = ScaffoldMessenger.of(context);
       next.whenData((carsState) {
+        final prevMessages = prev?.value?.remoteChangeMessages;
+        final nextMessages = carsState.remoteChangeMessages;
+        if (prevMessages != nextMessages && nextMessages.isNotEmpty) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(nextMessages.join('\n'))),
+          );
+          ref.read(carListProvider.notifier).clearRemoteChangeBanner();
+          return;
+        }
+
         final prevSig = bannerSignature(prev?.value);
         final nextSig = bannerSignature(carsState);
         if (prevSig == nextSig) return;
@@ -267,84 +279,110 @@ class _CarCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant),
+    final isPendingDelete = ref.watch(
+      carListProvider.select(
+        (async) => async.value?.pendingDeleteIds.contains(car.id) ?? false,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
+    );
+
+    return Opacity(
+      opacity: isPendingDelete ? 0.45 : 1,
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colorScheme.outlineVariant),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.directions_car,
+                  color: colorScheme.onPrimaryContainer,
+                  size: 28,
+                ),
               ),
-              child: Icon(
-                Icons.directions_car,
-                color: colorScheme.onPrimaryContainer,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${car.brand} ${car.model}',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${car.brand} ${car.model}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      InfoChip(label: car.year.toString()),
-                      const SizedBox(width: 8),
-                      InfoChip(label: car.licensePlate),
-                      if (car.color != null) ...[
-                        const SizedBox(width: 8),
-                        InfoChip(label: car.color!),
-                      ],
+                    if (isPendingDelete) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        'Pendiente de borrado',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
                     ],
-                  ),
-                  if (car.mileage != null) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(
-                          Icons.speed,
-                          size: 14,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        // TODO: Cambiar a km o mi según los ajustes del usuario
-                        Text(
-                          '${_formatMileage(context, car.mileage!)} km',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
+                        InfoChip(label: car.year.toString()),
+                        const SizedBox(width: 8),
+                        InfoChip(label: car.licensePlate),
+                        if (car.color != null) ...[
+                          const SizedBox(width: 8),
+                          InfoChip(label: car.color!),
+                        ],
                       ],
                     ),
+                    if (car.mileage != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.speed,
+                            size: 14,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          // TODO: Cambiar a km o mi según los ajustes del usuario
+                          Text(
+                            '${_formatMileage(context, car.mileage!)} km',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Editar vehículo',
-              onPressed: () => _openEditCar(context, ref, car),
-            ),
-            Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-          ],
+              IconButton(
+                icon: const Icon(Icons.delete_outline),
+                tooltip: 'Eliminar',
+                onPressed: isPendingDelete
+                    ? null
+                    : () => _openDeleteCar(context, ref, car),
+              ),
+              if (!isPendingDelete)
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  tooltip: 'Editar vehículo',
+                  onPressed: () => _openEditCar(context, ref, car),
+                ),
+              if (!isPendingDelete)
+                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
+            ],
+          ),
         ),
       ),
     );
@@ -374,4 +412,127 @@ Future<void> _openEditCar(BuildContext context, WidgetRef ref, Car car) async {
     () => ref.read(carListProvider.notifier).updateCar(updatedDraft, car),
     errorText: 'Error al actualizar el vehículo',
   );
+}
+
+Future<void> _openDeleteCar(
+  BuildContext context,
+  WidgetRef ref,
+  Car car,
+) async {
+  final confirmed = await showDeleteConfirmDialog(context, car);
+  if (confirmed != true || !context.mounted) return;
+  await _runCarMutation(
+    context,
+    ref,
+    () => ref.read(carListProvider.notifier).deleteCar(car),
+    errorText: 'Error al eliminar el vehículo',
+  );
+}
+
+Future<bool?> showDeleteConfirmDialog(BuildContext context, Car car) {
+  return showGeneralDialog<bool>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Cerrar',
+    barrierColor: Colors.black.withValues(alpha: 0.3),
+    pageBuilder: (_, __, ___) => _DeleteConfirmDialog(car: car),
+    transitionBuilder: (_, animation, __, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      );
+      return BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: 6 * animation.value,
+          sigmaY: 6 * animation.value,
+        ),
+        child: FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.92, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+    transitionDuration: const Duration(milliseconds: 250),
+  );
+}
+
+class _DeleteConfirmDialog extends ConsumerWidget {
+  const _DeleteConfirmDialog({required this.car});
+
+  final Car car;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Material(
+          borderRadius: BorderRadius.circular(24),
+          color: colorScheme.surface,
+          elevation: 6,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.delete_outline,
+                    size: 40,
+                    color: colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Eliminar vehículo',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '¿Seguro que quieres eliminar ${car.brand} ${car.model}?',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancelar'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: colorScheme.error,
+                            foregroundColor: colorScheme.onError,
+                          ),
+                          child: const Text('Eliminar'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
