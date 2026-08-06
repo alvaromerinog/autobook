@@ -2,3 +2,4 @@
 .claude/
 skills*
 **/.vscode/settings.json
+.tmp/
