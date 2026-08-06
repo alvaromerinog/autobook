@@ -147,11 +147,11 @@ class CarLocalDatasourceImpl implements CarLocalDataSource {
 
   @override
   Future<Set<String>> pendingDeleteIds() async {
-    final rows = await (_db.select(
-      _db.carsTable,
-    )..where(
-      (t) => t.syncState.isInValues([SyncStateEnum.pendingDelete]),
-    )).get();
+    final rows =
+        await (_db.select(_db.carsTable)..where(
+              (t) => t.syncState.isInValues([SyncStateEnum.pendingDelete]),
+            ))
+            .get();
     return rows.map((e) => e.id).toSet();
   }
 
