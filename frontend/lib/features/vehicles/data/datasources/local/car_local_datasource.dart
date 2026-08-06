@@ -1,6 +1,7 @@
 import 'package:autobook/core/di/app_database_provider.dart';
 import 'package:autobook/features/vehicles/data/datasources/local/app_database.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:autobook/features/vehicles/domain/entities/sync_state.dart';
 import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

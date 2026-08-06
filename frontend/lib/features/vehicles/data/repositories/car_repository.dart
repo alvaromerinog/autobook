@@ -1,10 +1,10 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/network/connectivity_service.dart';
-import 'package:autobook/features/vehicles/data/datasources/local/app_database.dart';
 import 'package:autobook/features/vehicles/data/datasources/local/car_local_datasource.dart';
 import 'package:autobook/features/vehicles/data/datasources/remote/car_remote_datasource.dart';
 import 'package:autobook/features/vehicles/data/models/car_dto.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:autobook/features/vehicles/domain/entities/sync_state.dart';
 import 'package:autobook/features/vehicles/domain/repositories/car_repository.dart';
 import 'package:dio/dio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -137,6 +137,8 @@ class CarRepository implements ICarRepository {
                 CarDto.fromDomain(pending.car),
               ),
             );
+          case SyncStateEnum.pendingDelete:
+            break;
           case SyncStateEnum.synced:
             assert(false);
         }

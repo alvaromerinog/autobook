@@ -1,8 +1,7 @@
+import 'package:autobook/features/vehicles/domain/entities/sync_state.dart';
 import 'package:drift/drift.dart';
 
 part 'app_database.g.dart';
-
-enum SyncStateEnum { synced, pendingCreate, pendingUpdate }
 
 @DataClassName('CarEntry')
 class CarsTable extends Table {
