@@ -7,6 +7,7 @@ import 'package:autobook/features/vehicles/data/datasources/remote/car_remote_da
 import 'package:autobook/features/vehicles/data/models/car_dto.dart';
 import 'package:autobook/features/vehicles/data/repositories/car_repository.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/entities/sync_state.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -225,7 +226,7 @@ void main() {
 
         // then
         verify(() => mockLocal.hardDeleteMany(['1'])).called(1);
-        expect(events, ['Coche Toyota Corolla eliminado']);
+        expect(events, [const RemoteSyncEvent.remoteDeleted(toyotaCorolla)]);
       });
 
       test('given a pendingUpdate car missing from the remote list, '
@@ -251,7 +252,9 @@ void main() {
 
         // then
         verify(() => mockLocal.hardDeleteMany(['1'])).called(1);
-        expect(events, ['Coche Toyota Corolla eliminado, edición descartada']);
+        expect(events, [
+          const RemoteSyncEvent.remoteDeletedWithPendingUpdate(toyotaCorolla),
+        ]);
       });
 
       test('given a pendingDelete car missing from the remote list, '

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/delete_car_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/get_cars_usecase.dart';
@@ -74,7 +75,7 @@ void main() {
         // given
         when(
           () => mockRepo.refreshFromRemote(),
-        ).thenAnswer((_) async => <String>[]);
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -95,7 +96,7 @@ void main() {
         // given
         when(
           () => mockRepo.refreshFromRemote(),
-        ).thenAnswer((_) async => <String>[]);
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(
           () => mockRepo.getAll(),
@@ -120,7 +121,7 @@ void main() {
         // given
         when(
           () => mockRepo.refreshFromRemote(),
-        ).thenAnswer((_) async => <String>[]);
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(
           () => mockRepo.getAll(),
@@ -174,7 +175,7 @@ void main() {
           'when build runs, '
           'then local data is emitted before remote completes', () async {
         // given
-        final remoteCompleter = Completer<List<String>>();
+        final remoteCompleter = Completer<List<RemoteSyncEvent>>();
         when(
           () => mockRepo.refreshFromRemote(),
         ).thenAnswer((_) => remoteCompleter.future);
@@ -191,7 +192,7 @@ void main() {
         expect(initial.syncError, isNull);
 
         // complete remote and flush
-        remoteCompleter.complete(const []);
+        remoteCompleter.complete(const <RemoteSyncEvent>[]);
         for (var i = 0; i < 10; i++) {
           await Future.delayed(Duration.zero);
         }
@@ -205,11 +206,11 @@ void main() {
 
       test('given refreshFromRemote reports a remote deletion, '
           'when build runs, '
-          'then remoteChangeMessages captures the event', () async {
+          'then remoteSyncEvents captures the event', () async {
         // given
-        when(
-          () => mockRepo.refreshFromRemote(),
-        ).thenAnswer((_) async => ['Coche Toyota Corolla eliminado']);
+        when(() => mockRepo.refreshFromRemote()).thenAnswer(
+          (_) async => [const RemoteSyncEvent.remoteDeleted(toyotaCorolla)],
+        );
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -223,7 +224,9 @@ void main() {
 
         // then — background refresh surfaced the event
         final state = container.read(carListProvider).requireValue;
-        expect(state.remoteChangeMessages, ['Coche Toyota Corolla eliminado']);
+        expect(state.remoteSyncEvents, [
+          const RemoteSyncEvent.remoteDeleted(toyotaCorolla),
+        ]);
       });
     });
 
@@ -234,7 +237,7 @@ void main() {
         // given
         when(
           () => mockRepo.refreshFromRemote(),
-        ).thenAnswer((_) async => <String>[]);
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -268,7 +271,7 @@ void main() {
         // given
         when(
           () => mockRepo.refreshFromRemote(),
-        ).thenAnswer((_) async => <String>[]);
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
@@ -308,7 +311,7 @@ void main() {
           // given
           when(
             () => mockRepo.refreshFromRemote(),
-          ).thenAnswer((_) async => <String>[]);
+          ).thenAnswer((_) async => <RemoteSyncEvent>[]);
           when(() => mockRepo.syncPending()).thenAnswer((_) async {});
           when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
           when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -343,7 +346,7 @@ void main() {
         // given
         when(
           () => mockRepo.refreshFromRemote(),
-        ).thenAnswer((_) async => <String>[]);
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
@@ -374,7 +377,7 @@ void main() {
         // given
         when(
           () => mockRepo.refreshFromRemote(),
-        ).thenAnswer((_) async => <String>[]);
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -404,7 +407,7 @@ void main() {
           // given
           when(
             () => mockRepo.refreshFromRemote(),
-          ).thenAnswer((_) async => <String>[]);
+          ).thenAnswer((_) async => <RemoteSyncEvent>[]);
           when(() => mockRepo.syncPending()).thenAnswer((_) async {});
           when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
           when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
@@ -436,7 +439,9 @@ void main() {
         'then state exposes the pending delete ids and pending sync',
         () async {
           // given
-          when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async => []);
+          when(
+            () => mockRepo.refreshFromRemote(),
+          ).thenAnswer((_) async => <RemoteSyncEvent>[]);
           when(() => mockRepo.syncPending()).thenAnswer((_) async {});
           when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
           when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
@@ -469,7 +474,9 @@ void main() {
         'then the error is captured and the row stays pending delete',
         () async {
           // given
-          when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async => []);
+          when(
+            () => mockRepo.refreshFromRemote(),
+          ).thenAnswer((_) async => <RemoteSyncEvent>[]);
           when(() => mockRepo.syncPending()).thenAnswer((_) async {});
           when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
           when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
@@ -499,13 +506,13 @@ void main() {
     });
 
     group('clearRemoteChangeBanner', () {
-      test('given state with remote change messages, '
+      test('given state with remote sync events, '
           'when clearRemoteChangeBanner is called, '
-          'then the messages are cleared', () async {
+          'then the events are cleared', () async {
         // given
-        when(
-          () => mockRepo.refreshFromRemote(),
-        ).thenAnswer((_) async => ['Coche Toyota Corolla eliminado']);
+        when(() => mockRepo.refreshFromRemote()).thenAnswer(
+          (_) async => [const RemoteSyncEvent.remoteDeleted(toyotaCorolla)],
+        );
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -516,14 +523,14 @@ void main() {
           await Future.delayed(Duration.zero);
         }
         final withMessages = container.read(carListProvider).requireValue;
-        expect(withMessages.remoteChangeMessages, isNotEmpty);
+        expect(withMessages.remoteSyncEvents, isNotEmpty);
 
         // when
         container.read(carListProvider.notifier).clearRemoteChangeBanner();
 
         // then
         final cleared = container.read(carListProvider).requireValue;
-        expect(cleared.remoteChangeMessages, isEmpty);
+        expect(cleared.remoteSyncEvents, isEmpty);
         expect(cleared.cars, oneCarList);
       });
     });

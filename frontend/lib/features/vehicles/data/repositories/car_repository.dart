@@ -4,6 +4,7 @@ import 'package:autobook/features/vehicles/data/datasources/local/car_local_data
 import 'package:autobook/features/vehicles/data/datasources/remote/car_remote_datasource.dart';
 import 'package:autobook/features/vehicles/data/models/car_dto.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/entities/sync_state.dart';
 import 'package:autobook/features/vehicles/domain/repositories/car_repository.dart';
 import 'package:dio/dio.dart';
@@ -73,7 +74,7 @@ class CarRepository implements ICarRepository {
   }
 
   @override
-  Future<List<String>> refreshFromRemote() async {
+  Future<List<RemoteSyncEvent>> refreshFromRemote() async {
     if (!await _connectivity.isConnected()) return [];
     final List<Car> remoteCars;
     try {
@@ -95,7 +96,7 @@ class CarRepository implements ICarRepository {
     }
     final remoteIds = remoteCars.map((c) => c.id).toSet();
     final toHardDelete = <String>[];
-    final events = <String>[];
+    final events = <RemoteSyncEvent>[];
     for (final row in localRows) {
       if (remoteIds.contains(row.car.id)) continue;
       switch (row.syncState) {
@@ -103,13 +104,10 @@ class CarRepository implements ICarRepository {
           toHardDelete.add(row.car.id);
         case SyncStateEnum.synced:
           toHardDelete.add(row.car.id);
-          events.add('Coche ${row.car.brand} ${row.car.model} eliminado');
+          events.add(RemoteSyncEvent.remoteDeleted(row.car));
         case SyncStateEnum.pendingUpdate:
           toHardDelete.add(row.car.id);
-          events.add(
-            'Coche ${row.car.brand} ${row.car.model} eliminado, '
-            'edición descartada',
-          );
+          events.add(RemoteSyncEvent.remoteDeletedWithPendingUpdate(row.car));
         case SyncStateEnum.pendingCreate:
           break;
       }

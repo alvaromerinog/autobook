@@ -1,4 +1,5 @@
 import 'package:autobook/core/error/failures.dart';
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/usecases/refresh_cars_usecase.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -21,7 +22,7 @@ void main() {
       // given
       when(
         () => mockRepo.refreshFromRemote(),
-      ).thenAnswer((_) async => <String>[]);
+      ).thenAnswer((_) async => <RemoteSyncEvent>[]);
 
       // when
       final events = await useCase();
