@@ -17,14 +17,17 @@ void main() {
   group('RefreshCarsUseCase', () {
     test('given repository refreshes successfully, '
         'when call runs, '
-        'then delegates to refreshFromRemote', () async {
+        'then delegates to refreshFromRemote and returns events', () async {
       // given
-      when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+      when(
+        () => mockRepo.refreshFromRemote(),
+      ).thenAnswer((_) async => <String>[]);
 
       // when
-      await useCase();
+      final events = await useCase();
 
       // then
+      expect(events, isEmpty);
       verify(() => mockRepo.refreshFromRemote()).called(1);
     });
 

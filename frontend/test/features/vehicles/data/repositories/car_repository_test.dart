@@ -52,13 +52,18 @@ void main() {
         when(
           () => mockRemote.fetchAll(),
         ).thenAnswer((_) async => const CarsListResponse(cars: []));
+        when(
+          () => mockLocal.getAllWithStates(),
+        ).thenAnswer((_) async => <PendingCar>[]);
         when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDeleteMany(any())).thenAnswer((_) async {});
 
         // when
-        await repo.refreshFromRemote();
+        final events = await repo.refreshFromRemote();
 
         // then
         verify(() => mockLocal.upsertAll([])).called(1);
+        expect(events, isEmpty);
       });
 
       test('given api returns two cars, '
@@ -75,10 +80,14 @@ void main() {
             cars: [CarDto.fromDomain(car1), CarDto.fromDomain(car2)],
           ),
         );
+        when(
+          () => mockLocal.getAllWithStates(),
+        ).thenAnswer((_) async => <PendingCar>[]);
         when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDeleteMany(any())).thenAnswer((_) async {});
 
         // when
-        await repo.refreshFromRemote();
+        final events = await repo.refreshFromRemote();
 
         // then
         final captured = verify(
@@ -88,6 +97,7 @@ void main() {
         expect(upserted, hasLength(2));
         expect(upserted[0].id, '1');
         expect(upserted[1].id, '2');
+        expect(events, isEmpty);
       });
 
       test('given api throws a generic exception, '
@@ -162,6 +172,9 @@ void main() {
         when(
           () => mockRemote.fetchAll(),
         ).thenAnswer((_) async => const CarsListResponse(cars: []));
+        when(
+          () => mockLocal.getAllWithStates(),
+        ).thenAnswer((_) async => <PendingCar>[]);
         when(
           () => mockLocal.upsertAll(any()),
         ).thenThrow(StateError('db error'));
