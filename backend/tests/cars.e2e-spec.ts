@@ -28,7 +28,7 @@ describe('CarsController (e2e)', () => {
 
     prisma = moduleFixture.get<PrismaDatabase>(PrismaDatabase);
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true }));
+    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
     await app.init();
   });
 
@@ -61,12 +61,16 @@ describe('CarsController (e2e)', () => {
         .get('/cars')
         .expect(200);
 
-      const body = response.body as { cars: Array<{ id: string }> };
+      const body = response.body as {
+        cars: Array<{ id: string; deletedAt?: Date }>;
+      };
       expect(body.cars).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ id: CAR_PAYLOAD.id }),
         ]),
       );
+      const car = body.cars.find((c) => c.id === CAR_PAYLOAD.id);
+      expect(car).not.toHaveProperty('deletedAt');
     });
 
     it('given an existing car with the same id when POST /cars then returns 409', async () => {
