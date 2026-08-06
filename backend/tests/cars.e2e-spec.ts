@@ -28,7 +28,7 @@ describe('CarsController (e2e)', () => {
 
     prisma = moduleFixture.get<PrismaDatabase>(PrismaDatabase);
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true }));
+    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
     await app.init();
   });
 
