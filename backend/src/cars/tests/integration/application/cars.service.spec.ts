@@ -84,6 +84,22 @@ describe('CarsService (integration)', () => {
     expect(car).toMatchObject({ color: 'Red', mileage: 50000 });
   });
 
+  it('given an existing active car when updateCar with a deletedAt value in the input then the persisted deletedAt remains null', async () => {
+    await prisma.car.create({ data: TEST_CARS[0] });
+    const stale = {
+      ...TEST_CARS[0],
+      deletedAt: new Date('2026-01-01T00:00:00.000Z'),
+    };
+
+    const result = await service.updateCar(stale);
+
+    expect(result).toEqual({ id: TEST_CARS[0].id });
+    const persisted = await prisma.car.findUnique({
+      where: { id: TEST_CARS[0].id },
+    });
+    expect(persisted!.deletedAt).toBeNull();
+  });
+
   it('given no car with the given id when updateCar then returns null', async () => {
     const result = await service.updateCar(TEST_CARS[0]);
 
