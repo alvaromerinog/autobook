@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/network/connectivity_service.dart';
 import 'package:autobook/features/vehicles/data/datasources/local/car_local_datasource.dart';
@@ -714,7 +716,7 @@ void main() {
         },
       );
 
-      test('given device is online and car is pendingCreate, '
+      test('given car is pendingCreate, '
           'when delete is called, '
           'then hard deletes locally and never calls remote', () async {
         // given
@@ -730,6 +732,42 @@ void main() {
         verify(() => mockLocal.hardDelete('pend1')).called(1);
         verifyNever(() => mockRemote.delete(any()));
         verifyNever(() => mockLocal.markPendingDelete(any()));
+      });
+
+      test('given a pendingCreate car whose push is in flight, '
+          'when delete is called, '
+          'then throws CacheFailure and does not hard delete', () async {
+        // given — a create in flight holds the id in _syncingIds
+        when(
+          () => mockLocal.syncStateOf('pend1'),
+        ).thenAnswer((_) async => SyncStateEnum.pendingCreate);
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockLocal.insertPending(any())).thenAnswer((_) async {});
+        final remoteCompleter = Completer<void>();
+        when(
+          () => mockRemote.create(any()),
+        ).thenAnswer((_) => remoteCompleter.future);
+        when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
+        final createFuture = repo.create(fiat500);
+        // remote.create invoked only after the id entered _syncingIds
+        for (var i = 0; i < 10; i++) {
+          await Future.delayed(Duration.zero);
+        }
+        verify(() => mockRemote.create(CarDto.fromDomain(fiat500))).called(1);
+
+        // when / then
+        await expectLater(
+          () => repo.delete(fiat500),
+          throwsA(isA<CacheFailure>()),
+        );
+        verifyNever(() => mockLocal.hardDelete(any()));
+
+        // when — complete the in-flight push so no future leaks
+        remoteCompleter.complete();
+        await createFuture;
       });
 
       test('given device is offline and car is synced, '
