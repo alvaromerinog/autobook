@@ -18,7 +18,7 @@ class CarDetailScreen extends ConsumerWidget {
 
   final String carId;
 
-  Future<void> _runMutation(
+  Future<bool> _runMutation(
     BuildContext context,
     WidgetRef ref,
     Future<void> Function() mutation, {
@@ -26,11 +26,14 @@ class CarDetailScreen extends ConsumerWidget {
   }) async {
     try {
       await mutation();
+      return true;
     } on Failure catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(errorText)));
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorText)));
+      }
+      return false;
     }
   }
 
@@ -64,13 +67,13 @@ class CarDetailScreen extends ConsumerWidget {
   ) async {
     final confirmed = await showDeleteConfirmDialog(context, car);
     if (confirmed != true || !context.mounted) return;
-    await _runMutation(
+    final deleted = await _runMutation(
       context,
       ref,
       () => ref.read(carListProvider.notifier).deleteCar(car),
       errorText: 'Error al eliminar el vehículo',
     );
-    if (context.mounted) context.pop();
+    if (deleted && context.mounted) context.pop();
   }
 
   @override
@@ -218,11 +221,22 @@ class CarDetailScreen extends ConsumerWidget {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-                  child: Text(
-                    'Historial de mantenimientos',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: cs.onSurface,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Historial de mantenimientos',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: cs.onSurface,
+                        ),
+                      ),
+                      Text(
+                        '${maintAsync.value?.maintenances.length ?? 0} entradas',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
@@ -261,7 +275,14 @@ class CarDetailScreen extends ConsumerWidget {
                 })
               >('/cars/$carId/add-maintenance');
           if (draft == null) return;
-          await ref.read(maintenanceListProvider(carId).notifier).add(draft);
+          try {
+            await ref.read(maintenanceListProvider(carId).notifier).add(draft);
+          } on Failure catch (_) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Error al crear el mantenimiento')),
+            );
+          }
         },
         icon: const Icon(Icons.add),
         label: const Text('Añadir mantenimiento'),
