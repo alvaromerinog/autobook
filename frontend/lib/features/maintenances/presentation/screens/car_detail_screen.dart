@@ -277,6 +277,10 @@ class CarDetailScreen extends ConsumerWidget {
           if (draft == null) return;
           try {
             await ref.read(maintenanceListProvider(carId).notifier).add(draft);
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Mantenimiento registrado')),
+            );
           } on Failure catch (_) {
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
