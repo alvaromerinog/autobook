@@ -12,6 +12,7 @@ import { PrismaCarsRepository } from '../../../infrastructure/repositories/cars.
 import { applyMigrations } from '../../../../test-utils/apply-migrations';
 import { TEST_CARS } from '../../fixtures/cars.fixtures';
 import { Car } from '@prisma/client';
+import { CarConflictError } from '../../../domain/errors/car-conflict.error';
 
 describe('CarsService (integration)', () => {
   let service: CarsService;
@@ -83,6 +84,22 @@ describe('CarsService (integration)', () => {
     expect(car).toMatchObject({ color: 'Red', mileage: 50000 });
   });
 
+  it('given an existing active car when updateCar with a deletedAt value in the input then the persisted deletedAt remains null', async () => {
+    await prisma.car.create({ data: TEST_CARS[0] });
+    const stale = {
+      ...TEST_CARS[0],
+      deletedAt: new Date('2026-01-01T00:00:00.000Z'),
+    };
+
+    const result = await service.updateCar(stale);
+
+    expect(result).toEqual({ id: TEST_CARS[0].id });
+    const persisted = await prisma.car.findUnique({
+      where: { id: TEST_CARS[0].id },
+    });
+    expect(persisted!.deletedAt).toBeNull();
+  });
+
   it('given no car with the given id when updateCar then returns null', async () => {
     const result = await service.updateCar(TEST_CARS[0]);
 
@@ -123,5 +140,62 @@ describe('CarsService (integration)', () => {
     } as unknown as Car;
 
     await expect(service.createCar(invalidCar)).rejects.toThrow();
+  });
+
+  it('given an existing car when deleteCar then returns its id and the row persists with deletedAt set', async () => {
+    await prisma.car.create({ data: TEST_CARS[0] });
+
+    const result = await service.deleteCar(TEST_CARS[0].id);
+
+    expect(result).toEqual({ id: TEST_CARS[0].id });
+    const persisted = await prisma.car.findUnique({
+      where: { id: TEST_CARS[0].id },
+    });
+    expect(persisted).not.toBeNull();
+    expect(persisted!.deletedAt).not.toBeNull();
+  });
+
+  it('given a non-existing car id when deleteCar then returns null', async () => {
+    const result = await service.deleteCar(TEST_CARS[0].id);
+
+    expect(result).toBeNull();
+  });
+
+  it('given an already soft-deleted car when deleteCar then returns null', async () => {
+    await prisma.car.create({ data: TEST_CARS[0] });
+    await service.deleteCar(TEST_CARS[0].id);
+
+    const result = await service.deleteCar(TEST_CARS[0].id);
+
+    expect(result).toBeNull();
+  });
+
+  it('given two cars with one soft-deleted when getCars then returns only the active car', async () => {
+    await prisma.car.create({ data: TEST_CARS[0] });
+    await prisma.car.create({ data: TEST_CARS[1] });
+    await service.deleteCar(TEST_CARS[0].id);
+
+    const { cars } = await service.getCars();
+
+    expect(cars).toHaveLength(1);
+    expect(cars[0].id).toBe(TEST_CARS[1].id);
+  });
+
+  it('given a soft-deleted car when updateCar then returns null', async () => {
+    await prisma.car.create({ data: TEST_CARS[0] });
+    await service.deleteCar(TEST_CARS[0].id);
+
+    const result = await service.updateCar(TEST_CARS[0]);
+
+    expect(result).toBeNull();
+  });
+
+  it('given a soft-deleted car id when createCar then throws CarConflictError', async () => {
+    await prisma.car.create({ data: TEST_CARS[0] });
+    await service.deleteCar(TEST_CARS[0].id);
+
+    await expect(service.createCar(TEST_CARS[0])).rejects.toThrow(
+      CarConflictError,
+    );
   });
 });

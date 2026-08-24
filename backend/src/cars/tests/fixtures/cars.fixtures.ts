@@ -9,6 +9,7 @@ export const TEST_CARS: Car[] = [
     licensePlate: 'ABC-001',
     color: 'White',
     mileage: 30000,
+    deletedAt: null,
   },
   {
     id: 'b3adf506-ad60-46c2-915e-479832f19528',
@@ -18,6 +19,7 @@ export const TEST_CARS: Car[] = [
     licensePlate: 'DEF-002',
     color: null,
     mileage: null,
+    deletedAt: null,
   },
   {
     id: '9e86e900-1367-40d7-a4bc-ce83fb5fecfe',
@@ -27,5 +29,6 @@ export const TEST_CARS: Car[] = [
     licensePlate: 'GHI-003',
     color: 'Blue',
     mileage: 15000,
+    deletedAt: null,
   },
 ];

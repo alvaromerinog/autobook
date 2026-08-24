@@ -28,7 +28,7 @@ describe('CarsController (e2e)', () => {
 
     prisma = moduleFixture.get<PrismaDatabase>(PrismaDatabase);
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true }));
+    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
     await app.init();
   });
 
@@ -61,16 +61,78 @@ describe('CarsController (e2e)', () => {
         .get('/cars')
         .expect(200);
 
-      const body = response.body as { cars: Array<{ id: string }> };
+      const body = response.body as {
+        cars: Array<{ id: string; deletedAt?: Date }>;
+      };
       expect(body.cars).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ id: CAR_PAYLOAD.id }),
         ]),
       );
+      const car = body.cars.find((c) => c.id === CAR_PAYLOAD.id);
+      expect(car).not.toHaveProperty('deletedAt');
     });
 
     it('given an existing car with the same id when POST /cars then returns 409', async () => {
       await prisma.car.create({ data: CAR_PAYLOAD });
+
+      return request(app.getHttpServer())
+        .post('/cars')
+        .send(CAR_PAYLOAD)
+        .expect(409);
+    });
+  });
+
+  describe('DELETE /cars/:id', () => {
+    it('given an active car when DELETE /cars/:id then returns 204 and the car is no longer listed', async () => {
+      await prisma.car.create({ data: CAR_PAYLOAD });
+
+      await request(app.getHttpServer())
+        .delete(`/cars/${CAR_PAYLOAD.id}`)
+        .expect(204);
+
+      const response = await request(app.getHttpServer())
+        .get('/cars')
+        .expect(200);
+
+      const body = response.body as { cars: Array<{ id: string }> };
+      expect(body.cars).toHaveLength(0);
+    });
+
+    it('given a non-existing id when DELETE /cars/:id then returns 404', () => {
+      return request(app.getHttpServer())
+        .delete(`/cars/${CAR_PAYLOAD.id}`)
+        .expect(404);
+    });
+
+    it('given an already deleted car when DELETE /cars/:id then returns 404', async () => {
+      await prisma.car.create({ data: CAR_PAYLOAD });
+      await request(app.getHttpServer())
+        .delete(`/cars/${CAR_PAYLOAD.id}`)
+        .expect(204);
+
+      return request(app.getHttpServer())
+        .delete(`/cars/${CAR_PAYLOAD.id}`)
+        .expect(404);
+    });
+
+    it('given a deleted car when PUT /cars/:id then returns 404', async () => {
+      await prisma.car.create({ data: CAR_PAYLOAD });
+      await request(app.getHttpServer())
+        .delete(`/cars/${CAR_PAYLOAD.id}`)
+        .expect(204);
+
+      return request(app.getHttpServer())
+        .put(`/cars/${CAR_PAYLOAD.id}`)
+        .send(CAR_PAYLOAD)
+        .expect(404);
+    });
+
+    it('given a deleted car id when POST /cars then returns 409', async () => {
+      await prisma.car.create({ data: CAR_PAYLOAD });
+      await request(app.getHttpServer())
+        .delete(`/cars/${CAR_PAYLOAD.id}`)
+        .expect(204);
 
       return request(app.getHttpServer())
         .post('/cars')

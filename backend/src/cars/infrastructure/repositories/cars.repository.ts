@@ -9,7 +9,9 @@ export class PrismaCarsRepository implements CarsRepository {
   constructor(private readonly prisma: PrismaDatabase) {}
 
   async getAll(): Promise<Car[]> {
-    const cars = await this.prisma.car.findMany();
+    const cars = await this.prisma.car.findMany({
+      where: { deletedAt: null },
+    });
     return cars;
   }
 
@@ -22,14 +24,26 @@ export class PrismaCarsRepository implements CarsRepository {
   }
 
   async update(input: Car): Promise<{ id: string } | null> {
-    const existing = await this.prisma.car.findUnique({
-      where: { id: input.id },
+    const updateData = {
+      brand: input.brand,
+      model: input.model,
+      year: input.year,
+      licensePlate: input.licensePlate,
+      color: input.color,
+      mileage: input.mileage,
+    };
+    const { count } = await this.prisma.car.updateMany({
+      where: { id: input.id, deletedAt: null },
+      data: updateData,
     });
-    if (!existing) return null;
-    const car = await this.prisma.car.update({
-      where: { id: input.id },
-      data: input,
+    return count === 1 ? { id: input.id } : null;
+  }
+
+  async delete(id: string): Promise<{ id: string } | null> {
+    const { count } = await this.prisma.car.updateMany({
+      where: { id, deletedAt: null },
+      data: { deletedAt: new Date() },
     });
-    return { id: car.id };
+    return count === 1 ? { id } : null;
   }
 }
