@@ -9,6 +9,7 @@ import 'package:autobook/features/vehicles/presentation/widgets/delete_car_dialo
 import 'package:autobook/features/vehicles/presentation/widgets/info_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 Future<void> _runCarMutation(
@@ -294,103 +295,112 @@ class _CarCard extends ConsumerWidget {
       ),
     );
 
-    return Opacity(
-      opacity: isPendingDelete ? 0.45 : 1,
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 12),
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: colorScheme.outlineVariant),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.directions_car,
-                  color: colorScheme.onPrimaryContainer,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${car.brand} ${car.model}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+    return GestureDetector(
+      onTap: () => context.push('/cars/${car.id}'),
+      child: Opacity(
+        opacity: isPendingDelete ? 0.45 : 1,
+        child: Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: colorScheme.outlineVariant),
+          ),
+          child: InkWell(
+            onTap: () => context.push('/cars/${car.id}'),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    if (isPendingDelete) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        'Pendiente de borrado',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.error,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    Row(
+                    child: Icon(
+                      Icons.directions_car,
+                      color: colorScheme.onPrimaryContainer,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        InfoChip(label: car.year.toString()),
-                        const SizedBox(width: 8),
-                        InfoChip(label: car.licensePlate),
-                        if (car.color != null) ...[
-                          const SizedBox(width: 8),
-                          InfoChip(label: car.color!),
-                        ],
-                      ],
-                    ),
-                    if (car.mileage != null) ...[
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.speed,
-                            size: 14,
-                            color: colorScheme.onSurfaceVariant,
+                        Text(
+                          '${car.brand} ${car.model}',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
-                          const SizedBox(width: 4),
-                          // TODO: Cambiar a km o mi según los ajustes del usuario
+                        ),
+                        if (isPendingDelete) ...[
+                          const SizedBox(height: 4),
                           Text(
-                            '${_formatMileage(context, car.mileage!)} km',
+                            'Pendiente de borrado',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
+                              color: colorScheme.error,
                             ),
                           ),
                         ],
-                      ),
-                    ],
-                  ],
-                ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            InfoChip(label: car.year.toString()),
+                            const SizedBox(width: 8),
+                            InfoChip(label: car.licensePlate),
+                            if (car.color != null) ...[
+                              const SizedBox(width: 8),
+                              InfoChip(label: car.color!),
+                            ],
+                          ],
+                        ),
+                        if (car.mileage != null) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.speed,
+                                size: 14,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              // TODO: Cambiar a km o mi según los ajustes del usuario
+                              Text(
+                                '${_formatMileage(context, car.mileage!)} km',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    tooltip: 'Eliminar',
+                    onPressed: isPendingDelete
+                        ? null
+                        : () => _openDeleteCar(context, ref, car),
+                  ),
+                  if (!isPendingDelete)
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      tooltip: 'Editar vehículo',
+                      onPressed: () => _openEditCar(context, ref, car),
+                    ),
+                  if (!isPendingDelete)
+                    Icon(
+                      Icons.chevron_right,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                ],
               ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: 'Eliminar',
-                onPressed: isPendingDelete
-                    ? null
-                    : () => _openDeleteCar(context, ref, car),
-              ),
-              if (!isPendingDelete)
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Editar vehículo',
-                  onPressed: () => _openEditCar(context, ref, car),
-                ),
-              if (!isPendingDelete)
-                Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-            ],
+            ),
           ),
         ),
       ),
