@@ -2,5 +2,6 @@
 .claude/
 skills*
 **/.vscode/settings.json
-.tmp/.worktrees/
+.tmp/
+.worktrees/
 docs/superpowers/
