@@ -6,4 +6,5 @@ export interface Car {
   licensePlate: string;
   color: string | null;
   mileage: number | null;
+  deletedAt: Date | null;
 }

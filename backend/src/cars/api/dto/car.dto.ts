@@ -69,6 +69,7 @@ export class CarDto {
       licensePlate: this.licensePlate,
       color: this.color,
       mileage: this.mileage,
+      deletedAt: null,
     };
   }
 }

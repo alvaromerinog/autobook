@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
+import 'package:autobook/features/vehicles/domain/usecases/delete_car_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/get_cars_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/has_pending_cars_usecase.dart';
+import 'package:autobook/features/vehicles/domain/usecases/pending_delete_ids_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/refresh_cars_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/sync_pending_cars_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/update_car_usecase.dart';
@@ -31,6 +34,7 @@ void main() {
   setUp(() {
     mockRepo = MockCarRepository();
     mockIds = MockIdGenerator();
+    when(() => mockRepo.pendingDeleteIds()).thenAnswer((_) async => <String>{});
   });
 
   ProviderContainer makeContainer() {
@@ -51,6 +55,10 @@ void main() {
           SyncPendingCarsUseCase(mockRepo),
         ),
         updateCarUseCaseProvider.overrideWithValue(UpdateCarUseCase(mockRepo)),
+        deleteCarUseCaseProvider.overrideWithValue(DeleteCarUseCase(mockRepo)),
+        pendingDeleteIdsUseCaseProvider.overrideWithValue(
+          PendingDeleteIdsUseCase(mockRepo),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -65,7 +73,9 @@ void main() {
           'when build runs, '
           'then exposes the cars without a sync error', () async {
         // given
-        when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+        when(
+          () => mockRepo.refreshFromRemote(),
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -84,7 +94,9 @@ void main() {
           'when build runs, '
           'then the provider ends in an error state', () async {
         // given
-        when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+        when(
+          () => mockRepo.refreshFromRemote(),
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(
           () => mockRepo.getAll(),
@@ -107,7 +119,9 @@ void main() {
           'then it surfaces the failure as syncError with an empty list '
           'instead of erroring', () async {
         // given
-        when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+        when(
+          () => mockRepo.refreshFromRemote(),
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(
           () => mockRepo.getAll(),
@@ -161,7 +175,7 @@ void main() {
           'when build runs, '
           'then local data is emitted before remote completes', () async {
         // given
-        final remoteCompleter = Completer<void>();
+        final remoteCompleter = Completer<List<RemoteSyncEvent>>();
         when(
           () => mockRepo.refreshFromRemote(),
         ).thenAnswer((_) => remoteCompleter.future);
@@ -178,7 +192,7 @@ void main() {
         expect(initial.syncError, isNull);
 
         // complete remote and flush
-        remoteCompleter.complete();
+        remoteCompleter.complete(const <RemoteSyncEvent>[]);
         for (var i = 0; i < 10; i++) {
           await Future.delayed(Duration.zero);
         }
@@ -189,6 +203,31 @@ void main() {
         expect(eventual.syncError, isNull);
         verify(() => mockRepo.refreshFromRemote()).called(1);
       });
+
+      test('given refreshFromRemote reports a remote deletion, '
+          'when build runs, '
+          'then remoteSyncEvents captures the event', () async {
+        // given
+        when(() => mockRepo.refreshFromRemote()).thenAnswer(
+          (_) async => [const RemoteSyncEvent.remoteDeleted(toyotaCorolla)],
+        );
+        when(() => mockRepo.syncPending()).thenAnswer((_) async {});
+        when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+        when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
+
+        // when
+        final container = makeContainer();
+        await container.read(carListProvider.future);
+        for (var i = 0; i < 10; i++) {
+          await Future.delayed(Duration.zero);
+        }
+
+        // then — background refresh surfaced the event
+        final state = container.read(carListProvider).requireValue;
+        expect(state.remoteSyncEvents, [
+          const RemoteSyncEvent.remoteDeleted(toyotaCorolla),
+        ]);
+      });
     });
 
     group('add', () {
@@ -196,7 +235,9 @@ void main() {
           'when add is called, '
           'then state is updated with the new car list and no error', () async {
         // given
-        when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+        when(
+          () => mockRepo.refreshFromRemote(),
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -228,7 +269,9 @@ void main() {
           'then state is still updated with the current car list and the '
           'error is rethrown', () async {
         // given
-        when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+        when(
+          () => mockRepo.refreshFromRemote(),
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
@@ -266,7 +309,9 @@ void main() {
         'then state is refreshed with the current car list and no error',
         () async {
           // given
-          when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+          when(
+            () => mockRepo.refreshFromRemote(),
+          ).thenAnswer((_) async => <RemoteSyncEvent>[]);
           when(() => mockRepo.syncPending()).thenAnswer((_) async {});
           when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
           when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -299,7 +344,9 @@ void main() {
           'then state is refreshed with the current car list and the '
           'error is rethrown', () async {
         // given
-        when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+        when(
+          () => mockRepo.refreshFromRemote(),
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
@@ -328,7 +375,9 @@ void main() {
           'when the coordinator flushes, '
           'then syncPendingCars runs and state is updated', () async {
         // given
-        when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+        when(
+          () => mockRepo.refreshFromRemote(),
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
         when(() => mockRepo.syncPending()).thenAnswer((_) async {});
         when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
         when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
@@ -356,7 +405,9 @@ void main() {
         'then state captures the syncError and no error is rethrown',
         () async {
           // given
-          when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+          when(
+            () => mockRepo.refreshFromRemote(),
+          ).thenAnswer((_) async => <RemoteSyncEvent>[]);
           when(() => mockRepo.syncPending()).thenAnswer((_) async {});
           when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
           when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
@@ -379,6 +430,109 @@ void main() {
           verify(() => mockRepo.syncPending()).called(1);
         },
       );
+    });
+
+    group('deleteCar', () {
+      test(
+        'given delete succeeds, '
+        'when deleteCar is called, '
+        'then state exposes the pending delete ids and pending sync',
+        () async {
+          // given
+          when(
+            () => mockRepo.refreshFromRemote(),
+          ).thenAnswer((_) async => <RemoteSyncEvent>[]);
+          when(() => mockRepo.syncPending()).thenAnswer((_) async {});
+          when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+          when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
+          when(
+            () => mockRepo.pendingDeleteIds(),
+          ).thenAnswer((_) async => {'1'});
+          when(() => mockRepo.delete(any())).thenAnswer((_) async {});
+
+          final container = makeContainer();
+          await container.read(carListProvider.future);
+
+          // when
+          await container
+              .read(carListProvider.notifier)
+              .deleteCar(toyotaCorolla);
+
+          // then
+          final state = await container.read(carListProvider.future);
+          expect(state.cars, oneCarList);
+          expect(state.pendingDeleteIds, {'1'});
+          expect(state.hasPendingSync, isTrue);
+          expect(state.syncError, isNull);
+          verify(() => mockRepo.delete(toyotaCorolla)).called(1);
+        },
+      );
+
+      test(
+        'given delete fails with a NetworkFailure, '
+        'when deleteCar is called, '
+        'then the error is captured and the row stays pending delete',
+        () async {
+          // given
+          when(
+            () => mockRepo.refreshFromRemote(),
+          ).thenAnswer((_) async => <RemoteSyncEvent>[]);
+          when(() => mockRepo.syncPending()).thenAnswer((_) async {});
+          when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+          when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
+          when(
+            () => mockRepo.pendingDeleteIds(),
+          ).thenAnswer((_) async => {'1'});
+          when(() => mockRepo.delete(any())).thenThrow(const NetworkFailure());
+
+          final container = makeContainer();
+          await container.read(carListProvider.future);
+
+          // when / then
+          await expectLater(
+            () => container
+                .read(carListProvider.notifier)
+                .deleteCar(toyotaCorolla),
+            throwsA(isA<NetworkFailure>()),
+          );
+
+          // then — state still coherent with the pending delete exposed
+          final state = await container.read(carListProvider.future);
+          expect(state.syncError, isA<NetworkFailure>());
+          expect(state.cars, oneCarList);
+          expect(state.pendingDeleteIds, {'1'});
+        },
+      );
+    });
+
+    group('clearRemoteChangeBanner', () {
+      test('given state with remote sync events, '
+          'when clearRemoteChangeBanner is called, '
+          'then the events are cleared', () async {
+        // given
+        when(() => mockRepo.refreshFromRemote()).thenAnswer(
+          (_) async => [const RemoteSyncEvent.remoteDeleted(toyotaCorolla)],
+        );
+        when(() => mockRepo.syncPending()).thenAnswer((_) async {});
+        when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+        when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
+
+        final container = makeContainer();
+        await container.read(carListProvider.future);
+        for (var i = 0; i < 10; i++) {
+          await Future.delayed(Duration.zero);
+        }
+        final withMessages = container.read(carListProvider).requireValue;
+        expect(withMessages.remoteSyncEvents, isNotEmpty);
+
+        // when
+        container.read(carListProvider.notifier).clearRemoteChangeBanner();
+
+        // then
+        final cleared = container.read(carListProvider).requireValue;
+        expect(cleared.remoteSyncEvents, isEmpty);
+        expect(cleared.cars, oneCarList);
+      });
     });
   });
 }

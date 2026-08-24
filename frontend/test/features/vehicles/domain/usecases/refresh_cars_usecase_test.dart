@@ -1,4 +1,5 @@
 import 'package:autobook/core/error/failures.dart';
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/usecases/refresh_cars_usecase.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -17,14 +18,17 @@ void main() {
   group('RefreshCarsUseCase', () {
     test('given repository refreshes successfully, '
         'when call runs, '
-        'then delegates to refreshFromRemote', () async {
+        'then delegates to refreshFromRemote and returns events', () async {
       // given
-      when(() => mockRepo.refreshFromRemote()).thenAnswer((_) async {});
+      when(
+        () => mockRepo.refreshFromRemote(),
+      ).thenAnswer((_) async => <RemoteSyncEvent>[]);
 
       // when
-      await useCase();
+      final events = await useCase();
 
       // then
+      expect(events, isEmpty);
       verify(() => mockRepo.refreshFromRemote()).called(1);
     });
 

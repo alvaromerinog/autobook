@@ -1,8 +1,10 @@
 import 'package:autobook/core/di/uuid_id_generator.dart';
 import 'package:autobook/features/vehicles/data/repositories/car_repository.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
+import 'package:autobook/features/vehicles/domain/usecases/delete_car_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/get_cars_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/has_pending_cars_usecase.dart';
+import 'package:autobook/features/vehicles/domain/usecases/pending_delete_ids_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/refresh_cars_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/sync_pending_cars_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/update_car_usecase.dart';
@@ -35,3 +37,11 @@ HasPendingCarsUseCase hasPendingCarsUseCase(Ref ref) =>
 @riverpod
 UpdateCarUseCase updateCarUseCase(Ref ref) =>
     UpdateCarUseCase(ref.watch(carRepositoryProvider));
+
+@riverpod
+DeleteCarUseCase deleteCarUseCase(Ref ref) =>
+    DeleteCarUseCase(ref.watch(carRepositoryProvider));
+
+@riverpod
+PendingDeleteIdsUseCase pendingDeleteIdsUseCase(Ref ref) =>
+    PendingDeleteIdsUseCase(ref.watch(carRepositoryProvider));
