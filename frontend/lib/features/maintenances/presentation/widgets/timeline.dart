@@ -111,7 +111,7 @@ class _TimelineEntryState extends State<TimelineEntry> {
       onTapCancel: () => setState(() => _hover = false),
       onTapUp: (_) => setState(() => _hover = false),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
             width: 40,
