@@ -24,12 +24,34 @@ class CarsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [CarsTable])
+@DataClassName('MaintenanceEntry')
+class MaintenancesTable extends Table {
+  @override
+  String get tableName => 'maintenances';
+
+  TextColumn get id => text()();
+  TextColumn get carId => text()();
+  TextColumn get type => text()();
+  TextColumn get date => text()();
+  IntColumn get mileage => integer()();
+  RealColumn get cost => real()();
+  TextColumn get garage => text().nullable()();
+  TextColumn get notes => text().nullable()();
+  TextColumn get syncState => textEnum<SyncStateEnum>().withDefault(
+    Constant(SyncStateEnum.synced.name),
+  )();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftDatabase(tables: [CarsTable, MaintenancesTable])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -47,6 +69,9 @@ class AppDatabase extends _$AppDatabase {
           await customStatement('ALTER TABLE cars DROP COLUMN wasCreated');
           await customStatement('ALTER TABLE cars DROP COLUMN wasUpdated');
         }
+      }
+      if (from < 4) {
+        await m.createTable(maintenancesTable);
       }
     },
   );
