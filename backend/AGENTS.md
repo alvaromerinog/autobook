@@ -62,14 +62,14 @@ pnpm exec prisma migrate dev --name <migration-name>
 pnpm test           # Run all unit tests once
 pnpm test:watch     # Run unit tests in watch mode
 pnpm test:cov       # Run unit tests with coverage report (output: ../coverage/)
-pnpm test:e2e       # Run end-to-end tests (config: test/jest-e2e.json)
+pnpm test:e2e       # Run end-to-end tests (config: tests/jest-e2e.json)
 ```
 
-- Test files live under a `tests/` folder inside the feature they cover, follow the `*.spec.ts` naming convention, and are grouped by test type. Each type mirrors the source layout — e.g. `src/cars/tests/integration/application/cars.service.spec.ts` tests `src/cars/application/cars.service.ts`.
+- Unit and integration tests live under a `tests/` folder inside the feature they cover, follow the `*.spec.ts` naming convention, and are grouped by test type. Each type mirrors the source layout — e.g. `src/cars/tests/integration/application/cars.service.spec.ts` tests `src/cars/application/cars.service.ts`.
 - Three test types, by layer and isolation level:
-  - **unit** (`tests/unit/`): tests for `domain/` and `application/` using mocks for any collaborators (no database, no HTTP).
-  - **integration** (`tests/integration/`): tests for `application/` and `infrastructure/` using real repositories and the real SQLite database.
-  - **e2e** (`tests/e2e/`): tests for the `api/` layer — exercise the HTTP endpoints end to end.
+  - **unit** (`src/<feature>/tests/unit/`): tests for `domain/` and `application/` using mocks for any collaborators (no database, no HTTP).
+  - **integration** (`src/<feature>/tests/integration/`): tests for `application/` and `infrastructure/` using real repositories and the real SQLite database.
+  - **e2e** (`tests/` at backend root): HTTP endpoint tests for the `api/` layer, one `*.e2e-spec.ts` per module — exercise the endpoints end to end against a migrated temp DB.
 - `src/test-setup.ts` is loaded via Jest `setupFiles` and injects `env/test.env` into `process.env` before any module is instantiated.
 - Integration and e2e tests use the real SQLite database and clean relevant tables in `beforeEach`.
 - Test descriptions follow the format: **given** {state} **when** {function} **then** {expected result}.
@@ -116,28 +116,39 @@ src/
 └── cars/                             # Cars feature (layered: api / application / domain / infrastructure)
     ├── cars.module.ts                # Cars feature module (wires controller, service, repository)
     ├── api/
-    │   ├── cars.controller.ts        # HTTP layer — GET /cars, PUT /cars
+    │   ├── cars.controller.ts        # HTTP layer — GET /cars, POST /cars, PUT /cars/:id, DELETE /cars/:id
     │   └── dto/
     │       ├── car.dto.ts            # Car request/response DTO (+ domain mappers)
+    │       ├── createCarResponse.dto.ts
     │       ├── getCarsResponse.dto.ts
+    │       ├── isModelYear.decorator.ts
     │       └── updateCarResponse.dto.ts
     ├── application/
     │   └── cars.service.ts           # Use cases — orchestrates the domain repository
     ├── domain/
     │   ├── entities/
     │   │   └── car.entity.ts         # Car domain model (interface)
+    │   ├── errors/
+    │   │   └── car-conflict.error.ts
     │   └── repositories/
     │       └── cars.repository.ts    # Repository contract (abstract class — DI token)
     ├── infrastructure/
     │   └── repositories/
     │       └── cars.repository.ts    # Prisma-backed CarsRepository implementation
     └── tests/                        # Feature tests, grouped by type, mirroring src layout
-        ├── unit/                     # domain/ + application/ tests with mocks
-        ├── integration/              # application/ + infrastructure/ tests with real repositories
+        ├── fixtures/
+        │   └── cars.fixtures.ts
+        ├── unit/
+        │   ├── api/dto/
+        │   │   └── is-model-year.decorator.spec.ts
         │   └── application/
         │       └── cars.service.spec.ts
-        └── e2e/                      # api/ HTTP endpoint tests
-test/
+        └── integration/
+            └── application/
+                └── cars.service.spec.ts
+tests/
+├── app.e2e-spec.ts                   # AppController e2e (temp DB + applyMigrations)
+├── cars.e2e-spec.ts                  # CarsController e2e (temp DB + applyMigrations)
 └── jest-e2e.json                     # e2e Jest configuration
 ```
 
