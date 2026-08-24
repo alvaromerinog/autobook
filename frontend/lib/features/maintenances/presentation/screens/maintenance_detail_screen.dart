@@ -1,6 +1,5 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
-import 'package:autobook/features/maintenances/domain/entities/maintenance_type.dart';
 import 'package:autobook/features/maintenances/presentation/providers/maintenance_list_provider.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_tints.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_type_icons.dart';
@@ -51,7 +50,11 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     if (confirmed != true || !context.mounted) return;
     try {
       await ref.read(maintenanceListProvider(carId).notifier).deleteMaint(m);
-      if (context.mounted) context.pop();
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Mantenimiento eliminado')));
+      context.pop();
     } on Failure catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -60,25 +63,34 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     }
   }
 
+  Maintenance? _findMaintenance(List<Maintenance> maintenances) {
+    for (final m in maintenances) {
+      if (m.id == maintenanceId) return m;
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final maintState = ref.watch(maintenanceListProvider(carId)).value;
     final maintenances = maintState?.maintenances ?? const <Maintenance>[];
-    final m = maintenances.firstWhere(
-      (x) => x.id == maintenanceId,
-      orElse: () => maintenances.isEmpty
-          ? const Maintenance(
-              id: '',
-              carId: '',
-              type: MaintenanceType.oil,
-              date: '',
-              mileage: 0,
-              cost: 0,
-            )
-          : maintenances.first,
-    );
+    final m = _findMaintenance(maintenances);
+
+    if (m == null) {
+      return Scaffold(
+        backgroundColor: cs.surface,
+        appBar: AppBar(
+          backgroundColor: cs.surface,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          leading: BackButton(onPressed: () => context.pop()),
+        ),
+        body: const Center(child: Text('Registro no encontrado')),
+      );
+    }
+
     final carsState = ref.watch(carListProvider).value;
     final car = carsState?.cars.firstWhere(
       (c) => c.id == carId,

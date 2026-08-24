@@ -18,10 +18,7 @@ class CreateMaintenanceUseCase {
   final IMaintenanceRepository _repo;
   final IdGenerator _ids;
 
-  Future<Maintenance> call(
-    MaintenanceDraft draft,
-    String carId,
-  ) async {
+  Future<Maintenance> call(MaintenanceDraft draft, String carId) async {
     final maintenance = Maintenance(
       id: _ids.newId(),
       carId: carId,

@@ -7,10 +7,7 @@ class UpdateMaintenanceUseCase {
 
   final IMaintenanceRepository _repo;
 
-  Future<Maintenance> call(
-    MaintenanceDraft draft,
-    Maintenance existing,
-  ) async {
+  Future<Maintenance> call(MaintenanceDraft draft, Maintenance existing) async {
     final updated = existing.copyWith(
       type: draft.type,
       date: draft.date,
