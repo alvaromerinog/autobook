@@ -33,7 +33,9 @@ describe('MaintenancesController (e2e)', () => {
 
     prisma = moduleFixture.get<PrismaDatabase>(PrismaDatabase);
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ transform: true, whitelist: true }),
+    );
     await app.init();
     await prisma.car.create({ data: PARENT_CAR });
   });
@@ -69,9 +71,7 @@ describe('MaintenancesController (e2e)', () => {
         maintenances: Array<{ id: string; deletedAt?: Date }>;
       };
       expect(body.maintenances).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ id: M1.id }),
-        ]),
+        expect.arrayContaining([expect.objectContaining({ id: M1.id })]),
       );
       const m = body.maintenances.find((x) => x.id === M1.id);
       expect(m).not.toHaveProperty('deletedAt');
