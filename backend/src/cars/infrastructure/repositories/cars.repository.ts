@@ -40,10 +40,17 @@ export class PrismaCarsRepository implements CarsRepository {
   }
 
   async delete(id: string): Promise<{ id: string } | null> {
-    const { count } = await this.prisma.car.updateMany({
-      where: { id, deletedAt: null },
-      data: { deletedAt: new Date() },
+    return this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.car.updateMany({
+        where: { id, deletedAt: null },
+        data: { deletedAt: new Date() },
+      });
+      if (count !== 1) return null;
+      await tx.maintenance.updateMany({
+        where: { carId: id, deletedAt: null },
+        data: { deletedAt: new Date() },
+      });
+      return { id };
     });
-    return count === 1 ? { id } : null;
   }
 }
