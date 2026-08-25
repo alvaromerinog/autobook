@@ -974,6 +974,80 @@ void main() {
           () => mockMaintenanceLocal.hardDeleteForCar(toyotaCorolla.id),
         ).called(1);
       });
+
+      test('given a pendingDelete car queued while offline, '
+          'when syncPending replays its push successfully, '
+          'then its maintenance rows are hard-deleted', () async {
+        // given
+        when(() => mockLocal.getPending()).thenAnswer(
+          (_) async => [
+            (car: toyotaCorolla, syncState: SyncStateEnum.pendingDelete),
+          ],
+        );
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.delete(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.syncPending();
+
+        // then
+        verify(
+          () => mockMaintenanceLocal.hardDeleteForCar(toyotaCorolla.id),
+        ).called(1);
+      });
+
+      test('given a pendingCreate car is deleted locally, '
+          'when delete runs, '
+          'then its maintenance rows are hard-deleted', () async {
+        // given
+        when(
+          () => mockLocal.syncStateOf(fiat500.id),
+        ).thenAnswer((_) async => SyncStateEnum.pendingCreate);
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.delete(fiat500);
+
+        // then
+        verify(
+          () => mockMaintenanceLocal.hardDeleteForCar(fiat500.id),
+        ).called(1);
+      });
+
+      test('given remote delete returns a 404 tombstone, '
+          'when delete settles via the tombstone path, '
+          'then its maintenance rows are still hard-deleted', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockLocal.syncStateOf(toyotaCorolla.id),
+        ).thenAnswer((_) async => SyncStateEnum.synced);
+        when(() => mockLocal.markPendingDelete(any())).thenAnswer((_) async {});
+        when(() => mockRemote.delete(any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/1'),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: '/cars/1'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.delete(toyotaCorolla);
+
+        // then
+        verify(
+          () => mockMaintenanceLocal.hardDeleteForCar(toyotaCorolla.id),
+        ).called(1);
+      });
     });
 
     group('delete during in-flight create', () {

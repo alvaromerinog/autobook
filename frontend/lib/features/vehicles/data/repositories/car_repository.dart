@@ -176,6 +176,7 @@ class CarRepository implements ICarRepository {
       final state = await _local.syncStateOf(car.id);
       if (state == SyncStateEnum.pendingCreate) {
         await _local.hardDelete(car.id);
+        await _maintenanceLocal.hardDeleteForCar(car.id);
         return;
       }
       await _local.markPendingDelete(car.id);
@@ -237,7 +238,10 @@ class CarRepository implements ICarRepository {
               pending.car,
               remoteCall: () => _remote.delete(pending.car.id),
               tombstoneStatus: 404,
-              settle: () => _local.hardDelete(pending.car.id),
+              settle: () async {
+                await _local.hardDelete(pending.car.id);
+                await _maintenanceLocal.hardDeleteForCar(pending.car.id);
+              },
             );
           case SyncStateEnum.synced:
             assert(false);
