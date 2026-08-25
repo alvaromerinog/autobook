@@ -67,6 +67,9 @@ class MaintenanceList extends _$MaintenanceList {
     Future<void> Function() mutation, {
     bool rethrowError = true,
   }) async {
+    var cancelled = false;
+    ref.onDispose(() => cancelled = true);
+
     Failure? syncError;
     try {
       await mutation();
@@ -74,23 +77,25 @@ class MaintenanceList extends _$MaintenanceList {
       syncError = f;
     }
 
-    var maintenances = <Maintenance>[];
-    var hasPendingSync = false;
-    var pendingDeleteIds = <String>{};
-    try {
-      (maintenances, hasPendingSync, pendingDeleteIds) =
-          await _readWithPending();
-    } on Failure catch (f) {
-      syncError ??= f;
-    }
+    if (!cancelled) {
+      var maintenances = <Maintenance>[];
+      var hasPendingSync = false;
+      var pendingDeleteIds = <String>{};
+      try {
+        (maintenances, hasPendingSync, pendingDeleteIds) =
+            await _readWithPending();
+      } on Failure catch (f) {
+        syncError ??= f;
+      }
 
-    state = AsyncData((
-      maintenances: maintenances,
-      syncError: syncError,
-      hasPendingSync: hasPendingSync,
-      pendingDeleteIds: pendingDeleteIds,
-      remoteSyncEvents: const [],
-    ));
+      state = AsyncData((
+        maintenances: maintenances,
+        syncError: syncError,
+        hasPendingSync: hasPendingSync,
+        pendingDeleteIds: pendingDeleteIds,
+        remoteSyncEvents: const [],
+      ));
+    }
 
     if (rethrowError && syncError != null) throw syncError;
   }
