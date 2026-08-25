@@ -160,7 +160,10 @@ class CarRepository implements ICarRepository {
         remoteCall: () => _remote.update(car.id, CarDto.fromDomain(car)),
         tombstoneStatus: 404,
         settle: () => _local.markSynced(car.id),
-        tombstoneSettle: () => _local.hardDelete(car.id),
+        tombstoneSettle: () async {
+          await _local.hardDelete(car.id);
+          await _maintenanceLocal.hardDeleteForCar(car.id);
+        },
       );
     } finally {
       _syncingIds.remove(car.id);
@@ -231,7 +234,10 @@ class CarRepository implements ICarRepository {
               ),
               tombstoneStatus: 404,
               settle: () => _local.markSynced(pending.car.id),
-              tombstoneSettle: () => _local.hardDelete(pending.car.id),
+              tombstoneSettle: () async {
+                await _local.hardDelete(pending.car.id);
+                await _maintenanceLocal.hardDeleteForCar(pending.car.id);
+              },
             );
           case SyncStateEnum.pendingDelete:
             await _push(
