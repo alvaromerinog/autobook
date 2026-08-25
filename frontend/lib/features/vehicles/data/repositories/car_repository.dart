@@ -41,6 +41,7 @@ class CarRepository implements ICarRepository {
     required Future<void> Function() remoteCall,
     required Future<void> Function() settle,
     int? tombstoneStatus,
+    Future<void> Function()? tombstoneSettle,
   }) async {
     if (!await _connectivity.isConnected()) return;
     try {
@@ -49,7 +50,7 @@ class CarRepository implements ICarRepository {
     } on DioException catch (e) {
       if (tombstoneStatus != null &&
           e.response?.statusCode == tombstoneStatus) {
-        await settle();
+        await (tombstoneSettle ?? settle)();
         return;
       }
       if (e.response != null) {
@@ -148,7 +149,9 @@ class CarRepository implements ICarRepository {
       await _push(
         car,
         remoteCall: () => _remote.update(car.id, CarDto.fromDomain(car)),
+        tombstoneStatus: 404,
         settle: () => _local.markSynced(car.id),
+        tombstoneSettle: () => _local.hardDelete(car.id),
       );
     } finally {
       _syncingIds.remove(car.id);
