@@ -118,7 +118,7 @@ The repository layer converts low-level exceptions (DioException, Drift errors) 
 ### Use cases & dependency wiring
 
 - Use case classes (`GetCarsUseCase`, `CreateCarUseCase`, `RefreshCarsUseCase`, `SyncPendingCarsUseCase`, `HasPendingCarsUseCase`) live in `domain/usecases/` as **pure** Dart with a single `call()`; they depend only on ports (`ICarRepository`, `IdGenerator`) and carry **no** `@riverpod` annotation.
-- The `@riverpod` functions that instantiate use cases with their concrete dependencies live in the composition layer at `features/vehicles/presentation/providers/usecase_providers.dart` — this is the only place in the feature that imports `data/` and `core/di/`.
+- The `@riverpod` functions that instantiate use cases with their concrete dependencies live in each feature's composition layer at `features/<feature>/presentation/providers/usecase_providers.dart` (currently `vehicles` and `maintenances`) — this is the only place in the feature that imports `data/` and `core/di/`.
 - `CreateCarUseCase` takes a `CarDraft` (a pure record typedef of the form fields), assembles the `Car` with an id from the injected `IdGenerator`, persists it via the repository, and returns it. Screens collect raw input (`AddCarScreen` returns a `CarDraft`); they never build entities or generate ids.
 - Presentation depends **only** on use case providers, never on `carRepositoryProvider` directly.
 
@@ -143,6 +143,7 @@ The app is offline-first: local Drift DB is always the source of truth for reads
 - `CarRepository.refreshFromRemote()` attempts to fetch from the backend and upsert into Drift; it silently returns if offline, and throws a `Failure` if the network call fails.
 - `CarRepository.create(Car)` always writes the car as pending to Drift first; if online it also pushes to the backend and marks the row as synced.
 - `CarRepository.syncPending()` retries all pending rows; individual failures are skipped so the rest of the queue is still processed.
+- `MaintenanceRepository` (`features/maintenances/data/repositories/`) follows the same offline-first pattern, plus a `pendingDelete` state: deletions mark the row locally, queue its id via `pendingDeleteIds()`, replay it in `syncPending()` (a 404 tombstone counts as settled), and `refreshFromRemote()` reconciles rows removed remotely, surfacing them as `MaintenanceRemoteSyncEvent`s.
 - `SyncCoordinator` (`core/sync/sync_coordinator.dart`) holds the connectivity stream subscription and invokes registered callbacks when connectivity is restored.
 
 ## Build
@@ -170,7 +171,7 @@ lib/
 │   └── di/                 # Riverpod root providers for infrastructure deps (Dio, DB, UuidIdGenerator)
 │
 ├── features/
-│   └── vehicles/           # All cars / vehicle functionality
+│   ├── vehicles/           # All cars / vehicle functionality
 │       ├── domain/         # Pure Dart: entities, repository interfaces, use cases (NO riverpod/data imports)
 │       │   ├── entities/   # Car entity (freezed, no JSON)
 │       │   ├── repositories/ # ICarRepository abstract class (port)
@@ -185,6 +186,22 @@ lib/
 │           ├── providers/  # usecase_providers.dart (@riverpod wiring) + CarListNotifier consuming use cases
 │           ├── screens/    # Full-page screens (HomeScreen, AddCarScreen dialog returning CarDraft)
 │           └── widgets/    # Feature-scoped reusable widgets (InfoChip, CustomFormField)
+│   └── maintenances/       # All maintenance records functionality (scoped to a car)
+│       ├── domain/         # Pure Dart: entities, repository interfaces, use cases (NO riverpod/data imports)
+│       │   ├── entities/   # Maintenance (freezed), MaintenanceType enum, MaintenanceRemoteSyncEvent (sealed freezed union)
+│       │   ├── repositories/ # IMaintenanceRepository abstract class (port)
+│       │   └── usecases/   # Get/Create/Update/Delete/Refresh/SyncPending/HasPending/PendingDeleteIds (pure call() wrappers); MaintenanceDraft typedef (create_maintenance_usecase.dart)
+│       ├── data/           # Adapters: DTOs, datasources, repository implementation
+│       │   ├── models/     # MaintenanceDto (freezed + json_serializable)
+│       │   ├── datasources/
+│       │   │   ├── local/  # MaintenanceLocalDataSource over the shared Drift AppDatabase (maintenances table)
+│       │   │   └── remote/ # Retrofit MaintenanceRemoteDataSource (HTTP)
+│       │   └── repositories/ # MaintenanceRepository: implements IMaintenanceRepository, wires local + remote
+│       └── presentation/   # UI layer for the maintenances feature
+│           ├── providers/  # usecase_providers.dart (@riverpod wiring) + MaintenanceList notifier (family per carId)
+│           ├── screens/    # CarDetailScreen (car timeline), AddMaintenanceScreen dialog returning MaintenanceDraft, MaintenanceDetailScreen
+│           ├── widgets/    # Feature-scoped reusable widgets (Timeline, MaintTypePill, MaintTypeIcon, BigStat)
+│           └── theme/      # Per-type icon/tint mappings (maint_type_icons.dart, maint_tints.dart)
 │
 └── app/
     ├── router/             # GoRouter configuration (appRouterProvider)
