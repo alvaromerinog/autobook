@@ -88,13 +88,14 @@ class MaintenanceLocalDatasourceImpl implements MaintenanceLocalDataSource {
 
   @override
   Future<List<Maintenance>> getAll(String carId) async {
-    final rows = await (_db.select(_db.maintenancesTable)
-          ..where((t) => t.carId.equals(carId))
-          ..orderBy([
-            (t) => OrderingTerm.desc(t.date),
-            (t) => OrderingTerm.desc(t.updatedAt),
-          ]))
-        .get();
+    final rows =
+        await (_db.select(_db.maintenancesTable)
+              ..where((t) => t.carId.equals(carId))
+              ..orderBy([
+                (t) => OrderingTerm.desc(t.date),
+                (t) => OrderingTerm.desc(t.updatedAt),
+              ]))
+            .get();
     return rows.map(_toEntity).toList();
   }
 

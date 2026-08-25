@@ -89,12 +89,12 @@ class _StubSyncPendingMaintenances extends SyncPendingMaintenancesUseCase {
 }
 
 void main() {
-  group('appRouter edit route', () {
+  group('appRouter routes', () {
     late ProviderContainer container;
     late GoRouter router;
 
     setUp(() {
-      // given: cold provider graph whose data layer yields empty state
+      // given: cold provider graph whose data layer yields one maintenance
       final mockCarRepo = MockCarRepository();
       when(
         () => mockCarRepo.refreshFromRemote(),
@@ -128,7 +128,7 @@ void main() {
             DeleteCarUseCase(mockCarRepo),
           ),
           maint_usecases.getMaintenancesUseCaseProvider.overrideWithValue(
-            _StubGetMaintenances(const <Maintenance>[]),
+            _StubGetMaintenances([buildMaintenance(carId: 'car-1')]),
           ),
           maint_usecases.hasPendingMaintenancesUseCaseProvider
               .overrideWithValue(_StubHasPendingMaintenances()),
@@ -156,54 +156,17 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('given extra carries the matching maintenance, '
-        'when the edit route builds cold, '
-        'then the screen opens in edit mode', (tester) async {
+    testWidgets('given a matching maintenance is cached, '
+        'when the detail route is pushed, '
+        'then the maintenance detail screen renders it', (tester) async {
+      // given / when
       await pumpRouter(tester);
-      final existing = buildMaintenance();
-
-      // when
-      unawaited(
-        router.push<Object?>(
-          '/cars/${existing.carId}/maintenances/${existing.id}/edit',
-          extra: existing,
-        ),
-      );
+      unawaited(router.push<Object?>('/cars/car-1/maintenances/m1'));
       await tester.pumpAndSettle();
 
       // then
-      expect(find.text('Editar mantenimiento'), findsOneWidget);
-    });
-
-    testWidgets('given neither extra nor cached entry, '
-        'when the edit route builds, '
-        'then it shows a not-found screen instead of crashing', (tester) async {
-      await pumpRouter(tester);
-
-      // when
-      unawaited(router.push<Object?>('/cars/c1/maintenances/nope/edit'));
-      await tester.pumpAndSettle();
-
-      // then
-      expect(find.text('Registro no encontrado'), findsOneWidget);
-    });
-
-    testWidgets('given a cold deep link to a missing record, '
-        'when the not-found back button is pressed, '
-        'then no error is thrown and it falls back to the car screen', (
-      tester,
-    ) async {
-      await pumpRouter(tester);
-
-      // when: go() leaves only the edit page on the stack (nothing to pop)
-      router.go('/cars/c1/maintenances/nope/edit');
-      await tester.pumpAndSettle();
-      expect(find.text('Registro no encontrado'), findsOneWidget);
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
-
-      // then
-      expect(find.text('Vehículo no encontrado'), findsOneWidget);
+      expect(find.text('Cambio de aceite'), findsOneWidget);
+      expect(find.byTooltip('Editar'), findsOneWidget);
     });
   });
 }

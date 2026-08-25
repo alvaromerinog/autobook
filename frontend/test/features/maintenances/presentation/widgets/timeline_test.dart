@@ -9,11 +9,7 @@ import '../../fixtures/maintenance_fixtures.dart';
 Widget _pumpTimeline(List<Maintenance> items) {
   return MaterialApp(
     home: Scaffold(
-      body: Timeline(
-        maintenances: items,
-        carId: 'car-1',
-        onOpen: (_) {},
-      ),
+      body: Timeline(maintenances: items, carId: 'car-1', onOpen: (_) {}),
     ),
   );
 }
@@ -24,10 +20,7 @@ void main() {
         'when pumped, '
         'then the type label and year are painted', (tester) async {
       // given
-      final m = buildMaintenance(
-        type: MaintenanceType.oil,
-        date: '2026-03-12',
-      );
+      final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
 
       // when
       await tester.pumpWidget(_pumpTimeline([m]));
@@ -53,8 +46,9 @@ void main() {
 
     testWidgets('given three maintenances across two years, '
         'when pumped, '
-        'then years are desc and entries within a year are date desc',
-        (tester) async {
+        'then years are desc and entries within a year are date desc', (
+      tester,
+    ) async {
       // given
       final jan = buildMaintenance(id: 'jan', date: '2026-01-05');
       final mar = buildMaintenance(id: 'mar', date: '2026-03-12');
@@ -101,23 +95,19 @@ void main() {
 
     testWidgets('given one maintenance, '
         'when pumped, '
-        'then the entry exposes a semantics label with type and date',
-        (tester) async {
+        'then the entry exposes a semantics label with type and date', (
+      tester,
+    ) async {
       // given
       final handle = tester.ensureSemantics();
-      final m = buildMaintenance(
-        type: MaintenanceType.oil,
-        date: '2026-03-12',
-      );
+      final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
 
       // when
       await tester.pumpWidget(_pumpTimeline([m]));
 
       // then
       expect(
-        find.bySemanticsLabel(
-          RegExp(r'Cambio de aceite.*'),
-        ),
+        find.bySemanticsLabel(RegExp(r'Cambio de aceite.*')),
         findsOneWidget,
       );
       handle.dispose();

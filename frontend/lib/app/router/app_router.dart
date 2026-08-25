@@ -1,7 +1,6 @@
 import 'package:autobook/features/maintenances/presentation/screens/car_detail_screen.dart';
 import 'package:autobook/features/maintenances/presentation/screens/maintenance_detail_screen.dart';
 import 'package:autobook/features/vehicles/presentation/screens/home_screen.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

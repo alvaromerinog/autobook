@@ -1,7 +1,6 @@
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance_type.dart';
 import 'package:autobook/features/maintenances/domain/usecases/create_maintenance_usecase.dart';
-import 'package:autobook/features/maintenances/presentation/theme/maint_tints.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_type_icons.dart';
 import 'package:autobook/features/maintenances/presentation/widgets/maint_type_icon.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/blur_dialog.dart';
