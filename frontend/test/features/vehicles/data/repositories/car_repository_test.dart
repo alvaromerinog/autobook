@@ -334,6 +334,38 @@ void main() {
         expect(events, isEmpty);
       });
 
+      test('given local pendingUpdate row exists remotely, '
+          'when refreshFromRemote runs, '
+          'then upsertAll skips that id', () async {
+        // given
+        const pendingCar = toyotaCorolla;
+        final staleRemote = pendingCar.copyWith(brand: 'RemoteBrand');
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.fetchAll()).thenAnswer(
+          (_) async => CarsListResponse(cars: [CarDto.fromDomain(staleRemote)]),
+        );
+        when(() => mockLocal.getAllWithStates()).thenAnswer(
+          (_) async => [
+            (car: pendingCar, syncState: SyncStateEnum.pendingUpdate),
+          ],
+        );
+        when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDeleteMany(any())).thenAnswer((_) async {});
+
+        // when
+        final events = await repo.refreshFromRemote();
+
+        // then
+        final captured = verify(
+          () => mockLocal.upsertAll(captureAny()),
+        ).captured;
+        final upserted = captured.first as List<Car>;
+        expect(upserted, isEmpty);
+        expect(events, isEmpty);
+      });
+
       test('given a known car in the remote list, '
           'when refreshFromRemote runs, '
           'then upsertAll updates it and no row is deleted', () async {
