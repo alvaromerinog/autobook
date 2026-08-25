@@ -1,6 +1,6 @@
 # AGENTS.md — Frontend
 
-Flutter application for autobook. All commands must be run from the `frontend/` directory.
+Flutter application for autobook. All commands must be run from the `frontend/` directory. All `flutter` and `dart` commands must go through FVM (`fvm flutter ...` / `fvm dart ...`) so they use the SDK pinned in `.fvmrc`.
 
 ## Tech Stack
 
@@ -20,8 +20,8 @@ Flutter application for autobook. All commands must be run from the `frontend/` 
 ## Setup
 
 ```bash
-fvm use stable      # Ensure correct Flutter version (defined in .fvmrc)
-flutter pub get     # Install dependencies
+fvm use stable          # Ensure correct Flutter version (defined in .fvmrc)
+fvm flutter pub get     # Install dependencies
 ```
 
 If FVM is not installed: `dart pub global activate fvm`
@@ -29,16 +29,16 @@ If FVM is not installed: `dart pub global activate fvm`
 ## Development
 
 ```bash
-flutter run                     # Run on connected device/emulator
-flutter run -d chrome           # Run as web app
-flutter run -d <device_id>      # Run on a specific device
-flutter devices                 # List available devices
+fvm flutter run                     # Run on connected device/emulator
+fvm flutter run -d chrome           # Run as web app
+fvm flutter run -d <device_id>      # Run on a specific device
+fvm flutter devices                 # List available devices
 ```
 
 The API base URL is read from the `AUTOBOOK_API_URL` environment variable at build time:
 
 ```bash
-flutter run --dart-define=AUTOBOOK_API_URL=http://localhost:3000
+fvm flutter run --dart-define=AUTOBOOK_API_URL=http://localhost:3000
 ```
 
 If the variable is not provided, it defaults to `http://localhost:3000`.
@@ -48,8 +48,8 @@ If the variable is not provided, it defaults to `http://localhost:3000`.
 After adding or modifying any annotated class (`@riverpod`, `@freezed`, `@RestApi`, `@DriftDatabase`), regenerate all output files:
 
 ```bash
-dart run build_runner build --delete-conflicting-outputs     # One-shot generation
-dart run build_runner watch --delete-conflicting-outputs     # Watch mode (during development)
+fvm dart run build_runner build --delete-conflicting-outputs     # One-shot generation
+fvm dart run build_runner watch --delete-conflicting-outputs     # Watch mode (during development)
 ```
 
 Generated files (`*.g.dart`, `*.freezed.dart`) are **gitignored** — do not commit them. They are regenerated on each build or via the commands above.
@@ -57,8 +57,8 @@ Generated files (`*.g.dart`, `*.freezed.dart`) are **gitignored** — do not com
 ## Testing
 
 ```bash
-flutter test                    # Run all tests
-flutter test test/path/to/file  # Run a specific test file
+fvm flutter test                    # Run all tests
+fvm flutter test test/path/to/file  # Run a specific test file
 ```
 
 Test files live in `test/` mirroring the `lib/` structure: a file at `lib/a/b/foo.dart` has its test at `test/a/b/foo_test.dart`.
@@ -84,8 +84,8 @@ Test files live in `test/` mirroring the `lib/` structure: a file at `lib/a/b/fo
 ## Code Style
 
 ```bash
-flutter analyze         # Static analysis (uses analysis_options.yaml)
-dart format lib/ test/  # Format Dart source files
+fvm flutter analyze         # Static analysis (uses analysis_options.yaml)
+fvm dart format lib/ test/  # Format Dart source files
 ```
 
 - Use Riverpod for all state — avoid `setState` in favor of `ConsumerWidget` / `ConsumerStatefulWidget`
@@ -149,11 +149,11 @@ The app is offline-first: local Drift DB is always the source of truth for reads
 ## Build
 
 ```bash
-flutter build apk           # Android APK
-flutter build appbundle     # Android App Bundle (Play Store)
-flutter build ios           # iOS (requires macOS + Xcode)
-flutter build web           # Web
-flutter build macos         # macOS desktop
+fvm flutter build apk           # Android APK
+fvm flutter build appbundle     # Android App Bundle (Play Store)
+fvm flutter build ios           # iOS (requires macOS + Xcode)
+fvm flutter build web           # Web
+fvm flutter build macos         # macOS desktop
 ```
 
 ## File Organization
@@ -215,5 +215,5 @@ test/                       # Mirrors lib/ structure; each *_test.dart sits besi
 `config.dart` reads the API host from the `AUTOBOOK_API_URL` compile-time variable (default: `http://localhost:3000`). Pass it via `--dart-define`:
 
 ```bash
-flutter run --dart-define=AUTOBOOK_API_URL=http://10.0.2.2:3000   # Android emulator
+fvm flutter run --dart-define=AUTOBOOK_API_URL=http://10.0.2.2:3000   # Android emulator
 ```
