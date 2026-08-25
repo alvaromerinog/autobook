@@ -108,6 +108,10 @@ class MaintenanceRepository implements IMaintenanceRepository {
       throw CacheFailure(e.toString());
     }
     final remoteIds = remoteMaintenances.map((m) => m.id).toSet();
+    final locallyPendingIds = localRows
+        .where((row) => row.syncState != SyncStateEnum.synced)
+        .map((row) => row.maintenance.id)
+        .toSet();
     final toHardDelete = <String>[];
     final events = <MaintenanceRemoteSyncEvent>[];
     for (final row in localRows) {
@@ -130,7 +134,11 @@ class MaintenanceRepository implements IMaintenanceRepository {
       }
     }
     try {
-      await _local.upsertAll(remoteMaintenances);
+      await _local.upsertAll(
+        remoteMaintenances
+            .where((m) => !locallyPendingIds.contains(m.id))
+            .toList(),
+      );
       for (final id in toHardDelete) {
         await _local.hardDelete(id);
       }

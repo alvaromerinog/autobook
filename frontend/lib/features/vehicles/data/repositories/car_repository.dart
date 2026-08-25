@@ -95,6 +95,10 @@ class CarRepository implements ICarRepository {
       throw CacheFailure(e.toString());
     }
     final remoteIds = remoteCars.map((c) => c.id).toSet();
+    final locallyPendingIds = localRows
+        .where((row) => row.syncState != SyncStateEnum.synced)
+        .map((row) => row.car.id)
+        .toSet();
     final toHardDelete = <String>[];
     final events = <RemoteSyncEvent>[];
     for (final row in localRows) {
@@ -113,7 +117,9 @@ class CarRepository implements ICarRepository {
       }
     }
     try {
-      await _local.upsertAll(remoteCars);
+      await _local.upsertAll(
+        remoteCars.where((c) => !locallyPendingIds.contains(c.id)).toList(),
+      );
       await _local.hardDeleteMany(toHardDelete);
     } catch (e) {
       throw CacheFailure(e.toString());
