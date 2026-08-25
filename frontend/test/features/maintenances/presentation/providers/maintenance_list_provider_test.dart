@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
 import 'package:autobook/features/maintenances/data/repositories/maintenance_repository.dart';
@@ -102,6 +104,52 @@ void main() {
 
       // then
       verify(() => repo.create(any())).called(1);
+    });
+
+    test('given provider disposed mid-mutation, '
+        'when the mutation completes, '
+        'then no error escapes', () async {
+      // given
+      const carId = 'car-1';
+      const maintenance = Maintenance(
+        id: 'm1',
+        carId: carId,
+        type: MaintenanceType.oil,
+        date: '2026-03-12',
+        mileage: 1,
+        cost: 1,
+      );
+      final deleteGate = Completer<void>();
+      when(() => repo.getAll(carId)).thenAnswer((_) async => [maintenance]);
+      when(() => repo.hasPending(carId)).thenAnswer((_) async => false);
+      when(
+        () => repo.pendingDeleteIds(carId),
+      ).thenAnswer((_) async => <String>{});
+      when(
+        () => repo.refreshFromRemote(carId),
+      ).thenAnswer((_) async => <MaintenanceRemoteSyncEvent>[]);
+      when(() => repo.syncPending()).thenAnswer((_) async {});
+      when(() => repo.delete(any())).thenAnswer((_) => deleteGate.future);
+
+      final midFlightContainer = ProviderContainer(
+        overrides: [
+          syncCoordinatorProvider.overrideWithValue(SyncCoordinator()),
+          maintenanceRepositoryProvider.overrideWithValue(repo),
+        ],
+      );
+      addTearDown(midFlightContainer.dispose);
+      midFlightContainer.listen(maintenanceListProvider(carId), (_, _) {});
+      await midFlightContainer.read(maintenanceListProvider(carId).future);
+
+      // when
+      final mutation = midFlightContainer
+          .read(maintenanceListProvider(carId).notifier)
+          .deleteMaint(maintenance);
+      midFlightContainer.dispose();
+      deleteGate.complete();
+
+      // then
+      await expectLater(mutation, completes);
     });
 
     test('deleteMaint rethrows ServerFailure as Failure', () async {

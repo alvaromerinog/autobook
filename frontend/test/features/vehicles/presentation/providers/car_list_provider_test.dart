@@ -433,6 +433,33 @@ void main() {
     });
 
     group('deleteCar', () {
+      test('given provider disposed mid-mutation, '
+          'when the mutation completes, '
+          'then no error escapes', () async {
+        // given
+        final deleteGate = Completer<void>();
+        when(
+          () => mockRepo.refreshFromRemote(),
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
+        when(() => mockRepo.syncPending()).thenAnswer((_) async {});
+        when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+        when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
+        when(() => mockRepo.delete(any())).thenAnswer((_) => deleteGate.future);
+
+        final container = makeContainer();
+        await container.read(carListProvider.future);
+
+        // when
+        final mutation = container
+            .read(carListProvider.notifier)
+            .deleteCar(toyotaCorolla);
+        container.dispose();
+        deleteGate.complete();
+
+        // then
+        await expectLater(mutation, completes);
+      });
+
       test(
         'given delete succeeds, '
         'when deleteCar is called, '
