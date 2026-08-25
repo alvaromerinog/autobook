@@ -1,8 +1,10 @@
+import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
 import 'package:autobook/features/maintenances/presentation/providers/maintenance_list_provider.dart';
 import 'package:autobook/features/maintenances/presentation/screens/add_maintenance_screen.dart';
 import 'package:autobook/features/maintenances/presentation/screens/car_detail_screen.dart';
 import 'package:autobook/features/maintenances/presentation/screens/maintenance_detail_screen.dart';
 import 'package:autobook/features/vehicles/presentation/screens/home_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -29,15 +31,34 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/cars/:carId/maintenances/:id/edit',
         builder: (context, state) {
-          final ref = ProviderScope.containerOf(context, listen: false);
           final carId = state.pathParameters['carId']!;
           final id = state.pathParameters['id']!;
-          final state_ = ref.read(maintenanceListProvider(carId)).value;
-          final existing = state_?.maintenances.firstWhere(
-            (m) => m.id == id,
-            orElse: () => throw StateError('maintenance $id not cached'),
-          );
-          return AddMaintenanceScreen(carId: carId, existing: existing);
+          final extra = state.extra;
+          if (extra is Maintenance && extra.id == id && extra.carId == carId) {
+            return AddMaintenanceScreen(carId: carId, existing: extra);
+          }
+          final ref = ProviderScope.containerOf(context, listen: false);
+          final cachedRows = ref
+              .read(maintenanceListProvider(carId))
+              .value
+              ?.maintenances;
+          Maintenance? match;
+          for (final m in cachedRows ?? const <Maintenance>[]) {
+            if (m.id == id) {
+              match = m;
+              break;
+            }
+          }
+          if (match == null) {
+            return Scaffold(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              appBar: AppBar(
+                leading: BackButton(onPressed: () => context.pop()),
+              ),
+              body: const Center(child: Text('Registro no encontrado')),
+            );
+          }
+          return AddMaintenanceScreen(carId: carId, existing: match);
         },
       ),
       GoRoute(
