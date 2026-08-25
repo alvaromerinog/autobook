@@ -110,122 +110,126 @@ class _TimelineEntryState extends State<TimelineEntry> {
       locale,
     ).format(date).replaceAll('.', '');
 
-    return IntrinsicHeight(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onOpen,
-        onTapDown: (_) => setState(() => _hover = true),
-        onTapCancel: () => setState(() => _hover = false),
-        onTapUp: (_) => setState(() => _hover = false),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              width: 40,
-              child: Stack(
-                alignment: Alignment.topCenter,
-                children: [
-                  if (!widget.isFirst)
-                    Positioned(
-                      top: 0,
-                      bottom: 0,
-                      child: Container(width: 2, color: cs.outlineVariant),
-                    ),
-                  if (!widget.isLast)
-                    Positioned(
-                      top: 26,
-                      bottom: 0,
-                      child: Container(width: 2, color: cs.outlineVariant),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: tint.bg,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: cs.surface, width: 3),
-                      ),
-                      child: Icon(
-                        maintTypeIcon(widget.maintenance.type),
-                        size: 16,
-                        color: tint.fg,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _hover
-                      ? cs.surfaceContainerHigh
-                      : cs.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return Semantics(
+      button: true,
+      label: '${maintTypeLabel(widget.maintenance.type)} $dateLabel',
+      child: IntrinsicHeight(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onOpen,
+          onTapDown: (_) => setState(() => _hover = true),
+          onTapCancel: () => setState(() => _hover = false),
+          onTapUp: (_) => setState(() => _hover = false),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 40,
+                child: Stack(
+                  alignment: Alignment.topCenter,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            maintTypeLabel(widget.maintenance.type),
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: cs.onSurface,
-                            ),
-                          ),
+                    if (!widget.isFirst)
+                      Positioned(
+                        top: 0,
+                        bottom: 0,
+                        child: Container(width: 2, color: cs.outlineVariant),
+                      ),
+                    if (!widget.isLast)
+                      Positioned(
+                        top: 26,
+                        bottom: 0,
+                        child: Container(width: 2, color: cs.outlineVariant),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: tint.bg,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: cs.surface, width: 3),
                         ),
-                        Text(
-                          dateLabel,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          '${kmFmt.format(widget.maintenance.mileage)} km',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text('·', style: TextStyle(color: cs.outline)),
-                        const SizedBox(width: 12),
-                        Text(
-                          costFmt.format(widget.maintenance.cost),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: cs.onSurface,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (widget.maintenance.garage != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.maintenance.garage!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
+                        child: Icon(
+                          maintTypeIcon(widget.maintenance.type),
+                          size: 16,
+                          color: tint.fg,
                         ),
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _hover
+                        ? cs.surfaceContainerHigh
+                        : cs.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              maintTypeLabel(widget.maintenance.type),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: cs.onSurface,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            dateLabel,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            '${kmFmt.format(widget.maintenance.mileage)} km',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text('·', style: TextStyle(color: cs.outline)),
+                          const SizedBox(width: 12),
+                          Text(
+                            costFmt.format(widget.maintenance.cost),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: cs.onSurface,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (widget.maintenance.garage != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.maintenance.garage!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
