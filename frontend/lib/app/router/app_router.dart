@@ -53,7 +53,15 @@ GoRouter appRouter(Ref ref) {
             return Scaffold(
               backgroundColor: Theme.of(context).colorScheme.surface,
               appBar: AppBar(
-                leading: BackButton(onPressed: () => context.pop()),
+                leading: BackButton(
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/cars/$carId');
+                    }
+                  },
+                ),
               ),
               body: const Center(child: Text('Registro no encontrado')),
             );
