@@ -242,7 +242,9 @@ class MaintenanceRepository implements IMaintenanceRepository {
                 p.maintenance.id,
                 MaintenanceDto.fromDomain(p.maintenance),
               ),
+              tombstoneStatus: 404,
               settle: () => _local.markSynced(p.maintenance.id),
+              tombstoneSettle: () => _local.hardDelete(p.maintenance.id),
             );
           case SyncStateEnum.pendingDelete:
             await _push(

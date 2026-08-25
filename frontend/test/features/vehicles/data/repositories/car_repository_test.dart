@@ -1113,9 +1113,9 @@ void main() {
         verify(() => mockLocal.markSynced('pend1')).called(1);
       });
 
-      test('given remote update returns 404 during the flush, '
+      test('given a pendingUpdate row receives a 404, '
           'when syncPending is called, '
-          'then the car stays pending and is not marked synced', () async {
+          'then hard-deletes the row and completes without throwing', () async {
         // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [(car: fiat500, syncState: SyncStateEnum.pendingUpdate)],
@@ -1133,11 +1133,13 @@ void main() {
             type: DioExceptionType.badResponse,
           ),
         );
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
         // when
         await repo.syncPending();
 
         // then
+        verify(() => mockLocal.hardDelete('pend1')).called(1);
         verifyNever(() => mockLocal.markSynced(any()));
       });
 
