@@ -1017,6 +1017,71 @@ void main() {
         ).called(1);
       });
 
+      test('given remote update returns a 404 tombstone, '
+          'when update settles via the tombstone path, '
+          'then its maintenance rows are hard-deleted', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockLocal.upsertPending(
+            any(),
+            syncState: any(named: 'syncState'),
+          ),
+        ).thenAnswer((_) async {});
+        when(() => mockRemote.update(any(), any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/1'),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: '/cars/1'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.update(toyotaCorolla);
+
+        // then
+        verify(
+          () => mockMaintenanceLocal.hardDeleteForCar(toyotaCorolla.id),
+        ).called(1);
+      });
+
+      test('given a queued pendingUpdate row receives a 404 during replay, '
+          'when syncPending is called, '
+          'then its maintenance rows are hard-deleted', () async {
+        // given
+        when(() => mockLocal.getPending()).thenAnswer(
+          (_) async => [(car: fiat500, syncState: SyncStateEnum.pendingUpdate)],
+        );
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(() => mockRemote.update(any(), any())).thenThrow(
+          DioException(
+            requestOptions: RequestOptions(path: '/cars/pend1'),
+            response: Response(
+              statusCode: 404,
+              requestOptions: RequestOptions(path: '/cars/pend1'),
+            ),
+            type: DioExceptionType.badResponse,
+          ),
+        );
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.syncPending();
+
+        // then
+        verify(
+          () => mockMaintenanceLocal.hardDeleteForCar(fiat500.id),
+        ).called(1);
+      });
+
       test('given remote delete returns a 404 tombstone, '
           'when delete settles via the tombstone path, '
           'then its maintenance rows are still hard-deleted', () async {
