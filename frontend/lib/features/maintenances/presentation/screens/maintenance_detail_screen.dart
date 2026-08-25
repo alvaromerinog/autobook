@@ -1,10 +1,10 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
-import 'package:autobook/features/maintenances/domain/usecases/create_maintenance_usecase.dart';
 import 'package:autobook/features/maintenances/presentation/providers/maintenance_list_provider.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_tints.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_type_icons.dart';
 import 'package:autobook/features/maintenances/presentation/widgets/big_stat.dart';
+import 'package:autobook/features/maintenances/presentation/widgets/maintenance_dialog.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/presentation/providers/car_list_provider.dart';
 import 'package:flutter/material.dart';
@@ -71,28 +71,6 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     return null;
   }
 
-  Future<void> _edit(BuildContext context, WidgetRef ref, Maintenance m) async {
-    final draft = await context.push<MaintenanceDraft>(
-      '/cars/$carId/maintenances/${m.id}/edit',
-      extra: m,
-    );
-    if (draft == null || !context.mounted) return;
-    try {
-      await ref
-          .read(maintenanceListProvider(carId).notifier)
-          .updateMaint(draft, m);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Cambios guardados')));
-    } on Failure catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al guardar los cambios')),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -146,7 +124,22 @@ class MaintenanceDetailScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Editar',
-            onPressed: () => _edit(context, ref, m),
+            onPressed: () async {
+              final draft = await showMaintenanceDialog(context, existing: m);
+              if (draft == null || !context.mounted) return;
+              try {
+                await ref
+                    .read(maintenanceListProvider(carId).notifier)
+                    .updateMaint(draft, m);
+              } on Failure catch (_) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Error al actualizar el mantenimiento'),
+                  ),
+                );
+              }
+            },
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),

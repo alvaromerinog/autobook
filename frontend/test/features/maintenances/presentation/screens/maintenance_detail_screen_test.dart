@@ -12,7 +12,6 @@ import 'package:autobook/features/maintenances/domain/usecases/sync_pending_main
 import 'package:autobook/features/maintenances/domain/usecases/update_maintenance_usecase.dart';
 import 'package:autobook/features/maintenances/presentation/providers/usecase_providers.dart'
     as maint_usecases;
-import 'package:autobook/features/maintenances/presentation/screens/add_maintenance_screen.dart';
 import 'package:autobook/features/maintenances/presentation/screens/maintenance_detail_screen.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
@@ -96,7 +95,6 @@ Future<void> pumpDetailScreen(
   WidgetTester tester, {
   required MockCarRepository mockCarRepo,
   required List<(MaintenanceDraft, Maintenance)> updateCalls,
-  required ValueChanged<Object?> onEditPushed,
 }) async {
   final router = GoRouter(
     initialLocation: '/cars/car-1/maintenances/m1',
@@ -111,21 +109,6 @@ Future<void> pumpDetailScreen(
           carId: state.pathParameters['carId']!,
           maintenanceId: state.pathParameters['id']!,
         ),
-        routes: [
-          GoRoute(
-            path: 'edit',
-            builder: (_, state) {
-              final extra = state.extra;
-              onEditPushed(extra);
-              return AddMaintenanceScreen(
-                carId: state.pathParameters['carId']!,
-                // Task 7 wires the real route to consume extra; mirrored
-                // here so the form is pre-filled as in production.
-                existing: extra is Maintenance ? extra : null,
-              );
-            },
-          ),
-        ],
       ),
     ],
   );
@@ -193,18 +176,15 @@ void stubCarDefaults(MockCarRepository mockRepo, {List<Car>? cars}) {
 void main() {
   group('MaintenanceDetailScreen', () {
     group('edit maintenance', () {
-      testWidgets('given edit saved in AddMaintenanceScreen flow, '
-          'when the draft is popped back with the existing record passed '
-          'via extra, then update use case was invoked once with it', (
-        tester,
-      ) async {
+      testWidgets('given edit saved in the maintenance dialog flow, '
+          'when the draft is saved, '
+          'then the update use case is invoked once with it', (tester) async {
         // given
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.reset);
         final existing = buildMaintenance(carId: 'car-1');
         final calledWith = <(MaintenanceDraft, Maintenance)>[];
-        final pushedExtras = <Object?>[];
         final mockCarRepo = MockCarRepository();
         stubCarDefaults(mockCarRepo);
 
@@ -212,22 +192,20 @@ void main() {
           tester,
           mockCarRepo: mockCarRepo,
           updateCalls: calledWith,
-          onEditPushed: pushedExtras.add,
         );
 
-        // when
+        // when — Editar abre el diálogo precargado; guardar cambios
         await tester.tap(find.byTooltip('Editar'));
         await tester.pumpAndSettle();
         await tester.enterText(
           find.widgetWithText(CustomFormField, 'Coste'),
           '99.9',
         );
-        await tester.tap(find.text('Guardar'));
+        await tester.pump();
+        await tester.tap(find.text('Guardar cambios'));
         await tester.pumpAndSettle();
 
         // then
-        expect(pushedExtras, hasLength(1));
-        expect(pushedExtras.single, existing);
         expect(calledWith, hasLength(1));
         expect(calledWith.first.$1.cost, 99.9);
         expect(calledWith.first.$2.id, existing.id);
