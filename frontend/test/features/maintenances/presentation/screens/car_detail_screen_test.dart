@@ -24,6 +24,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../vehicles/fixtures/car_fixtures.dart';
 import '../../../vehicles/helpers/car_mocks.dart';
+import '../../fixtures/maintenance_fixtures.dart';
 
 class MockIdGenerator extends Mock implements IdGenerator {}
 
@@ -128,6 +129,48 @@ void main() {
   });
 
   group('CarDetailScreen', () {
+    group('encabezado del historial', () {
+      testWidgets('given one maintenance, '
+          'when pumped, '
+          'then the count says "1 entrada"', (tester) async {
+        // given
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer(
+          (_) async => [
+            buildMaintenance(id: 'm1', carId: '1', date: '2026-03-12'),
+          ],
+        );
+
+        // when
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+
+        // then
+        expect(find.text('1 entrada'), findsOneWidget);
+        expect(find.text('1 entradas'), findsNothing);
+      });
+
+      testWidgets('given two maintenances, '
+          'when pumped, '
+          'then the count says "2 entradas"', (tester) async {
+        // given
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer(
+          (_) async => [
+            buildMaintenance(id: 'm1', carId: '1', date: '2026-03-12'),
+            buildMaintenance(id: 'm2', carId: '1', date: '2026-01-05'),
+          ],
+        );
+
+        // when
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+
+        // then
+        expect(find.text('2 entradas'), findsOneWidget);
+      });
+    });
+
     group('edit vehicle', () {
       testWidgets('given a car, when the edit icon is tapped, then the edit '
           'dialog opens pre-filled', (tester) async {

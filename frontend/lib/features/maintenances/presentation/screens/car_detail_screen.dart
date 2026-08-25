@@ -230,12 +230,16 @@ class CarDetailScreen extends ConsumerWidget {
                           color: cs.onSurface,
                         ),
                       ),
-                      Text(
-                        '${maintAsync.value?.maintenances.length ?? 0} entradas',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
+                      Builder(builder: (context) {
+                        final count =
+                            maintAsync.value?.maintenances.length ?? 0;
+                        return Text(
+                          '$count ${count == 1 ? 'entrada' : 'entradas'}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        );
+                      }),
                     ],
                   ),
                 ),
