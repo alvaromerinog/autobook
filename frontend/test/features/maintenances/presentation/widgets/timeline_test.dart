@@ -98,5 +98,29 @@ void main() {
       // then
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('given one maintenance, '
+        'when pumped, '
+        'then the entry exposes a semantics label with type and date',
+        (tester) async {
+      // given
+      final handle = tester.ensureSemantics();
+      final m = buildMaintenance(
+        type: MaintenanceType.oil,
+        date: '2026-03-12',
+      );
+
+      // when
+      await tester.pumpWidget(_pumpTimeline([m]));
+
+      // then
+      expect(
+        find.bySemanticsLabel(
+          RegExp(r'Cambio de aceite.*'),
+        ),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
   });
 }
