@@ -14,7 +14,7 @@ tasks:
   docker/start:
     desc: Start all services with Docker Compose in detached mode
     cmds:
-      - docker compose up -d
+      - docker compose up --build -d
 
   docker/stop:
     desc: Stop and remove all Docker Compose services
