@@ -121,6 +121,7 @@ void main() {
 
   setUpAll(() {
     registerCarFallbacks();
+    registerFallbackValue(buildMaintenance());
   });
 
   setUp(() {
@@ -168,6 +169,40 @@ void main() {
 
         // then
         expect(find.text('2 entradas'), findsOneWidget);
+      });
+    });
+
+    group('FAB añadir mantenimiento', () {
+      testWidgets('given the detail screen, '
+          'when the FAB is tapped and the dialog is saved, '
+          'then repo.create is called with a MaintenanceDraft', (tester) async {
+        // given
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer((_) async => []);
+        when(() => mockMaintRepo.create(any())).thenAnswer((_) async {});
+
+        // when — abrir diálogo desde el FAB
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+        await tester.tap(find.text('Añadir mantenimiento'));
+        await tester.pumpAndSettle();
+        expect(find.text('Nuevo mantenimiento'), findsOneWidget);
+
+        // rellenar y guardar
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Kilómetros'),
+          '5000',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Coste'),
+          '40',
+        );
+        await tester.pump();
+        await tester.tap(find.text('Guardar'));
+        await tester.pumpAndSettle();
+
+        // then
+        verify(() => mockMaintRepo.create(any())).called(1);
       });
     });
 

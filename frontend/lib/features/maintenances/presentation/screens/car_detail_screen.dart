@@ -1,7 +1,7 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance_remote_sync_event.dart';
-import 'package:autobook/features/maintenances/domain/entities/maintenance_type.dart';
 import 'package:autobook/features/maintenances/presentation/providers/maintenance_list_provider.dart';
+import 'package:autobook/features/maintenances/presentation/widgets/maintenance_dialog.dart';
 import 'package:autobook/features/maintenances/presentation/widgets/timeline.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/presentation/providers/car_list_provider.dart';
@@ -230,16 +230,18 @@ class CarDetailScreen extends ConsumerWidget {
                           color: cs.onSurface,
                         ),
                       ),
-                      Builder(builder: (context) {
-                        final count =
-                            maintAsync.value?.maintenances.length ?? 0;
-                        return Text(
-                          '$count ${count == 1 ? 'entrada' : 'entradas'}',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        );
-                      }),
+                      Builder(
+                        builder: (context) {
+                          final count =
+                              maintAsync.value?.maintenances.length ?? 0;
+                          return Text(
+                            '$count ${count == 1 ? 'entrada' : 'entradas'}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -267,17 +269,7 @@ class CarDetailScreen extends ConsumerWidget {
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          final draft = await context
-              .push<
-                ({
-                  MaintenanceType type,
-                  String date,
-                  int mileage,
-                  double cost,
-                  String? garage,
-                  String? notes,
-                })
-              >('/cars/$carId/add-maintenance');
+          final draft = await showMaintenanceDialog(context);
           if (draft == null) return;
           try {
             await ref.read(maintenanceListProvider(carId).notifier).add(draft);
