@@ -84,6 +84,8 @@ class CarList extends _$CarList {
         syncError ??= f;
       }
 
+      if (cancelled) return;
+
       state = AsyncData((
         cars: cars,
         syncError: syncError,
