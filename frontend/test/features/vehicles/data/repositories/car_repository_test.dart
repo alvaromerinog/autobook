@@ -915,6 +915,35 @@ void main() {
       });
     });
 
+    group('delete during in-flight create', () {
+      test('given create push is awaiting connectivity, '
+          'when delete of the same pendingCreate car runs, '
+          'then throws CacheFailure', () async {
+        // given
+        final gate = Completer<void>();
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) => gate.future.then((_) => true));
+        when(() => mockLocal.insertPending(any())).thenAnswer((_) async {});
+        when(
+          () => mockLocal.syncStateOf(toyotaCorolla.id),
+        ).thenAnswer((_) async => SyncStateEnum.pendingCreate);
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+        when(() => mockRemote.create(any())).thenAnswer((_) async {});
+        when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
+        final createFuture = repo.create(toyotaCorolla);
+        await pumpEventQueue();
+
+        // when / then
+        await expectLater(
+          () => repo.delete(toyotaCorolla),
+          throwsA(isA<CacheFailure>()),
+        );
+        gate.complete();
+        await createFuture;
+      });
+    });
+
     group('pendingDeleteIds', () {
       test('given the local data source returns ids, '
           'when pendingDeleteIds is called, '

@@ -43,7 +43,6 @@ class MaintenanceRepository implements IMaintenanceRepository {
     int? tombstoneStatus,
   }) async {
     if (!await _connectivity.isConnected()) return;
-    if (!_syncingIds.add(m.id)) return;
     try {
       await remoteCall();
       await settle();
@@ -59,8 +58,6 @@ class MaintenanceRepository implements IMaintenanceRepository {
       throw const NetworkFailure();
     } catch (_) {
       throw const NetworkFailure();
-    } finally {
-      _syncingIds.remove(m.id);
     }
   }
 
@@ -150,43 +147,57 @@ class MaintenanceRepository implements IMaintenanceRepository {
 
   @override
   Future<void> create(Maintenance m) async {
-    await _local.insertPending(m);
-    await _push(
-      m,
-      remoteCall: () => _remote.create(m.carId, MaintenanceDto.fromDomain(m)),
-      tombstoneStatus: 409,
-      settle: () => _local.markSynced(m.id),
-    );
+    if (!_syncingIds.add(m.id)) return;
+    try {
+      await _local.insertPending(m);
+      await _push(
+        m,
+        remoteCall: () => _remote.create(m.carId, MaintenanceDto.fromDomain(m)),
+        tombstoneStatus: 409,
+        settle: () => _local.markSynced(m.id),
+      );
+    } finally {
+      _syncingIds.remove(m.id);
+    }
   }
 
   @override
   Future<void> update(Maintenance m) async {
-    await _local.upsertPending(m, syncState: SyncStateEnum.pendingUpdate);
-    await _push(
-      m,
-      remoteCall: () =>
-          _remote.update(m.carId, m.id, MaintenanceDto.fromDomain(m)),
-      settle: () => _local.markSynced(m.id),
-    );
+    if (!_syncingIds.add(m.id)) return;
+    try {
+      await _local.upsertPending(m, syncState: SyncStateEnum.pendingUpdate);
+      await _push(
+        m,
+        remoteCall: () =>
+            _remote.update(m.carId, m.id, MaintenanceDto.fromDomain(m)),
+        settle: () => _local.markSynced(m.id),
+      );
+    } finally {
+      _syncingIds.remove(m.id);
+    }
   }
 
   @override
   Future<void> delete(Maintenance m) async {
-    final state = await _local.syncStateOf(m.id);
-    if (state == SyncStateEnum.pendingCreate) {
-      if (_syncingIds.contains(m.id)) {
-        throw const CacheFailure('delete while sync in flight');
-      }
-      await _local.hardDelete(m.id);
-      return;
+    if (!_syncingIds.add(m.id)) {
+      throw const CacheFailure('delete while sync in flight');
     }
-    await _local.markPendingDelete(m.id);
-    await _push(
-      m,
-      remoteCall: () => _remote.delete(m.carId, m.id),
-      tombstoneStatus: 404,
-      settle: () => _local.hardDelete(m.id),
-    );
+    try {
+      final state = await _local.syncStateOf(m.id);
+      if (state == SyncStateEnum.pendingCreate) {
+        await _local.hardDelete(m.id);
+        return;
+      }
+      await _local.markPendingDelete(m.id);
+      await _push(
+        m,
+        remoteCall: () => _remote.delete(m.carId, m.id),
+        tombstoneStatus: 404,
+        settle: () => _local.hardDelete(m.id),
+      );
+    } finally {
+      _syncingIds.remove(m.id);
+    }
   }
 
   @override
@@ -207,6 +218,7 @@ class MaintenanceRepository implements IMaintenanceRepository {
       throw CacheFailure(e.toString());
     }
     for (final p in pending) {
+      if (!_syncingIds.add(p.maintenance.id)) continue;
       try {
         switch (p.syncState) {
           case SyncStateEnum.pendingCreate:
@@ -244,6 +256,8 @@ class MaintenanceRepository implements IMaintenanceRepository {
         continue;
       } on Exception {
         continue;
+      } finally {
+        _syncingIds.remove(p.maintenance.id);
       }
     }
   }
