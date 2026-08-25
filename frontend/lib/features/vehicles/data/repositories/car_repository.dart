@@ -216,7 +216,9 @@ class CarRepository implements ICarRepository {
                 pending.car.id,
                 CarDto.fromDomain(pending.car),
               ),
+              tombstoneStatus: 404,
               settle: () => _local.markSynced(pending.car.id),
+              tombstoneSettle: () => _local.hardDelete(pending.car.id),
             );
           case SyncStateEnum.pendingDelete:
             await _push(
