@@ -1,5 +1,7 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/network/connectivity_service.dart';
+import 'package:autobook/features/maintenances/data/datasources/local/'
+    'maintenance_local_datasource.dart';
 import 'package:autobook/features/vehicles/data/datasources/local/car_local_datasource.dart';
 import 'package:autobook/features/vehicles/data/datasources/remote/car_remote_datasource.dart';
 import 'package:autobook/features/vehicles/data/models/car_dto.dart';
@@ -18,6 +20,7 @@ ICarRepository carRepository(Ref ref) {
     local: ref.watch(carLocalDatasourceProvider),
     remote: ref.watch(carRemoteDatasourceProvider),
     connectivity: ref.watch(connectivityServiceProvider),
+    maintenanceLocal: ref.watch(maintenanceLocalDatasourceProvider),
   );
 }
 
@@ -26,13 +29,16 @@ class CarRepository implements ICarRepository {
     required CarLocalDataSource local,
     required CarRemoteDataSource remote,
     required ConnectivityService connectivity,
+    required MaintenanceLocalDataSource maintenanceLocal,
   }) : _local = local,
        _remote = remote,
-       _connectivity = connectivity;
+       _connectivity = connectivity,
+       _maintenanceLocal = maintenanceLocal;
 
   final CarLocalDataSource _local;
   final CarRemoteDataSource _remote;
   final ConnectivityService _connectivity;
+  final MaintenanceLocalDataSource _maintenanceLocal;
 
   final _syncingIds = <String>{};
 
@@ -119,6 +125,9 @@ class CarRepository implements ICarRepository {
         remoteCars.where((c) => !locallyPendingIds.contains(c.id)).toList(),
       );
       await _local.hardDeleteMany(toHardDelete);
+      for (final deletedId in toHardDelete) {
+        await _maintenanceLocal.hardDeleteForCar(deletedId);
+      }
     } catch (e) {
       throw CacheFailure(e.toString());
     }
@@ -174,7 +183,10 @@ class CarRepository implements ICarRepository {
         car,
         remoteCall: () => _remote.delete(car.id),
         tombstoneStatus: 404,
-        settle: () => _local.hardDelete(car.id),
+        settle: () async {
+          await _local.hardDelete(car.id);
+          await _maintenanceLocal.hardDeleteForCar(car.id);
+        },
       );
     } finally {
       _syncingIds.remove(car.id);
