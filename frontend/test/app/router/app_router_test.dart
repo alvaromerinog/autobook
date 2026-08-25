@@ -187,5 +187,23 @@ void main() {
       // then
       expect(find.text('Registro no encontrado'), findsOneWidget);
     });
+
+    testWidgets('given a cold deep link to a missing record, '
+        'when the not-found back button is pressed, '
+        'then no error is thrown and it falls back to the car screen', (
+      tester,
+    ) async {
+      await pumpRouter(tester);
+
+      // when: go() leaves only the edit page on the stack (nothing to pop)
+      router.go('/cars/c1/maintenances/nope/edit');
+      await tester.pumpAndSettle();
+      expect(find.text('Registro no encontrado'), findsOneWidget);
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      // then
+      expect(find.text('Vehículo no encontrado'), findsOneWidget);
+    });
   });
 }
