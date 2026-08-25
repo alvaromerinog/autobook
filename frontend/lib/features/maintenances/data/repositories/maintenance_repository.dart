@@ -41,6 +41,7 @@ class MaintenanceRepository implements IMaintenanceRepository {
     required Future<void> Function() remoteCall,
     required Future<void> Function() settle,
     int? tombstoneStatus,
+    Future<void> Function()? tombstoneSettle,
   }) async {
     if (!await _connectivity.isConnected()) return;
     try {
@@ -49,7 +50,7 @@ class MaintenanceRepository implements IMaintenanceRepository {
     } on DioException catch (e) {
       if (tombstoneStatus != null &&
           e.response?.statusCode == tombstoneStatus) {
-        await settle();
+        await (tombstoneSettle ?? settle)();
         return;
       }
       if (e.response != null) {
@@ -170,7 +171,9 @@ class MaintenanceRepository implements IMaintenanceRepository {
         m,
         remoteCall: () =>
             _remote.update(m.carId, m.id, MaintenanceDto.fromDomain(m)),
+        tombstoneStatus: 404,
         settle: () => _local.markSynced(m.id),
+        tombstoneSettle: () => _local.hardDelete(m.id),
       );
     } finally {
       _syncingIds.remove(m.id);

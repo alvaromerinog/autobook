@@ -627,10 +627,9 @@ void main() {
         verifyNever(() => mockLocal.markSynced(any()));
       });
 
-      test('given remote update returns 404, '
-          'when update is called, '
-          'then throws ServerFailure and car stays pending without marking '
-          'synced', () async {
+      test('given remote returns 404, '
+          'when update push runs, '
+          'then hard-deletes locally and does not throw', () async {
         // given
         when(
           () => mockConnectivity.isConnected(),
@@ -651,12 +650,13 @@ void main() {
             type: DioExceptionType.badResponse,
           ),
         );
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when / then
-        await expectLater(
-          () => repo.update(toyotaCorolla),
-          throwsA(isA<ServerFailure>()),
-        );
+        // when
+        await repo.update(toyotaCorolla);
+
+        // then
+        verify(() => mockLocal.hardDelete(toyotaCorolla.id)).called(1);
         verifyNever(() => mockLocal.markSynced(any()));
       });
 
