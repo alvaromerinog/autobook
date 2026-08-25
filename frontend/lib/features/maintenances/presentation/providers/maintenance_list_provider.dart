@@ -88,6 +88,8 @@ class MaintenanceList extends _$MaintenanceList {
         syncError ??= f;
       }
 
+      if (cancelled) return;
+
       state = AsyncData((
         maintenances: maintenances,
         syncError: syncError,

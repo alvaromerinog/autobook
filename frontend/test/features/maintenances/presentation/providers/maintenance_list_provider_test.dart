@@ -152,6 +152,55 @@ void main() {
       await expectLater(mutation, completes);
     });
 
+    test('given provider disposed while post-mutation reads are in flight, '
+        'when the reads complete, '
+        'then no error escapes', () async {
+      // given
+      const carId = 'car-1';
+      const maintenance = Maintenance(
+        id: 'm1',
+        carId: carId,
+        type: MaintenanceType.oil,
+        date: '2026-03-12',
+        mileage: 1,
+        cost: 1,
+      );
+      when(() => repo.getAll(carId)).thenAnswer((_) async => [maintenance]);
+      when(() => repo.hasPending(carId)).thenAnswer((_) async => false);
+      when(
+        () => repo.pendingDeleteIds(carId),
+      ).thenAnswer((_) async => <String>{});
+      when(
+        () => repo.refreshFromRemote(carId),
+      ).thenAnswer((_) async => <MaintenanceRemoteSyncEvent>[]);
+      when(() => repo.syncPending()).thenAnswer((_) async {});
+      when(() => repo.delete(any())).thenAnswer((_) async {});
+
+      final midFlightContainer = ProviderContainer(
+        overrides: [
+          syncCoordinatorProvider.overrideWithValue(SyncCoordinator()),
+          maintenanceRepositoryProvider.overrideWithValue(repo),
+        ],
+      );
+      addTearDown(midFlightContainer.dispose);
+      midFlightContainer.listen(maintenanceListProvider(carId), (_, _) {});
+      await midFlightContainer.read(maintenanceListProvider(carId).future);
+
+      final readGate = Completer<List<Maintenance>>();
+      when(() => repo.getAll(carId)).thenAnswer((_) => readGate.future);
+
+      // when
+      final mutation = midFlightContainer
+          .read(maintenanceListProvider(carId).notifier)
+          .deleteMaint(maintenance);
+      await untilCalled(() => repo.getAll(carId));
+      midFlightContainer.dispose();
+      readGate.complete([maintenance]);
+
+      // then
+      await expectLater(mutation, completes);
+    });
+
     test('deleteMaint rethrows ServerFailure as Failure', () async {
       // given
       const carId = 'car-1';
