@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/network/connectivity_service.dart';
+import 'package:autobook/features/maintenances/data/datasources/local/'
+    'maintenance_local_datasource.dart';
 import 'package:autobook/features/vehicles/data/datasources/local/car_local_datasource.dart';
 import 'package:autobook/features/vehicles/data/datasources/remote/car_remote_datasource.dart';
 import 'package:autobook/features/vehicles/data/models/car_dto.dart';
@@ -22,10 +24,14 @@ class MockCarRemoteDataSource extends Mock implements CarRemoteDataSource {}
 
 class MockConnectivityService extends Mock implements ConnectivityService {}
 
+class MockMaintenanceLocalDataSource extends Mock
+    implements MaintenanceLocalDataSource {}
+
 void main() {
   late MockCarLocalDataSource mockLocal;
   late MockCarRemoteDataSource mockRemote;
   late MockConnectivityService mockConnectivity;
+  late MockMaintenanceLocalDataSource mockMaintenanceLocal;
   late CarRepository repo;
 
   setUpAll(() {
@@ -36,10 +42,15 @@ void main() {
     mockLocal = MockCarLocalDataSource();
     mockRemote = MockCarRemoteDataSource();
     mockConnectivity = MockConnectivityService();
+    mockMaintenanceLocal = MockMaintenanceLocalDataSource();
+    when(
+      () => mockMaintenanceLocal.hardDeleteForCar(any()),
+    ).thenAnswer((_) async {});
     repo = CarRepository(
       local: mockLocal,
       remote: mockRemote,
       connectivity: mockConnectivity,
+      maintenanceLocal: mockMaintenanceLocal,
     );
   });
 
@@ -912,6 +923,56 @@ void main() {
         );
         verifyNever(() => mockLocal.hardDelete(any()));
         verify(() => mockLocal.markPendingDelete('1')).called(1);
+      });
+    });
+
+    group('cascade maintenance cleanup', () {
+      test('given car delete push settles, '
+          'when delete completes, '
+          'then its maintenance rows are hard-deleted', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockLocal.syncStateOf(toyotaCorolla.id),
+        ).thenAnswer((_) async => SyncStateEnum.synced);
+        when(() => mockLocal.markPendingDelete(any())).thenAnswer((_) async {});
+        when(() => mockRemote.delete(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.delete(toyotaCorolla);
+
+        // then
+        verify(
+          () => mockMaintenanceLocal.hardDeleteForCar(toyotaCorolla.id),
+        ).called(1);
+      });
+
+      test('given refresh hard-deletes a removed car, '
+          'when refreshFromRemote runs, '
+          'then that car\'s maintenance rows are hard-deleted', () async {
+        // given
+        when(
+          () => mockConnectivity.isConnected(),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockRemote.fetchAll(),
+        ).thenAnswer((_) async => const CarsListResponse(cars: []));
+        when(() => mockLocal.getAllWithStates()).thenAnswer(
+          (_) async => [(car: toyotaCorolla, syncState: SyncStateEnum.synced)],
+        );
+        when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
+        when(() => mockLocal.hardDeleteMany(any())).thenAnswer((_) async {});
+
+        // when
+        await repo.refreshFromRemote();
+
+        // then
+        verify(
+          () => mockMaintenanceLocal.hardDeleteForCar(toyotaCorolla.id),
+        ).called(1);
       });
     });
 
