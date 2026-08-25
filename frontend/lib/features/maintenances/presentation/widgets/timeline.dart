@@ -166,6 +166,7 @@ class _TimelineEntryState extends State<TimelineEntry> {
                 children: [
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
                     children: [
                       Expanded(
                         child: Text(
