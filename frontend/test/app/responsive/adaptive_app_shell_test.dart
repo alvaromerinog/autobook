@@ -90,7 +90,7 @@ class _StubSyncPendingMaintenances extends SyncPendingMaintenancesUseCase {
   Future<void> call() async {}
 }
 
-Future<GoRouter> pumpApp(
+Future<(GoRouter, MockCarRepository)> pumpApp(
   WidgetTester tester, {
   required Size size,
   String initial = '/',
@@ -168,7 +168,7 @@ Future<GoRouter> pumpApp(
     ),
   );
   await tester.pumpAndSettle();
-  return router;
+  return (router, mockCarRepo);
 }
 
 void main() {
@@ -210,7 +210,7 @@ void main() {
           'tapped, then the URL goes to /cars/1 and the detail fills the '
           'third column without a back button', (tester) async {
         // when
-        final router = await pumpApp(tester, size: const Size(1200, 900));
+        final (router, _) = await pumpApp(tester, size: const Size(1200, 900));
         await tester.tap(find.text('Toyota Corolla'));
         await tester.pumpAndSettle();
 
@@ -243,6 +243,34 @@ void main() {
       });
     });
 
+    group('expanded delete selected', () {
+      testWidgets('given an expanded surface at /cars/1, when the car is '
+          'deleted, then the URL goes back to / and the placeholder is '
+          'shown', (tester) async {
+        // given
+        final (router, mockCarRepo) = await pumpApp(
+          tester,
+          size: const Size(1200, 900),
+          initial: '/cars/1',
+        );
+        expect(find.text('Historial de mantenimientos'), findsOneWidget);
+
+        // when — open the delete flow from the AppBar menu
+        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar vehículo'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar'));
+        await tester.pumpAndSettle();
+
+        // then — delete called once, URL back to /, placeholder restored
+        verify(() => mockCarRepo.delete(any())).called(1);
+        expect(router.routeInformationProvider.value.uri.path, '/');
+        expect(find.text('Selecciona un vehículo'), findsOneWidget);
+        expect(find.byType(NavigationRail), findsOneWidget);
+      });
+    });
+
     group('medium', () {
       testWidgets('given a medium surface at /, when pumped, then the rail '
           'and the car list are shown without the FAB', (tester) async {
@@ -261,7 +289,7 @@ void main() {
         tester,
       ) async {
         // when
-        final router = await pumpApp(
+        final (router, _) = await pumpApp(
           tester,
           size: const Size(720, 900),
         );
@@ -290,7 +318,7 @@ void main() {
       testWidgets('given a compact surface at /cars/1, when pushed, then the '
           'car detail is shown with a back button', (tester) async {
         // when
-        final router = await pumpApp(
+        final (router, _) = await pumpApp(
           tester,
           size: const Size(400, 900),
         );
