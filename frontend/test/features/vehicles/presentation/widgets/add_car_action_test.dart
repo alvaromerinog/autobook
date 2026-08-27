@@ -85,10 +85,7 @@ void stubDefaults(MockCarRepository mockRepo) {
 }
 
 Future<void> fillAndSave(WidgetTester tester) async {
-  await tester.enterText(
-    find.widgetWithText(TextFormField, 'Marca'),
-    'Toyota',
-  );
+  await tester.enterText(find.widgetWithText(TextFormField, 'Marca'), 'Toyota');
   await tester.enterText(
     find.widgetWithText(TextFormField, 'Modelo'),
     'Corolla',
@@ -138,9 +135,7 @@ void main() {
         'with Reintentar is shown', (tester) async {
       // given
       stubDefaults(mockRepo);
-      when(() => mockRepo.create(any())).thenThrow(
-        const ServerFailure(500),
-      );
+      when(() => mockRepo.create(any())).thenThrow(const ServerFailure(500));
       final mockIds = MockIdGenerator();
       when(() => mockIds.newId()).thenReturn('new-1');
 
