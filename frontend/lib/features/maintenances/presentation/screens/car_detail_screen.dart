@@ -98,8 +98,7 @@ class CarDetailScreen extends ConsumerWidget {
     }
     final selectedCar = car;
     final maintAsync = ref.watch(maintenanceListProvider(carId));
-    final embedded =
-        windowSizeClassOf(context) == WindowSizeClass.expanded;
+    final embedded = windowSizeClassOf(context) == WindowSizeClass.expanded;
 
     ref.listen<
       AsyncValue<MaintenanceListState>
@@ -134,9 +133,7 @@ class CarDetailScreen extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: !embedded,
-        leading: embedded
-            ? null
-            : BackButton(onPressed: () => context.pop()),
+        leading: embedded ? null : BackButton(onPressed: () => context.pop()),
         actions: [
           if (selectedCar != null)
             IconButton(

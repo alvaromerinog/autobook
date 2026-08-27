@@ -144,23 +144,22 @@ Future<(GoRouter, MockCarRepository)> pumpApp(
       maint_usecases.getMaintenancesUseCaseProvider.overrideWithValue(
         _StubGetMaintenances([buildMaintenance(carId: 'car-1')]),
       ),
-      maint_usecases.hasPendingMaintenancesUseCaseProvider
-          .overrideWithValue(_StubHasPendingMaintenances()),
+      maint_usecases.hasPendingMaintenancesUseCaseProvider.overrideWithValue(
+        _StubHasPendingMaintenances(),
+      ),
       maint_usecases.pendingDeleteIdsUseCaseProvider.overrideWithValue(
         _StubPendingDeleteIds(),
       ),
       maint_usecases.refreshMaintenancesUseCaseProvider.overrideWithValue(
         _StubRefreshMaintenances(),
       ),
-      maint_usecases.syncPendingMaintenancesUseCaseProvider
-          .overrideWithValue(_StubSyncPendingMaintenances()),
+      maint_usecases.syncPendingMaintenancesUseCaseProvider.overrideWithValue(
+        _StubSyncPendingMaintenances(),
+      ),
     ],
   );
   addTearDown(container.dispose);
-  final router = GoRouter(
-    initialLocation: initial,
-    routes: buildAppRoutes(),
-  );
+  final router = GoRouter(initialLocation: initial, routes: buildAppRoutes());
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
@@ -192,10 +191,12 @@ void main() {
         expect(find.byType(BackButton), findsNothing);
 
         final row = tester.widget<Row>(
-          find.ancestor(
-            of: find.text('Selecciona un vehículo'),
-            matching: find.byType(Row),
-          ).first,
+          find
+              .ancestor(
+                of: find.text('Selecciona un vehículo'),
+                matching: find.byType(Row),
+              )
+              .first,
         );
         expect(row.children[0], isA<AppSidebar>());
         expect(row.children[1], isA<VerticalDivider>());
@@ -215,10 +216,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // then — URL updated and detail rendered embedded
-        expect(
-          router.routeInformationProvider.value.uri.path,
-          '/cars/1',
-        );
+        expect(router.routeInformationProvider.value.uri.path, '/cars/1');
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
         expect(find.byType(BackButton), findsNothing);
         expect(find.byType(NavigationRail), findsOneWidget);
@@ -353,10 +351,7 @@ void main() {
         tester,
       ) async {
         // when
-        final (router, _) = await pumpApp(
-          tester,
-          size: const Size(720, 900),
-        );
+        final (router, _) = await pumpApp(tester, size: const Size(720, 900));
         unawaited(router.push('/cars/1'));
         await tester.pumpAndSettle();
 
@@ -382,10 +377,7 @@ void main() {
       testWidgets('given a compact surface at /cars/1, when pushed, then the '
           'car detail is shown with a back button', (tester) async {
         // when
-        final (router, _) = await pumpApp(
-          tester,
-          size: const Size(400, 900),
-        );
+        final (router, _) = await pumpApp(tester, size: const Size(400, 900));
         unawaited(router.push('/cars/1'));
         await tester.pumpAndSettle();
 

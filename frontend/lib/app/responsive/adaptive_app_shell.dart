@@ -5,11 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class AdaptiveAppShell extends StatelessWidget {
-  const AdaptiveAppShell({
-    super.key,
-    required this.state,
-    required this.child,
-  });
+  const AdaptiveAppShell({super.key, required this.state, required this.child});
 
   final GoRouterState state;
   final Widget child;
