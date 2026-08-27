@@ -36,8 +36,15 @@ Future<void> pumpCarDetailScreen(
   MockCarRepository mockCarRepo,
   MockMaintenanceRepository mockMaintRepo, {
   String carId = '1',
+  Size? size,
 }) async {
   final mockIds = MockIdGenerator();
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
   final router = GoRouter(
     initialLocation: '/cars/$carId',
     routes: [
@@ -295,6 +302,65 @@ void main() {
 
         // then
         verify(() => mockCarRepo.delete(any())).called(1);
+      });
+    });
+
+    group('responsive embedded', () {
+      testWidgets('given an expanded surface, when pumped, then no back '
+          'button is shown', (tester) async {
+        // given
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+
+        // when
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          size: const Size(1200, 900),
+        );
+
+        // then
+        expect(find.byType(BackButton), findsNothing);
+        expect(find.byTooltip('Back'), findsNothing);
+      });
+
+      testWidgets('given a compact surface, when pumped, then the back '
+          'button is shown', (tester) async {
+        // given
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+
+        // when
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          size: const Size(400, 900),
+        );
+
+        // then
+        expect(find.byType(BackButton), findsOneWidget);
+      });
+    });
+
+    group('vehículo no encontrado', () {
+      testWidgets('given a non-existent carId, when pumped, then the not '
+          'found message is shown', (tester) async {
+        // given
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+
+        // when
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          carId: 'no-existe',
+        );
+
+        // then
+        expect(find.text('Vehículo no encontrado'), findsOneWidget);
       });
     });
   });

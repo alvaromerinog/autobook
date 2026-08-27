@@ -1,3 +1,4 @@
+import 'package:autobook/app/responsive/breakpoints.dart';
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance_remote_sync_event.dart';
 import 'package:autobook/features/maintenances/presentation/providers/maintenance_list_provider.dart';
@@ -73,7 +74,12 @@ class CarDetailScreen extends ConsumerWidget {
       () => ref.read(carListProvider.notifier).deleteCar(car),
       errorText: 'Error al eliminar el vehículo',
     );
-    if (deleted && context.mounted) context.pop();
+    if (!deleted || !context.mounted) return;
+    if (windowSizeClassOf(context) == WindowSizeClass.expanded) {
+      context.go('/');
+    } else {
+      context.pop();
+    }
   }
 
   @override
@@ -81,12 +87,19 @@ class CarDetailScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final carsState = ref.watch(carListProvider).value;
-    final car = carsState?.cars.firstWhere(
-      (c) => c.id == carId,
-      orElse: () =>
-          const Car(id: '', brand: '', model: '', year: 0, licensePlate: ''),
-    );
+    Car? car;
+    if (carsState != null) {
+      for (final candidate in carsState.cars) {
+        if (candidate.id == carId) {
+          car = candidate;
+          break;
+        }
+      }
+    }
+    final selectedCar = car;
     final maintAsync = ref.watch(maintenanceListProvider(carId));
+    final embedded =
+        windowSizeClassOf(context) == WindowSizeClass.expanded;
 
     ref.listen<
       AsyncValue<MaintenanceListState>
@@ -120,19 +133,22 @@ class CarDetailScreen extends ConsumerWidget {
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
-        leading: BackButton(onPressed: () => context.pop()),
+        automaticallyImplyLeading: !embedded,
+        leading: embedded
+            ? null
+            : BackButton(onPressed: () => context.pop()),
         actions: [
-          if (car != null)
+          if (selectedCar != null)
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: 'Editar vehículo',
-              onPressed: () => _openEditCar(context, ref, car),
+              onPressed: () => _openEditCar(context, ref, selectedCar),
             ),
-          if (car != null)
+          if (selectedCar != null)
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert),
               onSelected: (v) {
-                if (v == 'delete') _openDeleteCar(context, ref, car);
+                if (v == 'delete') _openDeleteCar(context, ref, selectedCar);
               },
               itemBuilder: (_) => [
                 const PopupMenuItem(
@@ -143,7 +159,9 @@ class CarDetailScreen extends ConsumerWidget {
             ),
         ],
       ),
-      body: car == null
+      body: carsState == null
+          ? const Center(child: CircularProgressIndicator())
+          : selectedCar == null
           ? const Center(child: Text('Vehículo no encontrado'))
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -158,13 +176,13 @@ class CarDetailScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${car.year} · ${car.brand}',
+                              '${selectedCar.year} · ${selectedCar.brand}',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: cs.onSurfaceVariant,
                               ),
                             ),
                             Text(
-                              car.model,
+                              selectedCar.model,
                               style: theme.textTheme.headlineLarge?.copyWith(
                                 color: cs.onSurface,
                                 letterSpacing: -0.5,
@@ -183,7 +201,7 @@ class CarDetailScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          car.licensePlate,
+                          selectedCar.licensePlate,
                           style: theme.textTheme.labelLarge?.copyWith(
                             letterSpacing: 1.2,
                           ),
@@ -213,7 +231,7 @@ class CarDetailScreen extends ConsumerWidget {
                       decimalDigits: 0,
                     );
                     return _StatStrip(
-                      km: car.mileage?.toString() ?? '—',
+                      km: selectedCar.mileage?.toString() ?? '—',
                       spent: costFmt.format(totalSpent),
                       entries: s.maintenances.length.toString(),
                     );
