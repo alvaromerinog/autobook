@@ -205,6 +205,44 @@ void main() {
       });
     });
 
+    group('expanded selection', () {
+      testWidgets('given an expanded surface at /, when a car card is '
+          'tapped, then the URL goes to /cars/1 and the detail fills the '
+          'third column without a back button', (tester) async {
+        // when
+        final router = await pumpApp(tester, size: const Size(1200, 900));
+        await tester.tap(find.text('Toyota Corolla'));
+        await tester.pumpAndSettle();
+
+        // then — URL updated and detail rendered embedded
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          '/cars/1',
+        );
+        expect(find.text('Historial de mantenimientos'), findsOneWidget);
+        expect(find.byType(BackButton), findsNothing);
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+      });
+
+      testWidgets('given an expanded surface deep-linked to an unknown '
+          'car, then the third column shows the not found message', (
+        tester,
+      ) async {
+        // when
+        await pumpApp(
+          tester,
+          size: const Size(1200, 900),
+          initial: '/cars/no-existe',
+        );
+
+        // then
+        expect(find.text('Vehículo no encontrado'), findsOneWidget);
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+      });
+    });
+
     group('medium', () {
       testWidgets('given a medium surface at /, when pumped, then the rail '
           'and the car list are shown without the FAB', (tester) async {
