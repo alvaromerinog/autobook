@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:autobook/app/responsive/app_sidebar.dart';
 import 'package:autobook/app/router/app_router.dart';
 import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
@@ -177,6 +178,33 @@ void main() {
   });
 
   group('AdaptiveAppShell', () {
+    group('expanded', () {
+      testWidgets('given an expanded surface at /, when pumped, then the '
+          'sidebar, the list and the placeholder are shown in order without '
+          'a back button', (tester) async {
+        // when
+        await pumpApp(tester, size: const Size(1200, 900));
+
+        // then — three columns in order: sidebar, list, placeholder
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+        expect(find.text('Selecciona un vehículo'), findsOneWidget);
+        expect(find.byType(BackButton), findsNothing);
+
+        final row = tester.widget<Row>(
+          find.ancestor(
+            of: find.text('Selecciona un vehículo'),
+            matching: find.byType(Row),
+          ).first,
+        );
+        expect(row.children[0], isA<AppSidebar>());
+        expect(row.children[1], isA<VerticalDivider>());
+        expect(row.children[2], isA<Expanded>());
+        expect(row.children[3], isA<VerticalDivider>());
+        expect(row.children[4], isA<Expanded>());
+      });
+    });
+
     group('medium', () {
       testWidgets('given a medium surface at /, when pumped, then the rail '
           'and the car list are shown without the FAB', (tester) async {

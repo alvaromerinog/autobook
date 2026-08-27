@@ -31,6 +31,53 @@ class AdaptiveAppShell extends StatelessWidget {
       }
       return child;
     }
-    return child;
+    final carId = state.pathParameters['carId'];
+    return Scaffold(
+      body: Row(
+        children: [
+          const AppSidebar(extended: true),
+          const VerticalDivider(width: 1),
+          const Expanded(flex: 2, child: GarageListContent()),
+          const VerticalDivider(width: 1),
+          Expanded(
+            flex: 3,
+            child: carId == null
+                ? const _DetailPlaceholder(message: 'Selecciona un vehículo')
+                : child,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DetailPlaceholder extends StatelessWidget {
+  const _DetailPlaceholder({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.directions_car_outlined,
+            size: 56,
+            color: colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
