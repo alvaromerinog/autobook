@@ -177,6 +177,37 @@ void main() {
   });
 
   group('AdaptiveAppShell', () {
+    group('medium', () {
+      testWidgets('given a medium surface at /, when pumped, then the rail '
+          'and the car list are shown without the FAB', (tester) async {
+        // when
+        await pumpApp(tester, size: const Size(720, 900));
+
+        // then
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+        expect(find.text('Añadir vehículo'), findsNothing);
+        expect(find.byTooltip('Añadir coche'), findsOneWidget);
+      });
+
+      testWidgets('given a medium surface at /cars/1, when pushed, then the '
+          'car detail fills the screen with a back button and no rail', (
+        tester,
+      ) async {
+        // when
+        final router = await pumpApp(
+          tester,
+          size: const Size(720, 900),
+        );
+        unawaited(router.push('/cars/1'));
+        await tester.pumpAndSettle();
+
+        // then
+        expect(find.byType(BackButton), findsOneWidget);
+        expect(find.byType(NavigationRail), findsNothing);
+      });
+    });
+
     group('compact', () {
       testWidgets('given a compact surface at /, when pumped, then the full '
           'home scaffold is shown without a NavigationRail', (tester) async {
