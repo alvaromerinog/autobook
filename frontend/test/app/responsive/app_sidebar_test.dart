@@ -23,9 +23,7 @@ Future<GoRouter> pumpSidebar(
     ],
   );
   await tester.pumpWidget(
-    ProviderScope(
-      child: MaterialApp.router(routerConfig: router),
-    ),
+    ProviderScope(child: MaterialApp.router(routerConfig: router)),
   );
   await tester.pumpAndSettle();
   return router;
@@ -107,10 +105,7 @@ void main() {
           await tester.pumpAndSettle();
 
           // then
-          expect(
-            router.routeInformationProvider.value.uri.path,
-            '/',
-          );
+          expect(router.routeInformationProvider.value.uri.path, '/');
         });
       });
     }
