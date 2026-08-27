@@ -2,52 +2,15 @@ import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/presentation/providers/car_list_provider.dart';
-import 'package:autobook/features/vehicles/presentation/screens/add_car_screen.dart'
-    show showCarDialog;
+import 'package:autobook/features/vehicles/presentation/widgets/add_car_action.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/info_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-Future<void> _runCarMutation(
-  BuildContext context,
-  WidgetRef ref,
-  Future<void> Function() mutation, {
-  required String errorText,
-}) async {
-  try {
-    await mutation();
-  } on Failure catch (_) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(errorText),
-        action: SnackBarAction(
-          label: 'Reintentar',
-          onPressed: () async {
-            await ref.read(carListProvider.notifier).syncPendingCars();
-          },
-        ),
-      ),
-    );
-  }
-}
-
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
-
-  Future<void> _openAddCar(BuildContext context, WidgetRef ref) async {
-    final draft = await showCarDialog(context);
-    if (draft == null) return;
-    if (!context.mounted) return;
-    await _runCarMutation(
-      context,
-      ref,
-      () => ref.read(carListProvider.notifier).add(draft),
-      errorText: 'Error al crear el vehículo',
-    );
-  }
 
   String _friendlyError(Failure failure) => switch (failure) {
     NetworkFailure() => 'No se pudo conectar con el servidor.',
@@ -181,7 +144,7 @@ class HomeScreen extends ConsumerWidget {
             : _buildCarList(theme, carsState.cars),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddCar(context, ref),
+        onPressed: () => addCar(context, ref),
         icon: const Icon(Icons.add),
         label: const Text('Añadir vehículo'),
       ),
