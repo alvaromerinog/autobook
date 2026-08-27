@@ -243,6 +243,40 @@ void main() {
       });
     });
 
+    group('resize across breakpoints', () {
+      testWidgets('given an expanded surface at /cars/1, when resized to '
+          'compact, then the detail fills the screen with a back button, '
+          'and back to expanded restores the three columns', (tester) async {
+        // given
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(1200, 900),
+          initial: '/cars/1',
+        );
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.byType(BackButton), findsNothing);
+
+        // when — shrink to compact
+        tester.view.physicalSize = const Size(400, 900);
+        tester.view.devicePixelRatio = 1.0;
+        await tester.pumpAndSettle();
+
+        // then — full-screen detail with a back button
+        expect(find.byType(BackButton), findsOneWidget);
+        expect(find.byType(NavigationRail), findsNothing);
+
+        // when — grow back to expanded
+        tester.view.physicalSize = const Size(1200, 900);
+        tester.view.devicePixelRatio = 1.0;
+        await tester.pumpAndSettle();
+
+        // then — three columns with the same car still selected
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Historial de mantenimientos'), findsOneWidget);
+        expect(router.routeInformationProvider.value.uri.path, '/cars/1');
+      });
+    });
+
     group('maintenance push covers shell', () {
       testWidgets('given an expanded surface at /cars/1, when a timeline '
           'entry is opened, then the maintenance detail covers the three '
