@@ -243,6 +243,36 @@ void main() {
       });
     });
 
+    group('maintenance push covers shell', () {
+      testWidgets('given an expanded surface at /cars/1, when a timeline '
+          'entry is opened, then the maintenance detail covers the three '
+          'columns and pop returns to the shell', (tester) async {
+        // given
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(1200, 900),
+          initial: '/cars/1',
+        );
+
+        // when — tap the timeline entry (maintenance id m1)
+        await tester.tap(find.text('Cambio de aceite'));
+        await tester.pumpAndSettle();
+
+        // then — full-screen detail, shell columns hidden
+        expect(find.byType(BackButton), findsOneWidget);
+        expect(find.byType(NavigationRail), findsNothing);
+        expect(find.text('Añadir coche'), findsNothing);
+
+        // when — pop back
+        router.pop();
+        await tester.pumpAndSettle();
+
+        // then — three-column shell is back at /cars/1
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Historial de mantenimientos'), findsOneWidget);
+      });
+    });
+
     group('expanded delete selected', () {
       testWidgets('given an expanded surface at /cars/1, when the car is '
           'deleted, then the URL goes back to / and the placeholder is '
