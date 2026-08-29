@@ -298,6 +298,27 @@ void main() {
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Toyota Corolla'), findsOneWidget);
       });
+
+      testWidgets('given a car pushed in medium, when the back button is '
+          'tapped, then pop returns to the list', (tester) async {
+        // given — push the car detail on a medium surface
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(720, 900),
+        );
+        unawaited(router.push('/cars/1'));
+        await tester.pumpAndSettle();
+        expect(find.byType(BackButton), findsOneWidget);
+
+        // when
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+
+        // then — popped back to the list
+        expect(router.routeInformationProvider.value.uri.path, '/');
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+      });
     });
 
     group('maintenance push covers shell', () {
