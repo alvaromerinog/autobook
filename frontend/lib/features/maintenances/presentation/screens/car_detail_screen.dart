@@ -78,7 +78,7 @@ class CarDetailScreen extends ConsumerWidget {
     if (windowSizeClassOf(context) == WindowSizeClass.expanded) {
       context.go('/');
     } else {
-      context.pop();
+      _goBack(context);
     }
   }
 
