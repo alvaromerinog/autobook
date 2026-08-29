@@ -51,13 +51,11 @@ Future<void> pumpCarDetailScreen(
       GoRoute(
         path: '/',
         builder: (_, __) => const Scaffold(body: Text('home')),
-        routes: [
-          GoRoute(
-            path: 'cars/:carId',
-            builder: (_, state) =>
-                CarDetailScreen(carId: state.pathParameters['carId']!),
-          ),
-        ],
+      ),
+      GoRoute(
+        path: '/cars/:carId',
+        builder: (_, state) =>
+            CarDetailScreen(carId: state.pathParameters['carId']!),
       ),
     ],
   );
@@ -341,6 +339,29 @@ void main() {
 
         // then
         expect(find.byType(BackButton), findsOneWidget);
+      });
+    });
+
+    group('navegación atrás', () {
+      testWidgets('given a compact surface with a single-page stack, '
+          'when the back button is tapped, '
+          'then it navigates to /', (tester) async {
+        // given
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+
+        // when
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          size: const Size(400, 900),
+        );
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+
+        // then
+        expect(find.text('home'), findsOneWidget);
       });
     });
 
