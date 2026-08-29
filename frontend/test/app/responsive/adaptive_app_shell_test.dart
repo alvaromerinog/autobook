@@ -273,6 +273,31 @@ void main() {
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
         expect(router.routeInformationProvider.value.uri.path, '/cars/1');
       });
+
+      testWidgets('given a car selected in expanded, when resized to '
+          'medium and the back button is tapped, then the list is shown '
+          'again', (tester) async {
+        // given — select the car in expanded (go replaces the stack)
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(1200, 900),
+        );
+        await tester.tap(find.text('Toyota Corolla'));
+        await tester.pumpAndSettle();
+        expect(router.routeInformationProvider.value.uri.path, '/cars/1');
+
+        // when — resize to medium (tablet vertical) and tap back
+        tester.view.physicalSize = const Size(720, 900);
+        tester.view.devicePixelRatio = 1.0;
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+
+        // then — back at / with the rail and the car list visible
+        expect(router.routeInformationProvider.value.uri.path, '/');
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+      });
     });
 
     group('maintenance push covers shell', () {
