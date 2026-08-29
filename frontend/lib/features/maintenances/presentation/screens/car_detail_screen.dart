@@ -141,7 +141,7 @@ class CarDetailScreen extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         automaticallyImplyLeading: !embedded,
-        leading: embedded ? null : BackButton(onPressed: () => context.pop()),
+        leading: embedded ? null : BackButton(onPressed: () => _goBack(context)),
         actions: [
           if (selectedCar != null)
             IconButton(
