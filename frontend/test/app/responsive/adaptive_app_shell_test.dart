@@ -278,10 +278,7 @@ void main() {
           'medium and the back button is tapped, then the list is shown '
           'again', (tester) async {
         // given — select the car in expanded (go replaces the stack)
-        final (router, _) = await pumpApp(
-          tester,
-          size: const Size(1200, 900),
-        );
+        final (router, _) = await pumpApp(tester, size: const Size(1200, 900));
         await tester.tap(find.text('Toyota Corolla'));
         await tester.pumpAndSettle();
         expect(router.routeInformationProvider.value.uri.path, '/cars/1');
@@ -302,10 +299,7 @@ void main() {
       testWidgets('given a car pushed in medium, when the back button is '
           'tapped, then pop returns to the list', (tester) async {
         // given — push the car detail on a medium surface
-        final (router, _) = await pumpApp(
-          tester,
-          size: const Size(720, 900),
-        );
+        final (router, _) = await pumpApp(tester, size: const Size(720, 900));
         unawaited(router.push('/cars/1'));
         await tester.pumpAndSettle();
         expect(find.byType(BackButton), findsOneWidget);
