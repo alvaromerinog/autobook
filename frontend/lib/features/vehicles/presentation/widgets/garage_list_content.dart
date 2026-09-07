@@ -10,7 +10,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class GarageListContent extends ConsumerWidget {
-  const GarageListContent({super.key});
+  const GarageListContent({super.key, this.selectedCarId});
+
+  /// Id of the car whose detail pane is open, or `null` when none is.
+  ///
+  /// Drives the selection highlight in the list column; it comes from the route
+  /// so the URL stays the single source of truth.
+  final String? selectedCarId;
 
   String _friendlyError(Failure failure) => switch (failure) {
     NetworkFailure() => 'No se pudo conectar con el servidor.',
@@ -210,17 +216,20 @@ class GarageListContent extends ConsumerWidget {
 
   Widget _buildCarList(ThemeData theme, List<Car> cars) {
     return ListView.builder(
+      key: const PageStorageKey('garage-list'),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       itemCount: cars.length,
-      itemBuilder: (context, index) => _CarCard(car: cars[index]),
+      itemBuilder: (context, index) =>
+          _CarCard(car: cars[index], selected: cars[index].id == selectedCarId),
     );
   }
 }
 
 class _CarCard extends ConsumerWidget {
   final Car car;
+  final bool selected;
 
-  const _CarCard({required this.car});
+  const _CarCard({required this.car, required this.selected});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -237,9 +246,14 @@ class _CarCard extends ConsumerWidget {
       child: Card(
         margin: const EdgeInsets.only(bottom: 12),
         elevation: 0,
+        color: selected ? colorScheme.secondaryContainer : null,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: colorScheme.outlineVariant),
+          side: BorderSide(
+            color: selected
+                ? colorScheme.secondary
+                : colorScheme.outlineVariant,
+          ),
         ),
         child: InkWell(
           onTap: () {

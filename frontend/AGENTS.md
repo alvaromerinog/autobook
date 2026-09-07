@@ -204,8 +204,16 @@ lib/
 │           └── theme/      # Per-type icon/tint mappings (maint_type_icons.dart, maint_tints.dart)
 │
 └── app/
-    ├── router/             # GoRouter configuration (appRouterProvider)
+    ├── router/             # GoRouter configuration (appRouterProvider) + shared back navigation helper
+    ├── responsive/         # Adaptive layout: breakpoints (600/840), AdaptiveAppShell, AppSidebar
     └── theme/              # AppTheme (light/dark ThemeData)
+
+### Responsive layout (`app/responsive/`)
+
+- `WindowSizeClass` comes from `windowSizeClassFromWidth` in `breakpoints.dart`: `compact` < 600, `medium` < 840, `expanded` ≥ 840.
+- Screens must call `windowSizeClassOf(context)` — never read raw `MediaQuery` widths — so every call site shares the same thresholds.
+- `AdaptiveAppShell` owns the chrome for non-compact sizes: `compact` renders the bare child, `medium` renders `rail | list-or-detail`, `expanded` renders `rail | list | detail-or-placeholder`. The URL is the single source of truth: the shell reads `carId` from `GoRouterState.of(context).pathParameters`, and `GarageListContent` highlights the row matching it.
+- The shell guards system/hardware/web back with a `PopScope` that falls back to `/`; screens must route back taps through the shared `goBack` helper in `app/router/back_navigation.dart`, never a bare `context.pop()` (which throws on an empty stack).
 
 test/                       # Mirrors lib/ structure; each *_test.dart sits beside its subject
 ```

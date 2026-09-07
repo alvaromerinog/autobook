@@ -387,7 +387,7 @@ void main() {
       });
 
       testWidgets('given a medium surface at /cars/1, when pushed, then the '
-          'car detail fills the screen with a back button and no rail', (
+          'car detail fills the second column and the rail stays', (
         tester,
       ) async {
         // when
@@ -397,7 +397,8 @@ void main() {
 
         // then
         expect(find.byType(BackButton), findsOneWidget);
-        expect(find.byType(NavigationRail), findsNothing);
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Historial de mantenimientos'), findsOneWidget);
       });
     });
 
