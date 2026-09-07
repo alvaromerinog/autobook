@@ -4,13 +4,6 @@ import 'package:autobook/features/vehicles/presentation/widgets/garage_list_cont
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Lays [child] out inside the app chrome for non-compact surfaces.
-///
-/// | Size class | Layout                                              |
-/// |------------|-----------------------------------------------------|
-/// | compact    | `child` alone — the plain single-column stack         |
-/// | medium     | rail + (`child` when a car is open, else the list)    |
-/// | expanded   | rail + list + (`child` when a car is open, else hint) |
 class AdaptiveAppShell extends StatelessWidget {
   const AdaptiveAppShell({super.key, required this.child});
 

@@ -94,12 +94,6 @@ void registerAppHarnessFallbacks() {
   registerFallbackValue(buildMaintenance());
 }
 
-/// Pumps the whole app through the **production** route table on a surface of
-/// [size], starting at [initial], with [cars] in the garage and the one
-/// [maintenance] the detail screens render.
-///
-/// Returns the router and the [MockCarRepository] so tests can assert on the
-/// URL and on repo interactions.
 Future<(GoRouter, MockCarRepository)> pumpApp(
   WidgetTester tester, {
   Size size = const Size(1200, 900),
@@ -184,7 +178,6 @@ Future<(GoRouter, MockCarRepository)> pumpApp(
   return (router, mockCarRepo);
 }
 
-/// The [Scrollable] owning the garage list, used to read its scroll offset.
 Finder garageListScrollable() => find
     .descendant(of: find.byType(ListView), matching: find.byType(Scrollable))
     .first;

@@ -12,10 +12,6 @@ import 'package:intl/intl.dart';
 class GarageListContent extends ConsumerWidget {
   const GarageListContent({super.key, this.selectedCarId});
 
-  /// Id of the car whose detail pane is open, or `null` when none is.
-  ///
-  /// Drives the selection highlight in the list column; it comes from the route
-  /// so the URL stays the single source of truth.
   final String? selectedCarId;
 
   String _friendlyError(Failure failure) => switch (failure) {
