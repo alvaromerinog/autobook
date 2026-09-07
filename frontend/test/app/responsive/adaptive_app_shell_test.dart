@@ -1,179 +1,16 @@
 import 'dart:async';
 
 import 'package:autobook/app/responsive/app_sidebar.dart';
-import 'package:autobook/app/router/app_router.dart';
-import 'package:autobook/core/id/id_generator.dart';
-import 'package:autobook/core/sync/sync_coordinator.dart';
-import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
-import 'package:autobook/features/maintenances/domain/entities/maintenance_remote_sync_event.dart';
-import 'package:autobook/features/maintenances/domain/repositories/maintenance_repository.dart';
-import 'package:autobook/features/maintenances/domain/usecases/get_maintenances_usecase.dart';
-import 'package:autobook/features/maintenances/domain/usecases/has_pending_maintenances_usecase.dart';
-import 'package:autobook/features/maintenances/domain/usecases/pending_delete_ids_usecase.dart'
-    as maint_pending;
-import 'package:autobook/features/maintenances/domain/usecases/refresh_maintenances_usecase.dart';
-import 'package:autobook/features/maintenances/domain/usecases/sync_pending_maintenances_usecase.dart';
-import 'package:autobook/features/maintenances/presentation/providers/usecase_providers.dart'
-    as maint_usecases;
-import 'package:autobook/features/vehicles/domain/entities/car.dart';
-import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
-import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
-import 'package:autobook/features/vehicles/domain/usecases/delete_car_usecase.dart';
-import 'package:autobook/features/vehicles/domain/usecases/get_cars_usecase.dart';
-import 'package:autobook/features/vehicles/domain/usecases/has_pending_cars_usecase.dart';
-import 'package:autobook/features/vehicles/domain/usecases/pending_delete_ids_usecase.dart'
-    as vehicle_pending;
-import 'package:autobook/features/vehicles/domain/usecases/refresh_cars_usecase.dart';
-import 'package:autobook/features/vehicles/domain/usecases/sync_pending_cars_usecase.dart';
-import 'package:autobook/features/vehicles/domain/usecases/update_car_usecase.dart';
-import 'package:autobook/features/vehicles/presentation/providers/usecase_providers.dart'
-    as vehicle_usecases;
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../features/maintenances/fixtures/maintenance_fixtures.dart';
 import '../../features/vehicles/fixtures/car_fixtures.dart';
-import '../../features/vehicles/helpers/car_mocks.dart';
-
-class _MockIdGenerator extends Mock implements IdGenerator {}
-
-/// No-op repo handed to fake use cases whose `call` is overridden.
-class _UnusedMaintenanceRepo extends Mock implements IMaintenanceRepository {}
-
-class _StubGetCars extends GetCarsUseCase {
-  _StubGetCars(this.cars) : super(MockCarRepository());
-
-  final List<Car> cars;
-
-  @override
-  Future<List<Car>> call() async => cars;
-}
-
-class _StubGetMaintenances extends GetMaintenancesUseCase {
-  _StubGetMaintenances(this.maintenances) : super(_UnusedMaintenanceRepo());
-
-  final List<Maintenance> maintenances;
-
-  @override
-  Future<List<Maintenance>> call(String carId) async => maintenances;
-}
-
-class _StubHasPendingMaintenances extends HasPendingMaintenancesUseCase {
-  _StubHasPendingMaintenances() : super(_UnusedMaintenanceRepo());
-
-  @override
-  Future<bool> call(String carId) async => false;
-}
-
-class _StubPendingDeleteIds extends maint_pending.PendingDeleteIdsUseCase {
-  _StubPendingDeleteIds() : super(_UnusedMaintenanceRepo());
-
-  @override
-  Future<Set<String>> call(String carId) async => <String>{};
-}
-
-class _StubRefreshMaintenances extends RefreshMaintenancesUseCase {
-  _StubRefreshMaintenances() : super(_UnusedMaintenanceRepo());
-
-  @override
-  Future<List<MaintenanceRemoteSyncEvent>> call(String carId) async =>
-      const <MaintenanceRemoteSyncEvent>[];
-}
-
-class _StubSyncPendingMaintenances extends SyncPendingMaintenancesUseCase {
-  _StubSyncPendingMaintenances() : super(_UnusedMaintenanceRepo());
-
-  @override
-  Future<void> call() async {}
-}
-
-Future<(GoRouter, MockCarRepository)> pumpApp(
-  WidgetTester tester, {
-  required Size size,
-  String initial = '/',
-}) async {
-  tester.view.physicalSize = size;
-  tester.view.devicePixelRatio = 1.0;
-  addTearDown(tester.view.resetPhysicalSize);
-  addTearDown(tester.view.resetDevicePixelRatio);
-
-  // given: cold provider graph whose data layer yields one car
-  final mockCarRepo = MockCarRepository();
-  when(
-    () => mockCarRepo.refreshFromRemote(),
-  ).thenAnswer((_) async => <RemoteSyncEvent>[]);
-  when(() => mockCarRepo.getAll()).thenAnswer((_) async => oneCarList);
-  when(() => mockCarRepo.hasPending()).thenAnswer((_) async => false);
-  when(
-    () => mockCarRepo.pendingDeleteIds(),
-  ).thenAnswer((_) async => <String>{});
-  when(() => mockCarRepo.syncPending()).thenAnswer((_) async {});
-  when(() => mockCarRepo.create(any())).thenAnswer((_) async {});
-  when(() => mockCarRepo.update(any())).thenAnswer((_) async {});
-  when(() => mockCarRepo.delete(any())).thenAnswer((_) async {});
-  final container = ProviderContainer(
-    overrides: [
-      syncCoordinatorProvider.overrideWithValue(SyncCoordinator()),
-      vehicle_usecases.getCarsUseCaseProvider.overrideWithValue(
-        _StubGetCars(oneCarList),
-      ),
-      vehicle_usecases.hasPendingCarsUseCaseProvider.overrideWithValue(
-        HasPendingCarsUseCase(mockCarRepo),
-      ),
-      vehicle_usecases.pendingDeleteIdsUseCaseProvider.overrideWithValue(
-        vehicle_pending.PendingDeleteIdsUseCase(mockCarRepo),
-      ),
-      vehicle_usecases.refreshCarsUseCaseProvider.overrideWithValue(
-        RefreshCarsUseCase(mockCarRepo),
-      ),
-      vehicle_usecases.syncPendingCarsUseCaseProvider.overrideWithValue(
-        SyncPendingCarsUseCase(mockCarRepo),
-      ),
-      vehicle_usecases.createCarUseCaseProvider.overrideWithValue(
-        CreateCarUseCase(mockCarRepo, _MockIdGenerator()),
-      ),
-      vehicle_usecases.updateCarUseCaseProvider.overrideWithValue(
-        UpdateCarUseCase(mockCarRepo),
-      ),
-      vehicle_usecases.deleteCarUseCaseProvider.overrideWithValue(
-        DeleteCarUseCase(mockCarRepo),
-      ),
-      maint_usecases.getMaintenancesUseCaseProvider.overrideWithValue(
-        _StubGetMaintenances([buildMaintenance(carId: 'car-1')]),
-      ),
-      maint_usecases.hasPendingMaintenancesUseCaseProvider.overrideWithValue(
-        _StubHasPendingMaintenances(),
-      ),
-      maint_usecases.pendingDeleteIdsUseCaseProvider.overrideWithValue(
-        _StubPendingDeleteIds(),
-      ),
-      maint_usecases.refreshMaintenancesUseCaseProvider.overrideWithValue(
-        _StubRefreshMaintenances(),
-      ),
-      maint_usecases.syncPendingMaintenancesUseCaseProvider.overrideWithValue(
-        _StubSyncPendingMaintenances(),
-      ),
-    ],
-  );
-  addTearDown(container.dispose);
-  final router = GoRouter(initialLocation: initial, routes: buildAppRoutes());
-  await tester.pumpWidget(
-    UncontrolledProviderScope(
-      container: container,
-      child: MaterialApp.router(routerConfig: router),
-    ),
-  );
-  await tester.pumpAndSettle();
-  return (router, mockCarRepo);
-}
+import '../app_test_harness.dart';
 
 void main() {
   setUpAll(() {
-    registerCarFallbacks();
-    registerFallbackValue(buildMaintenance());
+    registerAppHarnessFallbacks();
   });
 
   group('AdaptiveAppShell', () {
@@ -181,7 +18,8 @@ void main() {
       testWidgets('given an expanded surface at /, when pumped, then the '
           'sidebar, the list and the placeholder are shown in order without '
           'a back button', (tester) async {
-        // when
+        // given — an expanded surface (1200x900) with one car in the garage
+        // when — the app is pumped at /
         await pumpApp(tester, size: const Size(1200, 900));
 
         // then — three columns in order: sidebar, list, placeholder
@@ -210,7 +48,8 @@ void main() {
       testWidgets('given an expanded surface at /, when a car card is '
           'tapped, then the URL goes to /cars/1 and the detail fills the '
           'third column without a back button', (tester) async {
-        // when
+        // given — an expanded surface with one car
+        // when — a car card is tapped
         final (router, _) = await pumpApp(tester, size: const Size(1200, 900));
         await tester.tap(find.text('Toyota Corolla'));
         await tester.pumpAndSettle();
@@ -227,7 +66,8 @@ void main() {
           'car, then the third column shows the not found message', (
         tester,
       ) async {
-        // when
+        // given — an expanded surface cold-started on /cars/no-existe
+        // when — the app is pumped
         await pumpApp(
           tester,
           size: const Size(1200, 900),
@@ -239,13 +79,48 @@ void main() {
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Toyota Corolla'), findsOneWidget);
       });
+
+      testWidgets('given an expanded surface with two cars, when one is '
+          'selected, then its card is highlighted and the other is not', (
+        tester,
+      ) async {
+        // given — two cars in the garage
+        // when — the second car is selected
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(1200, 900),
+          cars: [toyotaCorolla, fordFocus],
+        );
+        await tester.tap(find.text('Ford Focus'));
+        await tester.pumpAndSettle();
+
+        // then — the selected card is tinted, the other is not
+        final selected = tester.widget<Card>(
+          find.ancestor(
+            of: find.text('Ford Focus'),
+            matching: find.byType(Card),
+          ),
+        );
+        final unselected = tester.widget<Card>(
+          find.ancestor(
+            of: find.text('Toyota Corolla'),
+            matching: find.byType(Card),
+          ),
+        );
+        final colorScheme = Theme.of(
+          tester.element(find.text('Ford Focus')),
+        ).colorScheme;
+        expect(selected.color, colorScheme.secondaryContainer);
+        expect(unselected.color, isNull);
+        expect(router.routeInformationProvider.value.uri.path, '/cars/2');
+      });
     });
 
     group('resize across breakpoints', () {
       testWidgets('given an expanded surface at /cars/1, when resized to '
           'compact, then the detail fills the screen with a back button, '
           'and back to expanded restores the three columns', (tester) async {
-        // given
+        // given — an expanded cold start at /cars/1
         final (router, _) = await pumpApp(
           tester,
           size: const Size(1200, 900),
@@ -277,7 +152,7 @@ void main() {
       testWidgets('given a car selected in expanded, when resized to '
           'medium and the back button is tapped, then the list is shown '
           'again', (tester) async {
-        // given — select the car in expanded (go replaces the stack)
+        // given — a car selected in expanded (go replaces the stack)
         final (router, _) = await pumpApp(tester, size: const Size(1200, 900));
         await tester.tap(find.text('Toyota Corolla'));
         await tester.pumpAndSettle();
@@ -287,6 +162,9 @@ void main() {
         tester.view.physicalSize = const Size(720, 900);
         tester.view.devicePixelRatio = 1.0;
         await tester.pumpAndSettle();
+
+        // then — this is the empty-stack fallback path, so back must go to /
+        expect(router.canPop(), isFalse);
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
 
@@ -298,13 +176,13 @@ void main() {
 
       testWidgets('given a car pushed in medium, when the back button is '
           'tapped, then pop returns to the list', (tester) async {
-        // given — push the car detail on a medium surface
+        // given — a car detail pushed on a medium surface
         final (router, _) = await pumpApp(tester, size: const Size(720, 900));
         unawaited(router.push('/cars/1'));
         await tester.pumpAndSettle();
         expect(find.byType(BackButton), findsOneWidget);
 
-        // when
+        // when — the back button is tapped
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
 
@@ -315,11 +193,51 @@ void main() {
       });
     });
 
+    group('breakpoint boundaries through the shell', () {
+      testWidgets('given widths around the 600 and 840 thresholds, when the '
+          'surface is resized, then the shell swaps compact/medium/expanded', (
+        tester,
+      ) async {
+        // given — a compact surface (below 600) at /
+        await pumpApp(tester, size: const Size(599, 900));
+        expect(find.byType(NavigationRail), findsNothing);
+        expect(find.text('Añadir vehículo'), findsOneWidget);
+
+        // when — grown to the first medium width
+        tester.view.physicalSize = const Size(600, 900);
+        tester.view.devicePixelRatio = 1.0;
+        await tester.pumpAndSettle();
+
+        // then — the rail replaces the FAB
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Añadir vehículo'), findsNothing);
+        expect(find.byTooltip('Añadir coche'), findsOneWidget);
+
+        // when — grown to the last medium width
+        tester.view.physicalSize = const Size(839, 900);
+        tester.view.devicePixelRatio = 1.0;
+        await tester.pumpAndSettle();
+
+        // then — still the two-column rail + list (no placeholder)
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Selecciona un vehículo'), findsNothing);
+
+        // when — grown to the first expanded width
+        tester.view.physicalSize = const Size(840, 900);
+        tester.view.devicePixelRatio = 1.0;
+        await tester.pumpAndSettle();
+
+        // then — the placeholder column appears
+        expect(find.byType(NavigationRail), findsOneWidget);
+        expect(find.text('Selecciona un vehículo'), findsOneWidget);
+      });
+    });
+
     group('maintenance push covers shell', () {
       testWidgets('given an expanded surface at /cars/1, when a timeline '
           'entry is opened, then the maintenance detail covers the three '
           'columns and pop returns to the shell', (tester) async {
-        // given
+        // given — an expanded cold start at /cars/1
         final (router, _) = await pumpApp(
           tester,
           size: const Size(1200, 900),
@@ -349,7 +267,7 @@ void main() {
       testWidgets('given an expanded surface at /cars/1, when the car is '
           'deleted, then the URL goes back to / and the placeholder is '
           'shown', (tester) async {
-        // given
+        // given — an expanded, non-embedded detail at /cars/1
         final (router, mockCarRepo) = await pumpApp(
           tester,
           size: const Size(1200, 900),
@@ -357,7 +275,7 @@ void main() {
         );
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
 
-        // when — open the delete flow from the AppBar menu
+        // when — open the delete flow from the AppBar menu and confirm
         await tester.tap(find.byIcon(Icons.more_vert));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Eliminar vehículo'));
@@ -376,7 +294,8 @@ void main() {
     group('medium', () {
       testWidgets('given a medium surface at /, when pumped, then the rail '
           'and the car list are shown without the FAB', (tester) async {
-        // when
+        // given — a medium surface with one car
+        // when — the app is pumped at /
         await pumpApp(tester, size: const Size(720, 900));
 
         // then
@@ -386,26 +305,67 @@ void main() {
         expect(find.byTooltip('Añadir coche'), findsOneWidget);
       });
 
-      testWidgets('given a medium surface at /cars/1, when pushed, then the '
-          'car detail fills the second column and the rail stays', (
+      testWidgets('given a medium surface, when a car is pushed, then the '
+          'rail stays in place and the detail fills the second column', (
         tester,
       ) async {
-        // when
+        // given — a medium surface with one car
+        // when — the car detail is pushed
         final (router, _) = await pumpApp(tester, size: const Size(720, 900));
         unawaited(router.push('/cars/1'));
         await tester.pumpAndSettle();
 
-        // then
+        // then — the rail persists next to the detail pane
         expect(find.byType(BackButton), findsOneWidget);
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
       });
     });
 
+    group('scroll preservation on medium', () {
+      testWidgets('given a medium surface with a long garage, when the list '
+          'is scrolled, a car is pushed and back returns, then the scroll '
+          'offset survives the round trip', (tester) async {
+        // given — a garage long enough to scroll on medium
+        final cars = List.generate(
+          30,
+          (i) => buildCar(
+            id: '$i',
+            brand: 'Marca$i',
+            model: 'Modelo$i',
+            licensePlate: 'PLACA$i',
+          ),
+        );
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(720, 900),
+          cars: cars,
+        );
+
+        // when — the list is scrolled down
+        await tester.drag(find.byType(ListView), const Offset(0, -600));
+        await tester.pump();
+        final scrolled = garageListOffset(tester);
+        expect(scrolled, greaterThan(0));
+
+        // and a car detail is pushed and popped
+        unawaited(router.push('/cars/5'));
+        await tester.pumpAndSettle();
+        expect(find.text('Historial de mantenimientos'), findsOneWidget);
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+
+        // then — the same offset is restored
+        expect(router.routeInformationProvider.value.uri.path, '/');
+        expect(garageListOffset(tester), closeTo(scrolled, 1));
+      });
+    });
+
     group('compact', () {
       testWidgets('given a compact surface at /, when pumped, then the full '
           'home scaffold is shown without a NavigationRail', (tester) async {
-        // when
+        // given — a compact surface with one car
+        // when — the app is pumped at /
         await pumpApp(tester, size: const Size(400, 900));
 
         // then
@@ -417,7 +377,8 @@ void main() {
 
       testWidgets('given a compact surface at /cars/1, when pushed, then the '
           'car detail is shown with a back button', (tester) async {
-        // when
+        // given — a compact surface with one car
+        // when — the car detail is pushed
         final (router, _) = await pumpApp(tester, size: const Size(400, 900));
         unawaited(router.push('/cars/1'));
         await tester.pumpAndSettle();
@@ -427,6 +388,110 @@ void main() {
         expect(find.byType(NavigationRail), findsNothing);
         // the detail pane is reachable through the back stack
         expect(router.canPop(), isTrue);
+      });
+
+      testWidgets('given a compact surface cold-deep-linked to /cars/1, '
+          'when the car is deleted, then the empty-stack fallback goes to /', (
+        tester,
+      ) async {
+        // given — a compact, single-page stack at /cars/1
+        final (router, mockCarRepo) = await pumpApp(
+          tester,
+          size: const Size(400, 900),
+          initial: '/cars/1',
+        );
+        expect(router.canPop(), isFalse);
+
+        // when — the car is deleted through the AppBar menu
+        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar vehículo'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar'));
+        await tester.pumpAndSettle();
+
+        // then — delete was called and the app fell back to /
+        verify(() => mockCarRepo.delete(any())).called(1);
+        expect(router.routeInformationProvider.value.uri.path, '/');
+        expect(find.text('Añadir vehículo'), findsOneWidget);
+      });
+
+      testWidgets('given a compact surface cold-deep-linked to /cars/1, '
+          'when the system back is invoked, then the empty-stack fallback '
+          'goes to /', (tester) async {
+        // given — a compact, single-page stack at /cars/1
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(400, 900),
+          initial: '/cars/1',
+        );
+        expect(router.canPop(), isFalse);
+
+        // when — the system (hardware/web) back is dispatched
+        await tester.binding.handlePopRoute();
+        await tester.pumpAndSettle();
+
+        // then — the PopScope guard redirected to /
+        expect(router.routeInformationProvider.value.uri.path, '/');
+        expect(find.text('Añadir vehículo'), findsOneWidget);
+      });
+    });
+
+    group('resize while a dialog is open', () {
+      testWidgets('given an expanded detail with the delete dialog open, '
+          'when the surface shrinks to compact before confirming, then the '
+          'delete flow navigates per the new layout', (tester) async {
+        // given — an expanded, non-embedded detail at /cars/1
+        final (router, mockCarRepo) = await pumpApp(
+          tester,
+          size: const Size(1200, 900),
+          initial: '/cars/1',
+        );
+
+        // when — the delete dialog is opened and the surface shrinks to
+        // compact while it is still open
+        await tester.tap(find.byIcon(Icons.more_vert));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar vehículo'));
+        await tester.pumpAndSettle();
+        expect(
+          find.text('¿Seguro que quieres eliminar Toyota Corolla?'),
+          findsOneWidget,
+        );
+        tester.view.physicalSize = const Size(400, 900);
+        tester.view.devicePixelRatio = 1.0;
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar'));
+        await tester.pumpAndSettle();
+
+        // then — the size class is re-read after the flow, so on compact the
+        // single-page stack falls back to /
+        verify(() => mockCarRepo.delete(any())).called(1);
+        expect(router.routeInformationProvider.value.uri.path, '/');
+        expect(find.text('Añadir vehículo'), findsOneWidget);
+      });
+    });
+
+    group('maintenance cold deep link', () {
+      testWidgets('given a cold start on a maintenance deep link, when the '
+          'back button is tapped, then it falls back to / without throwing', (
+        tester,
+      ) async {
+        // given — a compact, single-page stack at a maintenance deep link
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(400, 900),
+          initial: '/cars/1/maintenances/m1',
+        );
+        expect(find.text('Cambio de aceite'), findsWidgets);
+
+        // when — the back button is tapped
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+
+        // then — no GoError: the guard falls back to /
+        expect(router.routeInformationProvider.value.uri.path, '/');
+        expect(find.text('Añadir vehículo'), findsOneWidget);
       });
     });
   });
