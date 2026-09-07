@@ -28,10 +28,6 @@ final List<RouteBase> _routes = [
   ),
 ];
 
-/// The app's router.
-///
-/// [initialLocation] lets a caller start anywhere in the tree, which is what
-/// deep links and widget tests need.
 @Riverpod(keepAlive: true)
 GoRouter appRouter(Ref ref, {String initialLocation = '/'}) =>
     GoRouter(initialLocation: initialLocation, routes: _routes);
