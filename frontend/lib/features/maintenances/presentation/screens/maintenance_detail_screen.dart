@@ -1,3 +1,4 @@
+import 'package:autobook/app/router/back_navigation.dart';
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
 import 'package:autobook/features/maintenances/presentation/providers/maintenance_list_provider.dart';
@@ -9,7 +10,6 @@ import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/presentation/providers/car_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class MaintenanceDetailScreen extends ConsumerWidget {
@@ -55,7 +55,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Mantenimiento eliminado')));
-      context.pop();
+      goBack(context);
     } on Failure catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -86,7 +86,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
           backgroundColor: cs.surface,
           surfaceTintColor: Colors.transparent,
           scrolledUnderElevation: 0,
-          leading: BackButton(onPressed: () => context.pop()),
+          leading: BackButton(onPressed: () => goBack(context)),
         ),
         body: const Center(child: Text('Registro no encontrado')),
       );
@@ -119,7 +119,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
-        leading: BackButton(onPressed: () => context.pop()),
+        leading: BackButton(onPressed: () => goBack(context)),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
