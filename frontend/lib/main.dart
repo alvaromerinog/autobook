@@ -25,7 +25,7 @@ class AutobookApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      routerConfig: ref.watch(appRouterProvider),
+      routerConfig: ref.watch(appRouterProvider()),
     );
   }
 }
