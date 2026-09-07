@@ -301,15 +301,13 @@ class _CarCard extends ConsumerWidget {
                         ),
                       ],
                       const SizedBox(height: 4),
-                      Row(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
                         children: [
                           InfoChip(label: car.year.toString()),
-                          const SizedBox(width: 8),
                           InfoChip(label: car.licensePlate),
-                          if (car.color != null) ...[
-                            const SizedBox(width: 8),
-                            InfoChip(label: car.color!),
-                          ],
+                          if (car.color != null) InfoChip(label: car.color!),
                         ],
                       ),
                       if (car.mileage != null) ...[
