@@ -1,14 +1,13 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
-import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:autobook/features/vehicles/presentation/providers/car_list_provider.dart';
 import 'package:autobook/features/vehicles/presentation/screens/add_car_screen.dart'
     show showCarDialog;
-import 'package:autobook/features/vehicles/presentation/widgets/delete_car_dialog.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/info_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 Future<void> _runCarMutation(
@@ -303,94 +302,83 @@ class _CarCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: colorScheme.outlineVariant),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: () => context.push('/cars/${car.id}'),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.directions_car,
+                    color: colorScheme.onPrimaryContainer,
+                    size: 28,
+                  ),
                 ),
-                child: Icon(
-                  Icons.directions_car,
-                  color: colorScheme.onPrimaryContainer,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${car.brand} ${car.model}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (isPendingDelete) ...[
-                      const SizedBox(height: 4),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        'Pendiente de borrado',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.error,
+                        '${car.brand} ${car.model}',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        InfoChip(label: car.year.toString()),
-                        const SizedBox(width: 8),
-                        InfoChip(label: car.licensePlate),
-                        if (car.color != null) ...[
-                          const SizedBox(width: 8),
-                          InfoChip(label: car.color!),
-                        ],
+                      if (isPendingDelete) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Pendiente de borrado',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.error,
+                          ),
+                        ),
                       ],
-                    ),
-                    if (car.mileage != null) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(
-                            Icons.speed,
-                            size: 14,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          // TODO: Cambiar a km o mi según los ajustes del usuario
-                          Text(
-                            '${_formatMileage(context, car.mileage!)} km',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
+                          InfoChip(label: car.year.toString()),
+                          const SizedBox(width: 8),
+                          InfoChip(label: car.licensePlate),
+                          if (car.color != null) ...[
+                            const SizedBox(width: 8),
+                            InfoChip(label: car.color!),
+                          ],
                         ],
                       ),
+                      if (car.mileage != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.speed,
+                              size: 14,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            // TODO: Cambiar a km o mi según los ajustes del usuario
+                            Text(
+                              '${_formatMileage(context, car.mileage!)} km',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: 'Eliminar',
-                onPressed: isPendingDelete
-                    ? null
-                    : () => _openDeleteCar(context, ref, car),
-              ),
-              if (!isPendingDelete)
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined),
-                  tooltip: 'Editar vehículo',
-                  onPressed: () => _openEditCar(context, ref, car),
-                ),
-              if (!isPendingDelete)
                 Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -401,39 +389,4 @@ class _CarCard extends ConsumerWidget {
     final locale = Localizations.localeOf(context).toString();
     return NumberFormat.decimalPattern(locale).format(mileage);
   }
-}
-
-Future<void> _openEditCar(BuildContext context, WidgetRef ref, Car car) async {
-  final CarDraft draft = (
-    brand: car.brand,
-    model: car.model,
-    year: car.year,
-    licensePlate: car.licensePlate,
-    color: car.color,
-    mileage: car.mileage,
-  );
-  final updatedDraft = await showCarDialog(context, initial: draft);
-  if (updatedDraft == null) return;
-  if (!context.mounted) return;
-  await _runCarMutation(
-    context,
-    ref,
-    () => ref.read(carListProvider.notifier).updateCar(updatedDraft, car),
-    errorText: 'Error al actualizar el vehículo',
-  );
-}
-
-Future<void> _openDeleteCar(
-  BuildContext context,
-  WidgetRef ref,
-  Car car,
-) async {
-  final confirmed = await showDeleteConfirmDialog(context, car);
-  if (confirmed != true || !context.mounted) return;
-  await _runCarMutation(
-    context,
-    ref,
-    () => ref.read(carListProvider.notifier).deleteCar(car),
-    errorText: 'Error al eliminar el vehículo',
-  );
 }

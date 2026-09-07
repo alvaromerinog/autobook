@@ -3,3 +3,5 @@
 skills*
 **/.vscode/settings.json
 .tmp/
+.worktrees/
+docs/superpowers/

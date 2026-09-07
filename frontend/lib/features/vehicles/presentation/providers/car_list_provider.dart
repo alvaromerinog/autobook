@@ -64,6 +64,9 @@ class CarList extends _$CarList {
     Future<void> Function() mutation, {
     bool rethrowError = true,
   }) async {
+    var cancelled = false;
+    ref.onDispose(() => cancelled = true);
+
     Failure? syncError;
     try {
       await mutation();
@@ -71,22 +74,26 @@ class CarList extends _$CarList {
       syncError = f;
     }
 
-    var cars = <Car>[];
-    var hasPendingSync = false;
-    var pendingDeleteIds = <String>{};
-    try {
-      (cars, hasPendingSync, pendingDeleteIds) = await _readCarsWithPending();
-    } on Failure catch (f) {
-      syncError ??= f;
-    }
+    if (!cancelled) {
+      var cars = <Car>[];
+      var hasPendingSync = false;
+      var pendingDeleteIds = <String>{};
+      try {
+        (cars, hasPendingSync, pendingDeleteIds) = await _readCarsWithPending();
+      } on Failure catch (f) {
+        syncError ??= f;
+      }
 
-    state = AsyncData((
-      cars: cars,
-      syncError: syncError,
-      hasPendingSync: hasPendingSync,
-      pendingDeleteIds: pendingDeleteIds,
-      remoteSyncEvents: const [],
-    ));
+      if (cancelled) return;
+
+      state = AsyncData((
+        cars: cars,
+        syncError: syncError,
+        hasPendingSync: hasPendingSync,
+        pendingDeleteIds: pendingDeleteIds,
+        remoteSyncEvents: const [],
+      ));
+    }
 
     if (rethrowError && syncError != null) throw syncError;
   }

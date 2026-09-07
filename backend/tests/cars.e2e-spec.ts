@@ -139,5 +139,31 @@ describe('CarsController (e2e)', () => {
         .send(CAR_PAYLOAD)
         .expect(409);
     });
+
+    it('given a car with maintenances when DELETE /cars/:id then its maintenances are also soft-deleted', async () => {
+      await prisma.car.create({ data: CAR_PAYLOAD });
+      await prisma.maintenance.create({
+        data: {
+          id: 'e2e-cascade-1',
+          carId: CAR_PAYLOAD.id,
+          type: 'oil',
+          date: '2026-01-01',
+          mileage: 1000,
+          cost: 50,
+          garage: null,
+          notes: null,
+          deletedAt: null,
+        },
+      });
+
+      await request(app.getHttpServer())
+        .delete(`/cars/${CAR_PAYLOAD.id}`)
+        .expect(204);
+
+      const maint = await prisma.maintenance.findUnique({
+        where: { id: 'e2e-cascade-1' },
+      });
+      expect(maint!.deletedAt).not.toBeNull();
+    });
   });
 });

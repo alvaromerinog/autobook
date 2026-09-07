@@ -81,54 +81,6 @@ void main() {
   });
 
   group('HomeScreen', () {
-    group('delete confirmation dialog', () {
-      testWidgets('given a car, when the delete icon is tapped and Cancelar '
-          'is chosen, then the dialog closes and delete is never called', (
-        tester,
-      ) async {
-        // given
-        stubSyncDefaults(mockRepo);
-
-        // when
-        await pumpHomeScreen(tester, mockRepo);
-        await tester.tap(find.byTooltip('Eliminar'));
-        await tester.pumpAndSettle();
-
-        // then — confirm dialog is shown
-        expect(find.text('Eliminar vehículo'), findsOneWidget);
-        expect(
-          find.text('¿Seguro que quieres eliminar Toyota Corolla?'),
-          findsOneWidget,
-        );
-
-        // when — cancel
-        await tester.tap(find.text('Cancelar'));
-        await tester.pumpAndSettle();
-
-        // then
-        expect(find.text('Eliminar vehículo'), findsNothing);
-        verifyNever(() => mockRepo.delete(any()));
-      });
-
-      testWidgets('given a car, when the delete icon is tapped and Eliminar '
-          'is chosen, then repo.delete is called once', (tester) async {
-        // given
-        stubSyncDefaults(mockRepo);
-        when(() => mockRepo.delete(any())).thenAnswer((_) async {});
-        when(() => mockRepo.hasPending()).thenAnswer((_) async => true);
-
-        // when
-        await pumpHomeScreen(tester, mockRepo);
-        await tester.tap(find.byTooltip('Eliminar'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Eliminar'));
-        await tester.pumpAndSettle();
-
-        // then
-        verify(() => mockRepo.delete(toyotaCorolla)).called(1);
-      });
-    });
-
     group('pending delete row', () {
       testWidgets('given a car pending delete, then the row is translucent and '
           'shows the pending label', (tester) async {

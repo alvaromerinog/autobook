@@ -1,6 +1,6 @@
 # AGENTS.md — Frontend
 
-Flutter application for autobook. All commands must be run from the `frontend/` directory.
+Flutter application for autobook. All commands must be run from the `frontend/` directory. All `flutter` and `dart` commands must go through FVM (`fvm flutter ...` / `fvm dart ...`) so they use the SDK pinned in `.fvmrc`.
 
 ## Tech Stack
 
@@ -20,8 +20,8 @@ Flutter application for autobook. All commands must be run from the `frontend/` 
 ## Setup
 
 ```bash
-fvm use stable      # Ensure correct Flutter version (defined in .fvmrc)
-flutter pub get     # Install dependencies
+fvm use stable          # Ensure correct Flutter version (defined in .fvmrc)
+fvm flutter pub get     # Install dependencies
 ```
 
 If FVM is not installed: `dart pub global activate fvm`
@@ -29,16 +29,16 @@ If FVM is not installed: `dart pub global activate fvm`
 ## Development
 
 ```bash
-flutter run                     # Run on connected device/emulator
-flutter run -d chrome           # Run as web app
-flutter run -d <device_id>      # Run on a specific device
-flutter devices                 # List available devices
+fvm flutter run                     # Run on connected device/emulator
+fvm flutter run -d chrome           # Run as web app
+fvm flutter run -d <device_id>      # Run on a specific device
+fvm flutter devices                 # List available devices
 ```
 
 The API base URL is read from the `AUTOBOOK_API_URL` environment variable at build time:
 
 ```bash
-flutter run --dart-define=AUTOBOOK_API_URL=http://localhost:3000
+fvm flutter run --dart-define=AUTOBOOK_API_URL=http://localhost:3000
 ```
 
 If the variable is not provided, it defaults to `http://localhost:3000`.
@@ -48,8 +48,8 @@ If the variable is not provided, it defaults to `http://localhost:3000`.
 After adding or modifying any annotated class (`@riverpod`, `@freezed`, `@RestApi`, `@DriftDatabase`), regenerate all output files:
 
 ```bash
-dart run build_runner build --delete-conflicting-outputs     # One-shot generation
-dart run build_runner watch --delete-conflicting-outputs     # Watch mode (during development)
+fvm dart run build_runner build --delete-conflicting-outputs     # One-shot generation
+fvm dart run build_runner watch --delete-conflicting-outputs     # Watch mode (during development)
 ```
 
 Generated files (`*.g.dart`, `*.freezed.dart`) are **gitignored** — do not commit them. They are regenerated on each build or via the commands above.
@@ -57,8 +57,8 @@ Generated files (`*.g.dart`, `*.freezed.dart`) are **gitignored** — do not com
 ## Testing
 
 ```bash
-flutter test                    # Run all tests
-flutter test test/path/to/file  # Run a specific test file
+fvm flutter test                    # Run all tests
+fvm flutter test test/path/to/file  # Run a specific test file
 ```
 
 Test files live in `test/` mirroring the `lib/` structure: a file at `lib/a/b/foo.dart` has its test at `test/a/b/foo_test.dart`.
@@ -84,8 +84,8 @@ Test files live in `test/` mirroring the `lib/` structure: a file at `lib/a/b/fo
 ## Code Style
 
 ```bash
-flutter analyze         # Static analysis (uses analysis_options.yaml)
-dart format lib/ test/  # Format Dart source files
+fvm flutter analyze         # Static analysis (uses analysis_options.yaml)
+fvm dart format lib/ test/  # Format Dart source files
 ```
 
 - Use Riverpod for all state — avoid `setState` in favor of `ConsumerWidget` / `ConsumerStatefulWidget`
@@ -118,7 +118,7 @@ The repository layer converts low-level exceptions (DioException, Drift errors) 
 ### Use cases & dependency wiring
 
 - Use case classes (`GetCarsUseCase`, `CreateCarUseCase`, `RefreshCarsUseCase`, `SyncPendingCarsUseCase`, `HasPendingCarsUseCase`) live in `domain/usecases/` as **pure** Dart with a single `call()`; they depend only on ports (`ICarRepository`, `IdGenerator`) and carry **no** `@riverpod` annotation.
-- The `@riverpod` functions that instantiate use cases with their concrete dependencies live in the composition layer at `features/vehicles/presentation/providers/usecase_providers.dart` — this is the only place in the feature that imports `data/` and `core/di/`.
+- The `@riverpod` functions that instantiate use cases with their concrete dependencies live in each feature's composition layer at `features/<feature>/presentation/providers/usecase_providers.dart` (currently `vehicles` and `maintenances`) — this is the only place in the feature that imports `data/` and `core/di/`.
 - `CreateCarUseCase` takes a `CarDraft` (a pure record typedef of the form fields), assembles the `Car` with an id from the injected `IdGenerator`, persists it via the repository, and returns it. Screens collect raw input (`AddCarScreen` returns a `CarDraft`); they never build entities or generate ids.
 - Presentation depends **only** on use case providers, never on `carRepositoryProvider` directly.
 
@@ -143,16 +143,17 @@ The app is offline-first: local Drift DB is always the source of truth for reads
 - `CarRepository.refreshFromRemote()` attempts to fetch from the backend and upsert into Drift; it silently returns if offline, and throws a `Failure` if the network call fails.
 - `CarRepository.create(Car)` always writes the car as pending to Drift first; if online it also pushes to the backend and marks the row as synced.
 - `CarRepository.syncPending()` retries all pending rows; individual failures are skipped so the rest of the queue is still processed.
+- `MaintenanceRepository` (`features/maintenances/data/repositories/`) follows the same offline-first pattern, plus a `pendingDelete` state: deletions mark the row locally, queue its id via `pendingDeleteIds()`, replay it in `syncPending()` (a 404 tombstone counts as settled), and `refreshFromRemote()` reconciles rows removed remotely, surfacing them as `MaintenanceRemoteSyncEvent`s.
 - `SyncCoordinator` (`core/sync/sync_coordinator.dart`) holds the connectivity stream subscription and invokes registered callbacks when connectivity is restored.
 
 ## Build
 
 ```bash
-flutter build apk           # Android APK
-flutter build appbundle     # Android App Bundle (Play Store)
-flutter build ios           # iOS (requires macOS + Xcode)
-flutter build web           # Web
-flutter build macos         # macOS desktop
+fvm flutter build apk           # Android APK
+fvm flutter build appbundle     # Android App Bundle (Play Store)
+fvm flutter build ios           # iOS (requires macOS + Xcode)
+fvm flutter build web           # Web
+fvm flutter build macos         # macOS desktop
 ```
 
 ## File Organization
@@ -170,7 +171,7 @@ lib/
 │   └── di/                 # Riverpod root providers for infrastructure deps (Dio, DB, UuidIdGenerator)
 │
 ├── features/
-│   └── vehicles/           # All cars / vehicle functionality
+│   ├── vehicles/           # All cars / vehicle functionality
 │       ├── domain/         # Pure Dart: entities, repository interfaces, use cases (NO riverpod/data imports)
 │       │   ├── entities/   # Car entity (freezed, no JSON)
 │       │   ├── repositories/ # ICarRepository abstract class (port)
@@ -185,6 +186,22 @@ lib/
 │           ├── providers/  # usecase_providers.dart (@riverpod wiring) + CarListNotifier consuming use cases
 │           ├── screens/    # Full-page screens (HomeScreen, AddCarScreen dialog returning CarDraft)
 │           └── widgets/    # Feature-scoped reusable widgets (InfoChip, CustomFormField)
+│   └── maintenances/       # All maintenance records functionality (scoped to a car)
+│       ├── domain/         # Pure Dart: entities, repository interfaces, use cases (NO riverpod/data imports)
+│       │   ├── entities/   # Maintenance (freezed), MaintenanceType enum, MaintenanceRemoteSyncEvent (sealed freezed union)
+│       │   ├── repositories/ # IMaintenanceRepository abstract class (port)
+│       │   └── usecases/   # Get/Create/Update/Delete/Refresh/SyncPending/HasPending/PendingDeleteIds (pure call() wrappers); MaintenanceDraft typedef (create_maintenance_usecase.dart)
+│       ├── data/           # Adapters: DTOs, datasources, repository implementation
+│       │   ├── models/     # MaintenanceDto (freezed + json_serializable)
+│       │   ├── datasources/
+│       │   │   ├── local/  # MaintenanceLocalDataSource over the shared Drift AppDatabase (maintenances table)
+│       │   │   └── remote/ # Retrofit MaintenanceRemoteDataSource (HTTP)
+│       │   └── repositories/ # MaintenanceRepository: implements IMaintenanceRepository, wires local + remote
+│       └── presentation/   # UI layer for the maintenances feature
+│           ├── providers/  # usecase_providers.dart (@riverpod wiring) + MaintenanceList notifier (family per carId)
+│           ├── screens/    # CarDetailScreen (car timeline), AddMaintenanceScreen dialog returning MaintenanceDraft, MaintenanceDetailScreen
+│           ├── widgets/    # Feature-scoped reusable widgets (Timeline, MaintTypePill, MaintTypeIcon, BigStat)
+│           └── theme/      # Per-type icon/tint mappings (maint_type_icons.dart, maint_tints.dart)
 │
 └── app/
     ├── router/             # GoRouter configuration (appRouterProvider)
@@ -198,5 +215,5 @@ test/                       # Mirrors lib/ structure; each *_test.dart sits besi
 `config.dart` reads the API host from the `AUTOBOOK_API_URL` compile-time variable (default: `http://localhost:3000`). Pass it via `--dart-define`:
 
 ```bash
-flutter run --dart-define=AUTOBOOK_API_URL=http://10.0.2.2:3000   # Android emulator
+fvm flutter run --dart-define=AUTOBOOK_API_URL=http://10.0.2.2:3000   # Android emulator
 ```

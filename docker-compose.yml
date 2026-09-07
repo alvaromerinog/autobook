@@ -4,7 +4,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "30000:3000"
     volumes:
       - backend_data:/data
     environment:
@@ -16,9 +16,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        AUTOBOOK_API_URL: ${AUTOBOOK_API_URL:-http://localhost:3000}
+        AUTOBOOK_API_URL: ${AUTOBOOK_API_URL:-http://localhost:30000}
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - backend
 
