@@ -173,7 +173,7 @@ Future<(GoRouter, MockCarRepository)> pumpApp(
     ],
   );
   addTearDown(container.dispose);
-  final router = GoRouter(initialLocation: initial, routes: buildAppRoutes());
+  final router = container.read(appRouterProvider(initialLocation: initial));
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,

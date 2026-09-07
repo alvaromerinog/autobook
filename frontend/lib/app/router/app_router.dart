@@ -7,9 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_router.g.dart';
 
-/// Shared route table so tests can build a `GoRouter` with a custom
-/// [GoRouter.initialLocation] while keeping the exact production routes.
-List<RouteBase> buildAppRoutes() => [
+final List<RouteBase> _routes = [
   ShellRoute(
     builder: (context, state, child) => AdaptiveAppShell(child: child),
     routes: [
@@ -30,7 +28,10 @@ List<RouteBase> buildAppRoutes() => [
   ),
 ];
 
+/// The app's router.
+///
+/// [initialLocation] lets a caller start anywhere in the tree, which is what
+/// deep links and widget tests need.
 @Riverpod(keepAlive: true)
-GoRouter appRouter(Ref ref) {
-  return GoRouter(routes: buildAppRoutes());
-}
+GoRouter appRouter(Ref ref, {String initialLocation = '/'}) =>
+    GoRouter(initialLocation: initialLocation, routes: _routes);
