@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
+import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:autobook/features/vehicles/domain/usecases/delete_car_usecase.dart';
@@ -433,6 +434,63 @@ void main() {
     });
 
     group('deleteCar', () {
+      test('given provider disposed mid-mutation, '
+          'when the mutation completes, '
+          'then no error escapes', () async {
+        // given
+        final deleteGate = Completer<void>();
+        when(
+          () => mockRepo.refreshFromRemote(),
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
+        when(() => mockRepo.syncPending()).thenAnswer((_) async {});
+        when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+        when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
+        when(() => mockRepo.delete(any())).thenAnswer((_) => deleteGate.future);
+
+        final container = makeContainer();
+        await container.read(carListProvider.future);
+
+        // when
+        final mutation = container
+            .read(carListProvider.notifier)
+            .deleteCar(toyotaCorolla);
+        container.dispose();
+        deleteGate.complete();
+
+        // then
+        await expectLater(mutation, completes);
+      });
+
+      test('given provider disposed while post-mutation reads are in flight, '
+          'when the reads complete, '
+          'then no error escapes', () async {
+        // given
+        when(
+          () => mockRepo.refreshFromRemote(),
+        ).thenAnswer((_) async => <RemoteSyncEvent>[]);
+        when(() => mockRepo.syncPending()).thenAnswer((_) async {});
+        when(() => mockRepo.getAll()).thenAnswer((_) async => oneCarList);
+        when(() => mockRepo.hasPending()).thenAnswer((_) async => false);
+        when(() => mockRepo.delete(any())).thenAnswer((_) async {});
+
+        final container = makeContainer();
+        await container.read(carListProvider.future);
+
+        final readGate = Completer<List<Car>>();
+        when(() => mockRepo.getAll()).thenAnswer((_) => readGate.future);
+
+        // when
+        final mutation = container
+            .read(carListProvider.notifier)
+            .deleteCar(toyotaCorolla);
+        await untilCalled(() => mockRepo.getAll());
+        container.dispose();
+        readGate.complete(oneCarList);
+
+        // then
+        await expectLater(mutation, completes);
+      });
+
       test(
         'given delete succeeds, '
         'when deleteCar is called, '

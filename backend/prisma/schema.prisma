@@ -15,4 +15,18 @@ model Car {
   color        String?
   mileage      Int?
   deletedAt    DateTime?
+  maintenances Maintenance[]
+}
+
+model Maintenance {
+  id        String   @id @default(uuid())
+  carId     String
+  type      String
+  date      String
+  mileage   Int
+  cost      Float
+  garage    String?
+  notes     String?
+  deletedAt DateTime?
+  car       Car      @relation(fields: [carId], references: [id])
 }

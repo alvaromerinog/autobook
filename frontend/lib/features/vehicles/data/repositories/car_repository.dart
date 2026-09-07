@@ -1,5 +1,7 @@
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/network/connectivity_service.dart';
+import 'package:autobook/features/maintenances/data/datasources/local/'
+    'maintenance_local_datasource.dart';
 import 'package:autobook/features/vehicles/data/datasources/local/car_local_datasource.dart';
 import 'package:autobook/features/vehicles/data/datasources/remote/car_remote_datasource.dart';
 import 'package:autobook/features/vehicles/data/models/car_dto.dart';
@@ -18,6 +20,7 @@ ICarRepository carRepository(Ref ref) {
     local: ref.watch(carLocalDatasourceProvider),
     remote: ref.watch(carRemoteDatasourceProvider),
     connectivity: ref.watch(connectivityServiceProvider),
+    maintenanceLocal: ref.watch(maintenanceLocalDatasourceProvider),
   );
 }
 
@@ -26,13 +29,16 @@ class CarRepository implements ICarRepository {
     required CarLocalDataSource local,
     required CarRemoteDataSource remote,
     required ConnectivityService connectivity,
+    required MaintenanceLocalDataSource maintenanceLocal,
   }) : _local = local,
        _remote = remote,
-       _connectivity = connectivity;
+       _connectivity = connectivity,
+       _maintenanceLocal = maintenanceLocal;
 
   final CarLocalDataSource _local;
   final CarRemoteDataSource _remote;
   final ConnectivityService _connectivity;
+  final MaintenanceLocalDataSource _maintenanceLocal;
 
   final _syncingIds = <String>{};
 
@@ -41,16 +47,16 @@ class CarRepository implements ICarRepository {
     required Future<void> Function() remoteCall,
     required Future<void> Function() settle,
     int? tombstoneStatus,
+    Future<void> Function()? tombstoneSettle,
   }) async {
     if (!await _connectivity.isConnected()) return;
-    if (!_syncingIds.add(car.id)) return;
     try {
       await remoteCall();
       await settle();
     } on DioException catch (e) {
       if (tombstoneStatus != null &&
           e.response?.statusCode == tombstoneStatus) {
-        await settle();
+        await (tombstoneSettle ?? settle)();
         return;
       }
       if (e.response != null) {
@@ -59,8 +65,6 @@ class CarRepository implements ICarRepository {
       throw const NetworkFailure();
     } catch (_) {
       throw const NetworkFailure();
-    } finally {
-      _syncingIds.remove(car.id);
     }
   }
 
@@ -95,6 +99,10 @@ class CarRepository implements ICarRepository {
       throw CacheFailure(e.toString());
     }
     final remoteIds = remoteCars.map((c) => c.id).toSet();
+    final locallyPendingIds = localRows
+        .where((row) => row.syncState != SyncStateEnum.synced)
+        .map((row) => row.car.id)
+        .toSet();
     final toHardDelete = <String>[];
     final events = <RemoteSyncEvent>[];
     for (final row in localRows) {
@@ -113,8 +121,13 @@ class CarRepository implements ICarRepository {
       }
     }
     try {
-      await _local.upsertAll(remoteCars);
+      await _local.upsertAll(
+        remoteCars.where((c) => !locallyPendingIds.contains(c.id)).toList(),
+      );
       await _local.hardDeleteMany(toHardDelete);
+      for (final deletedId in toHardDelete) {
+        await _maintenanceLocal.hardDeleteForCar(deletedId);
+      }
     } catch (e) {
       throw CacheFailure(e.toString());
     }
@@ -123,42 +136,65 @@ class CarRepository implements ICarRepository {
 
   @override
   Future<void> create(Car car) async {
-    await _local.insertPending(car);
-    await _push(
-      car,
-      remoteCall: () => _remote.create(CarDto.fromDomain(car)),
-      tombstoneStatus: 409,
-      settle: () => _local.markSynced(car.id),
-    );
+    if (!_syncingIds.add(car.id)) return;
+    try {
+      await _local.insertPending(car);
+      await _push(
+        car,
+        remoteCall: () => _remote.create(CarDto.fromDomain(car)),
+        tombstoneStatus: 409,
+        settle: () => _local.markSynced(car.id),
+      );
+    } finally {
+      _syncingIds.remove(car.id);
+    }
   }
 
   @override
   Future<void> update(Car car) async {
-    await _local.upsertPending(car, syncState: SyncStateEnum.pendingUpdate);
-    await _push(
-      car,
-      remoteCall: () => _remote.update(car.id, CarDto.fromDomain(car)),
-      settle: () => _local.markSynced(car.id),
-    );
+    if (!_syncingIds.add(car.id)) return;
+    try {
+      await _local.upsertPending(car, syncState: SyncStateEnum.pendingUpdate);
+      await _push(
+        car,
+        remoteCall: () => _remote.update(car.id, CarDto.fromDomain(car)),
+        tombstoneStatus: 404,
+        settle: () => _local.markSynced(car.id),
+        tombstoneSettle: () async {
+          await _local.hardDelete(car.id);
+          await _maintenanceLocal.hardDeleteForCar(car.id);
+        },
+      );
+    } finally {
+      _syncingIds.remove(car.id);
+    }
   }
 
   @override
   Future<void> delete(Car car) async {
-    final state = await _local.syncStateOf(car.id);
-    if (state == SyncStateEnum.pendingCreate) {
-      if (_syncingIds.contains(car.id)) {
-        throw const CacheFailure('delete while sync in flight');
-      }
-      await _local.hardDelete(car.id);
-      return;
+    if (!_syncingIds.add(car.id)) {
+      throw const CacheFailure('delete while sync in flight');
     }
-    await _local.markPendingDelete(car.id);
-    await _push(
-      car,
-      remoteCall: () => _remote.delete(car.id),
-      tombstoneStatus: 404,
-      settle: () => _local.hardDelete(car.id),
-    );
+    try {
+      final state = await _local.syncStateOf(car.id);
+      if (state == SyncStateEnum.pendingCreate) {
+        await _local.hardDelete(car.id);
+        await _maintenanceLocal.hardDeleteForCar(car.id);
+        return;
+      }
+      await _local.markPendingDelete(car.id);
+      await _push(
+        car,
+        remoteCall: () => _remote.delete(car.id),
+        tombstoneStatus: 404,
+        settle: () async {
+          await _local.hardDelete(car.id);
+          await _maintenanceLocal.hardDeleteForCar(car.id);
+        },
+      );
+    } finally {
+      _syncingIds.remove(car.id);
+    }
   }
 
   @override
@@ -179,6 +215,7 @@ class CarRepository implements ICarRepository {
       throw CacheFailure(e.toString());
     }
     for (final pending in pendingCars) {
+      if (!_syncingIds.add(pending.car.id)) continue;
       try {
         switch (pending.syncState) {
           case SyncStateEnum.pendingCreate:
@@ -195,14 +232,22 @@ class CarRepository implements ICarRepository {
                 pending.car.id,
                 CarDto.fromDomain(pending.car),
               ),
+              tombstoneStatus: 404,
               settle: () => _local.markSynced(pending.car.id),
+              tombstoneSettle: () async {
+                await _local.hardDelete(pending.car.id);
+                await _maintenanceLocal.hardDeleteForCar(pending.car.id);
+              },
             );
           case SyncStateEnum.pendingDelete:
             await _push(
               pending.car,
               remoteCall: () => _remote.delete(pending.car.id),
               tombstoneStatus: 404,
-              settle: () => _local.hardDelete(pending.car.id),
+              settle: () async {
+                await _local.hardDelete(pending.car.id);
+                await _maintenanceLocal.hardDeleteForCar(pending.car.id);
+              },
             );
           case SyncStateEnum.synced:
             assert(false);
@@ -211,6 +256,8 @@ class CarRepository implements ICarRepository {
         continue;
       } on Exception {
         continue;
+      } finally {
+        _syncingIds.remove(pending.car.id);
       }
     }
   }

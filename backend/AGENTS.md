@@ -113,7 +113,7 @@ src/
 │   ├── prisma.module.ts              # Global Prisma module
 │   └── infrastructure/
 │       └── prisma.database.ts        # PrismaClient wrapper with better-sqlite3 adapter
-└── cars/                             # Cars feature (layered: api / application / domain / infrastructure)
+├── cars/                             # Cars feature (layered: api / application / domain / infrastructure)
     ├── cars.module.ts                # Cars feature module (wires controller, service, repository)
     ├── api/
     │   ├── cars.controller.ts        # HTTP layer — GET /cars, POST /cars, PUT /cars/:id, DELETE /cars/:id
@@ -146,9 +146,43 @@ src/
         └── integration/
             └── application/
                 └── cars.service.spec.ts
+└── maintenances/                     # Maintenances feature (layered: api / application / domain / infrastructure)
+    ├── maintenances.module.ts        # Maintenances feature module (wires controller, service, repository)
+    ├── api/
+    │   ├── maintenances.controller.ts # HTTP layer — nested under cars: GET/POST /cars/:carId/maintenances, GET/PUT/DELETE /cars/:carId/maintenances/:id
+    │   └── dto/
+    │       ├── maintenance.dto.ts    # Maintenance request/response DTO (+ domain mappers)
+    │       ├── createMaintenanceResponse.dto.ts
+    │       ├── getMaintenancesResponse.dto.ts
+    │       ├── isMaintenanceType.decorator.ts
+    │       └── updateMaintenanceResponse.dto.ts
+    ├── application/
+    │   └── maintenances.service.ts   # Use cases — orchestrates the domain repository
+    ├── domain/
+    │   ├── entities/
+    │   │   └── maintenance.entity.ts # Maintenance domain model (interface) + MaintenanceType union / MAINT_TYPE_KEYS
+    │   ├── errors/
+    │   │   └── maintenance-conflict.error.ts
+    │   └── repositories/
+    │       └── maintenances.repository.ts # Repository contract (abstract class — DI token)
+    ├── infrastructure/
+    │   └── repositories/
+    │       └── maintenances.repository.ts # Prisma-backed MaintenancesRepository implementation
+    └── tests/                        # Feature tests, grouped by type, mirroring src layout
+        ├── fixtures/
+        │   └── maintenances.fixtures.ts
+        ├── unit/
+        │   ├── api/dto/
+        │   │   └── is-maintenance-type.decorator.spec.ts
+        │   └── application/
+        │       └── maintenances.service.spec.ts
+        └── integration/
+            └── application/
+                └── maintenances.service.spec.ts
 tests/
 ├── app.e2e-spec.ts                   # AppController e2e (temp DB + applyMigrations)
 ├── cars.e2e-spec.ts                  # CarsController e2e (temp DB + applyMigrations)
+├── maintenances.e2e-spec.ts          # MaintenancesController e2e (temp DB + applyMigrations)
 └── jest-e2e.json                     # e2e Jest configuration
 ```
 
