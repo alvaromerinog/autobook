@@ -11,8 +11,7 @@ part 'app_router.g.dart';
 /// [GoRouter.initialLocation] while keeping the exact production routes.
 List<RouteBase> buildAppRoutes() => [
   ShellRoute(
-    builder: (context, state, child) =>
-        AdaptiveAppShell(state: state, child: child),
+    builder: (context, state, child) => AdaptiveAppShell(child: child),
     routes: [
       GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
       GoRoute(

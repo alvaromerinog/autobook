@@ -4,53 +4,61 @@ import 'package:autobook/features/vehicles/presentation/widgets/garage_list_cont
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+/// Lays [child] out inside the app chrome for non-compact surfaces.
+///
+/// | Size class | Layout                                              |
+/// |------------|-----------------------------------------------------|
+/// | compact    | `child` alone — the plain single-column stack         |
+/// | medium     | rail + (`child` when a car is open, else the list)    |
+/// | expanded   | rail + list + (`child` when a car is open, else hint) |
 class AdaptiveAppShell extends StatelessWidget {
-  const AdaptiveAppShell({super.key, required this.state, required this.child});
+  const AdaptiveAppShell({super.key, required this.child});
 
-  final GoRouterState state;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final sizeClass = windowSizeClassOf(context);
-    if (sizeClass == WindowSizeClass.compact) return child;
-    if (sizeClass == WindowSizeClass.medium) {
-      if (state.uri.path == '/') {
-        return const Scaffold(
+    final carId = GoRouterState.of(context).pathParameters['carId'];
+    Widget layout;
+    if (sizeClass == WindowSizeClass.compact) {
+      layout = child;
+    } else {
+      if (sizeClass == WindowSizeClass.medium) {
+        layout = Scaffold(
           body: Row(
             children: [
-              AppSidebar(extended: false),
-              Expanded(child: GarageListContent()),
+              const AppSidebar(extended: false),
+              const VerticalDivider(width: 1),
+              Expanded(
+                child: carId == null ? const GarageListContent() : child,
+              ),
+            ],
+          ),
+        );
+      } else {
+        layout = Scaffold(
+          body: Row(
+            children: [
+              const AppSidebar(extended: true),
+              const VerticalDivider(width: 1),
+              Expanded(flex: 2, child: GarageListContent(selectedCarId: carId)),
+              const VerticalDivider(width: 1),
+              Expanded(
+                flex: 3,
+                child: carId == null ? const _DetailPlaceholder() : child,
+              ),
             ],
           ),
         );
       }
-      return child;
     }
-    final carId = state.pathParameters['carId'];
-    return Scaffold(
-      body: Row(
-        children: [
-          const AppSidebar(extended: true),
-          const VerticalDivider(width: 1),
-          const Expanded(flex: 2, child: GarageListContent()),
-          const VerticalDivider(width: 1),
-          Expanded(
-            flex: 3,
-            child: carId == null
-                ? const _DetailPlaceholder(message: 'Selecciona un vehículo')
-                : child,
-          ),
-        ],
-      ),
-    );
+    return layout;
   }
 }
 
 class _DetailPlaceholder extends StatelessWidget {
-  const _DetailPlaceholder({required this.message});
-
-  final String message;
+  const _DetailPlaceholder();
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +75,7 @@ class _DetailPlaceholder extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            message,
+            'Selecciona un vehículo',
             style: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
