@@ -1,4 +1,5 @@
 import 'package:autobook/app/responsive/breakpoints.dart';
+import 'package:autobook/app/router/back_navigation.dart';
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance_remote_sync_event.dart';
 import 'package:autobook/features/maintenances/presentation/providers/maintenance_list_provider.dart';
@@ -78,15 +79,7 @@ class CarDetailScreen extends ConsumerWidget {
     if (windowSizeClassOf(context) == WindowSizeClass.expanded) {
       context.go('/');
     } else {
-      _goBack(context);
-    }
-  }
-
-  void _goBack(BuildContext context) {
-    if (context.canPop()) {
-      context.pop();
-    } else {
-      context.go('/');
+      goBack(context);
     }
   }
 
@@ -140,10 +133,7 @@ class CarDetailScreen extends ConsumerWidget {
         backgroundColor: cs.surface,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
-        automaticallyImplyLeading: !embedded,
-        leading: embedded
-            ? null
-            : BackButton(onPressed: () => _goBack(context)),
+        leading: embedded ? null : BackButton(onPressed: () => goBack(context)),
         actions: [
           if (selectedCar != null)
             IconButton(
