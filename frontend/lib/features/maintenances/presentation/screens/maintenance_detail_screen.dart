@@ -64,6 +64,25 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _openEdit(
+    BuildContext context,
+    WidgetRef ref,
+    Maintenance m,
+  ) async {
+    final draft = await showMaintenanceDialog(context, existing: m);
+    if (draft == null || !context.mounted) return;
+    try {
+      await ref
+          .read(maintenanceListProvider(carId).notifier)
+          .updateMaint(draft, m);
+    } on Failure catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al actualizar el mantenimiento')),
+      );
+    }
+  }
+
   Maintenance? _findMaintenance(List<Maintenance> maintenances) {
     for (final m in maintenances) {
       if (m.id == maintenanceId) return m;
@@ -120,37 +139,6 @@ class MaintenanceDetailScreen extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         leading: BackButton(onPressed: () => goBack(context)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            tooltip: 'Editar',
-            onPressed: () async {
-              final draft = await showMaintenanceDialog(context, existing: m);
-              if (draft == null || !context.mounted) return;
-              try {
-                await ref
-                    .read(maintenanceListProvider(carId).notifier)
-                    .updateMaint(draft, m);
-              } on Failure catch (_) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Error al actualizar el mantenimiento'),
-                  ),
-                );
-              }
-            },
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (v) {
-              if (v == 'delete') _delete(context, ref, m);
-            },
-            itemBuilder: (_) => [
-              const PopupMenuItem(value: 'delete', child: Text('Eliminar')),
-            ],
-          ),
-        ],
       ),
       body: ListView(
         children: [
@@ -185,25 +173,78 @@ class MaintenanceDetailScreen extends ConsumerWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Row(
+            padding: const EdgeInsets.fromLTRB(0, 20, 0, 40),
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                BigStat(label: 'Coste', value: costFmt.format(m.cost)),
-                Container(
-                  width: 1,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  color: cs.outlineVariant,
+                Padding(
+                  // Reserves the buttons' 24px overhang so their centres
+                  // stay inside the Stack's hit-test bounds (a Positioned
+                  // child past the edge is not tappable).
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Card(
+                      elevation: 1,
+                      margin: EdgeInsets.zero,
+                      key: const Key('maintenance-stats-card'),
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 12, bottom: 24),
+                        child: Row(
+                          children: [
+                            BigStat(
+                              label: 'Coste',
+                              value: costFmt.format(m.cost),
+                            ),
+                            Container(
+                              width: 1,
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              color: cs.outlineVariant,
+                            ),
+                            BigStat(
+                              label: 'Kilómetros',
+                              value: '${kmFmt.format(m.mileage)} km',
+                            ),
+                            Container(
+                              width: 1,
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              color: cs.outlineVariant,
+                            ),
+                            BigStat(
+                              label: 'Fecha',
+                              value: dateFmt,
+                              sub: yearFmt,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                BigStat(
-                  label: 'Kilómetros',
-                  value: '${kmFmt.format(m.mileage)} km',
+                Positioned(
+                  right: 36, // outer padding 20 + 16px card inset
+                  bottom: 0, // 24px reserve → centre on the card edge
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _DetailActionButton(
+                        icon: Icons.edit_outlined,
+                        tooltip: 'Editar',
+                        discColor: cs.primary,
+                        iconColor: cs.onPrimary,
+                        onPressed: () => _openEdit(context, ref, m),
+                      ),
+                      const SizedBox(width: 8),
+                      _DetailActionButton(
+                        icon: Icons.delete_outlined,
+                        tooltip: 'Eliminar',
+                        discColor: cs.surface,
+                        iconColor: cs.error,
+                        onPressed: () => _delete(context, ref, m),
+                      ),
+                    ],
+                  ),
                 ),
-                Container(
-                  width: 1,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  color: cs.outlineVariant,
-                ),
-                BigStat(label: 'Fecha', value: dateFmt, sub: yearFmt),
               ],
             ),
           ),
@@ -238,6 +279,41 @@ class MaintenanceDetailScreen extends ConsumerWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _DetailActionButton extends StatelessWidget {
+  const _DetailActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.discColor,
+    required this.iconColor,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final Color discColor;
+  final Color iconColor;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: discColor,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 8),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon),
+        tooltip: tooltip,
+        color: iconColor,
+        onPressed: onPressed,
       ),
     );
   }

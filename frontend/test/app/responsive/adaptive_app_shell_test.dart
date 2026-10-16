@@ -275,10 +275,8 @@ void main() {
         );
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
 
-        // when — open the delete flow from the AppBar menu and confirm
-        await tester.tap(find.byIcon(Icons.more_vert));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Eliminar vehículo'));
+        // when — open the delete flow from the stat card's trash button
+        await tester.tap(find.byTooltip('Eliminar vehículo'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
@@ -402,10 +400,8 @@ void main() {
         );
         expect(router.canPop(), isFalse);
 
-        // when — the car is deleted through the AppBar menu
-        await tester.tap(find.byIcon(Icons.more_vert));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Eliminar vehículo'));
+        // when — the car is deleted through the stat card's trash button
+        await tester.tap(find.byTooltip('Eliminar vehículo'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
@@ -448,11 +444,9 @@ void main() {
           initial: '/cars/1',
         );
 
-        // when — the delete dialog is opened and the surface shrinks to
-        // compact while it is still open
-        await tester.tap(find.byIcon(Icons.more_vert));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Eliminar vehículo'));
+        // when — the delete dialog is opened from the stat card's trash
+        // button and the surface shrinks to compact while it is still open
+        await tester.tap(find.byTooltip('Eliminar vehículo'));
         await tester.pumpAndSettle();
         expect(
           find.text('¿Seguro que quieres eliminar Toyota Corolla?'),

@@ -249,7 +249,7 @@ void main() {
     });
 
     group('delete vehicle', () {
-      testWidgets('given a car, when the delete menu is opened and Cancelar '
+      testWidgets('given a car, when the delete button is tapped and Cancelar '
           'is chosen, then the dialog closes and delete is never called', (
         tester,
       ) async {
@@ -257,11 +257,17 @@ void main() {
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
 
-        // when — open the AppBar popup menu and tap the delete entry
+        // when
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
-        await tester.tap(find.byIcon(Icons.more_vert));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Eliminar vehículo'));
+
+        // then — no AppBar overflow menu; both actions live on the stat card
+        expect(find.byIcon(Icons.more_vert), findsNothing);
+        expect(find.byType(PopupMenuButton<String>), findsNothing);
+        expect(find.byTooltip('Editar vehículo'), findsOneWidget);
+        expect(find.byTooltip('Eliminar vehículo'), findsOneWidget);
+
+        // when — the stat card's trash button opens the confirmation dialog
+        await tester.tap(find.byTooltip('Eliminar vehículo'));
         await tester.pumpAndSettle();
 
         // then — confirm dialog is shown
@@ -282,7 +288,7 @@ void main() {
         verifyNever(() => mockCarRepo.delete(any()));
       });
 
-      testWidgets('given a car, when the delete menu is opened and Eliminar '
+      testWidgets('given a car, when the delete button is tapped and Eliminar '
           'is chosen, then repo.delete is called once', (tester) async {
         // given
         stubCarDefaults(mockCarRepo);
@@ -291,15 +297,58 @@ void main() {
 
         // when
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
-        await tester.tap(find.byIcon(Icons.more_vert));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Eliminar vehículo'));
+        await tester.tap(find.byTooltip('Eliminar vehículo'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
 
         // then
         verify(() => mockCarRepo.delete(any())).called(1);
+      });
+    });
+
+    group('acciones sobre la ficha de estadísticas', () {
+      testWidgets('given a car, when pumped, then the edit and delete buttons '
+          'straddle the stat card bottom edge', (tester) async {
+        // given
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+
+        // when
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+        final cardRect = tester.getRect(
+          find.byKey(const Key('stat-strip-card')),
+        );
+        final editCenter = tester.getCenter(find.byTooltip('Editar vehículo'));
+        final deleteCenter = tester.getCenter(
+          find.byTooltip('Eliminar vehículo'),
+        );
+
+        // then — the card's bottom edge crosses each button's centre (±1px)
+        expect(find.byKey(const Key('stat-strip-card')), findsOneWidget);
+        expect((editCenter.dy - cardRect.bottom).abs(), lessThan(1.0));
+        expect((deleteCenter.dy - cardRect.bottom).abs(), lessThan(1.0));
+        expect(editCenter.dx, lessThan(deleteCenter.dx)); // delete right-most
+
+        // and — the edit disc uses the app blue
+        final cs = Theme.of(
+          tester.element(find.byTooltip('Editar vehículo')),
+        ).colorScheme;
+        final editDisc = tester.widget<Container>(
+          find
+              .ancestor(
+                of: find.byTooltip('Editar vehículo'),
+                matching: find.byType(Container),
+              )
+              .first,
+        );
+        expect((editDisc.decoration! as BoxDecoration).color, cs.primary);
+
+        // and — FR-9: the historial block clears the hanging buttons
+        final historialTop = tester
+            .getTopLeft(find.text('Historial de mantenimientos'))
+            .dy;
+        expect(historialTop, greaterThan(deleteCenter.dy + 24.0));
       });
     });
 
@@ -382,6 +431,8 @@ void main() {
 
         // then
         expect(find.text('Vehículo no encontrado'), findsOneWidget);
+        expect(find.byTooltip('Editar vehículo'), findsNothing);
+        expect(find.byTooltip('Eliminar vehículo'), findsNothing);
       });
     });
   });

@@ -134,27 +134,6 @@ class CarDetailScreen extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         leading: embedded ? null : BackButton(onPressed: () => goBack(context)),
-        actions: [
-          if (selectedCar != null)
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: 'Editar vehículo',
-              onPressed: () => _openEditCar(context, ref, selectedCar),
-            ),
-          if (selectedCar != null)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
-              onSelected: (v) {
-                if (v == 'delete') _openDeleteCar(context, ref, selectedCar);
-              },
-              itemBuilder: (_) => [
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Text('Eliminar vehículo'),
-                ),
-              ],
-            ),
-        ],
       ),
       body: carsState == null
           ? const Center(child: CircularProgressIndicator())
@@ -227,15 +206,52 @@ class CarDetailScreen extends ConsumerWidget {
                       symbol: '€',
                       decimalDigits: 0,
                     );
-                    return _StatStrip(
-                      km: selectedCar.mileage?.toString() ?? '—',
-                      spent: costFmt.format(totalSpent),
-                      entries: s.maintenances.length.toString(),
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Padding(
+                          // Reserves the buttons' 24px overhang so their
+                          // centres stay inside the Stack's hit-test bounds
+                          // (a Positioned child past the edge is not tappable).
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: _StatStrip(
+                            km: selectedCar.mileage?.toString() ?? '—',
+                            spent: costFmt.format(totalSpent),
+                            entries: s.maintenances.length.toString(),
+                          ),
+                        ),
+                        Positioned(
+                          right: 36, // _StatStrip's padding 20 + 16px inset
+                          bottom: 0, // 24px reserve → centre on the card edge
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _DetailActionButton(
+                                icon: Icons.edit_outlined,
+                                tooltip: 'Editar vehículo',
+                                discColor: cs.primary,
+                                iconColor: cs.onPrimary,
+                                onPressed: () =>
+                                    _openEditCar(context, ref, selectedCar),
+                              ),
+                              const SizedBox(width: 8),
+                              _DetailActionButton(
+                                icon: Icons.delete_outlined,
+                                tooltip: 'Eliminar vehículo',
+                                discColor: cs.surface,
+                                iconColor: cs.error,
+                                onPressed: () =>
+                                    _openDeleteCar(context, ref, selectedCar),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 40, 20, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -306,6 +322,41 @@ class CarDetailScreen extends ConsumerWidget {
   }
 }
 
+class _DetailActionButton extends StatelessWidget {
+  const _DetailActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.discColor,
+    required this.iconColor,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final Color discColor;
+  final Color iconColor;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: discColor,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 8),
+        ],
+      ),
+      child: IconButton(
+        icon: Icon(icon),
+        tooltip: tooltip,
+        color: iconColor,
+        onPressed: onPressed,
+      ),
+    );
+  }
+}
+
 class _StatStrip extends StatelessWidget {
   const _StatStrip({
     required this.km,
@@ -324,8 +375,9 @@ class _StatStrip extends StatelessWidget {
       child: Card(
         elevation: 1,
         margin: EdgeInsets.zero,
+        key: const Key('stat-strip-card'),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.only(top: 12, bottom: 24),
           child: Row(
             children: [
               _Stat(icon: Icons.speed_outlined, value: km, label: 'KM'),

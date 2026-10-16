@@ -211,5 +211,96 @@ void main() {
         expect(calledWith.first.$2.id, existing.id);
       });
     });
+
+    group('acciones sobre la ficha de estadísticas', () {
+      testWidgets('given a maintenance, when pumped, then the edit and delete '
+          'buttons straddle the stats card bottom edge', (tester) async {
+        // given
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        final mockCarRepo = MockCarRepository();
+        stubCarDefaults(mockCarRepo);
+
+        // when
+        await pumpDetailScreen(
+          tester,
+          mockCarRepo: mockCarRepo,
+          updateCalls: <(MaintenanceDraft, Maintenance)>[],
+        );
+        const cardKey = Key('maintenance-stats-card');
+        final cardRect = tester.getRect(find.byKey(cardKey));
+        final editCenter = tester.getCenter(find.byTooltip('Editar'));
+        final deleteCenter = tester.getCenter(find.byTooltip('Eliminar'));
+
+        // then — the card's bottom edge crosses each button's centre (±1px)
+        expect(find.byKey(cardKey), findsOneWidget);
+        expect((editCenter.dy - cardRect.bottom).abs(), lessThan(1.0));
+        expect((deleteCenter.dy - cardRect.bottom).abs(), lessThan(1.0));
+        expect(editCenter.dx, lessThan(deleteCenter.dx));
+        expect(tester.widget<Card>(find.byKey(cardKey)).elevation, 1);
+        expect(find.text('COSTE'), findsOneWidget);
+        expect(find.text('KILÓMETROS'), findsOneWidget);
+        expect(find.text('FECHA'), findsOneWidget);
+
+        // and — the edit disc uses the app blue
+        final cs = Theme.of(
+          tester.element(find.byTooltip('Editar')),
+        ).colorScheme;
+        final editDisc = tester.widget<Container>(
+          find
+              .ancestor(
+                of: find.byTooltip('Editar'),
+                matching: find.byType(Container),
+              )
+              .first,
+        );
+        expect((editDisc.decoration! as BoxDecoration).color, cs.primary);
+
+        // and — FR-9: the stats Divider clears the hanging buttons
+        final dividerRect = tester.getRect(find.byType(Divider).first);
+        expect(dividerRect.top, greaterThan(deleteCenter.dy + 24.0 - 1.0));
+      });
+    });
+
+    group('delete maintenance', () {
+      testWidgets('given a maintenance, when the delete button is tapped and '
+          'Cancelar is chosen, then the confirmation dialog is shown and '
+          'closes without deleting', (tester) async {
+        // given
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        final mockCarRepo = MockCarRepository();
+        stubCarDefaults(mockCarRepo);
+
+        // when
+        await pumpDetailScreen(
+          tester,
+          mockCarRepo: mockCarRepo,
+          updateCalls: <(MaintenanceDraft, Maintenance)>[],
+        );
+
+        // then — no AppBar overflow menu; both actions are on the card
+        expect(find.byTooltip('Editar'), findsOneWidget);
+        expect(find.byTooltip('Eliminar'), findsOneWidget);
+        expect(find.byIcon(Icons.more_vert), findsNothing);
+        expect(find.byType(PopupMenuButton<String>), findsNothing);
+
+        // when — the trash button opens the confirmation dialog
+        await tester.tap(find.byTooltip('Eliminar'));
+        await tester.pumpAndSettle();
+
+        // then
+        expect(find.text('Eliminar mantenimiento'), findsOneWidget);
+
+        // when — cancel
+        await tester.tap(find.text('Cancelar'));
+        await tester.pumpAndSettle();
+
+        // then
+        expect(find.text('Eliminar mantenimiento'), findsNothing);
+      });
+    });
   });
 }
