@@ -188,7 +188,12 @@ void main() {
         when(() => mockMaintRepo.create(any())).thenAnswer((_) async {});
 
         // when — abrir diálogo desde el FAB
-        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          size: const Size(1080, 2400),
+        );
         await tester.tap(find.text('Añadir mantenimiento'));
         await tester.pumpAndSettle();
         expect(find.text('Nuevo mantenimiento'), findsOneWidget);
