@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:autobook/features/vehicles/presentation/widgets/garage_list_content.dart';
+
+import '../../features/maintenances/fixtures/maintenance_fixtures.dart';
 import '../../features/vehicles/fixtures/car_fixtures.dart';
 import '../app_test_harness.dart';
 
@@ -233,34 +236,205 @@ void main() {
       });
     });
 
-    group('maintenance push covers shell', () {
-      testWidgets('given an expanded surface at /cars/1, when a timeline '
-          'entry is opened, then the maintenance detail covers the three '
-          'columns and pop returns to the shell', (tester) async {
-        // given — an expanded cold start at /cars/1
-        final (router, _) = await pumpApp(
-          tester,
-          size: const Size(1200, 900),
-          initial: '/cars/1',
-        );
+    group('maintenance detail placement', () {
+      testWidgets(
+        'given an expanded surface at /cars/1, when a timeline entry is '
+        'opened, then the detail occupies the third column and the rail and '
+        'garage list remain visible',
+        (tester) async {
+          // given
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(1200, 900),
+            initial: '/cars/1',
+            maintenance: buildMaintenance(id: 'm1', carId: '1'),
+          );
 
-        // when — tap the timeline entry (maintenance id m1)
-        await tester.tap(find.text('Cambio de aceite'));
-        await tester.pumpAndSettle();
+          // when
+          await tester.tap(find.text('Cambio de aceite'));
+          await tester.pumpAndSettle();
 
-        // then — full-screen detail, shell columns hidden
-        expect(find.byType(BackButton), findsOneWidget);
-        expect(find.byType(NavigationRail), findsNothing);
-        expect(find.text('Añadir coche'), findsNothing);
+          // then
+          expect(find.text('Cambio de aceite'), findsOneWidget);
+          expect(
+            router.routeInformationProvider.value.uri.path,
+            '/cars/1/maintenances/m1',
+          );
+          expect(find.byType(AppSidebar), findsOneWidget);
+          expect(find.byType(GarageListContent), findsOneWidget);
+          expect(find.byType(NavigationRail), findsOneWidget);
+          expect(find.text('Historial de mantenimientos'), findsNothing);
+          expect(find.text('Cambio de aceite'), findsOneWidget);
 
-        // when — pop back
-        router.pop();
-        await tester.pumpAndSettle();
+          final shellRow = find
+              .byWidgetPredicate(
+                (widget) =>
+                    widget is Row &&
+                    widget.children.any((child) => child is AppSidebar),
+              )
+              .first;
+          final thirdColumn = find
+              .descendant(
+                of: shellRow,
+                matching: find.byWidgetPredicate(
+                  (widget) => widget is Expanded && widget.flex == 3,
+                ),
+              )
+              .first;
+          final detailRect = tester.getRect(find.text('Cambio de aceite'));
+          final thirdRect = tester.getRect(thirdColumn);
+          expect(detailRect.left, greaterThanOrEqualTo(thirdRect.left));
+          expect(detailRect.right, lessThanOrEqualTo(thirdRect.right));
 
-        // then — three-column shell is back at /cars/1
-        expect(find.byType(NavigationRail), findsOneWidget);
-        expect(find.text('Historial de mantenimientos'), findsOneWidget);
-      });
+          final garageColumn = find.descendant(
+            of: find.byType(GarageListContent),
+            matching: find.text('Toyota Corolla'),
+          );
+          final selectedCar = tester.widget<Card>(
+            find.ancestor(of: garageColumn, matching: find.byType(Card)),
+          );
+          final colorScheme = Theme.of(
+            tester.element(garageColumn),
+          ).colorScheme;
+          expect(selectedCar.color, colorScheme.secondaryContainer);
+        },
+      );
+
+      testWidgets(
+        'given a medium surface at /cars/1, when a timeline entry is opened, '
+        'then the detail fills the content column and the rail remains '
+        'visible',
+        (tester) async {
+          // given
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(720, 900),
+            initial: '/cars/1',
+            maintenance: buildMaintenance(id: 'm1', carId: '1'),
+          );
+
+          // when
+          await tester.tap(find.text('Cambio de aceite'));
+          await tester.pumpAndSettle();
+
+          // then
+          expect(
+            router.routeInformationProvider.value.uri.path,
+            '/cars/1/maintenances/m1',
+          );
+          expect(find.byType(AppSidebar), findsOneWidget);
+          expect(find.byType(NavigationRail), findsOneWidget);
+          expect(find.byType(GarageListContent), findsNothing);
+          expect(find.text('Historial de mantenimientos'), findsNothing);
+          expect(find.text('Cambio de aceite'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'given a compact surface at /cars/1, when a timeline entry is opened, '
+        'then the detail is full-screen and no rail is visible',
+        (tester) async {
+          // given
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(400, 900),
+            initial: '/cars/1',
+            maintenance: buildMaintenance(id: 'm1', carId: '1'),
+          );
+
+          // when
+          await tester.tap(find.text('Cambio de aceite'));
+          await tester.pumpAndSettle();
+
+          // then
+          expect(
+            router.routeInformationProvider.value.uri.path,
+            '/cars/1/maintenances/m1',
+          );
+          expect(find.byType(BackButton), findsOneWidget);
+          expect(find.byType(NavigationRail), findsNothing);
+          expect(find.byType(AppSidebar), findsNothing);
+          expect(find.byType(GarageListContent), findsNothing);
+          expect(find.text('Cambio de aceite'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'given an embedded maintenance detail reached from the history, when '
+        'the back button is tapped, then /cars/1 and the history are restored',
+        (tester) async {
+          // given
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(1200, 900),
+            initial: '/cars/1',
+            maintenance: buildMaintenance(id: 'm1', carId: '1'),
+          );
+          await tester.tap(find.text('Cambio de aceite'));
+          await tester.pumpAndSettle();
+
+          // when
+          await tester.tap(find.byType(BackButton));
+          await tester.pumpAndSettle();
+
+          // then
+          expect(router.routeInformationProvider.value.uri.path, '/cars/1');
+          expect(find.byType(NavigationRail), findsOneWidget);
+          expect(find.byType(GarageListContent), findsOneWidget);
+          expect(find.text('Historial de mantenimientos'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'given an embedded maintenance detail reached from the history, when '
+        'system back is invoked, then /cars/1 and the shell chrome are '
+        'restored',
+        (tester) async {
+          // given
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(1200, 900),
+            initial: '/cars/1',
+            maintenance: buildMaintenance(id: 'm1', carId: '1'),
+          );
+          await tester.tap(find.text('Cambio de aceite'));
+          await tester.pumpAndSettle();
+
+          // when
+          await tester.binding.handlePopRoute();
+          await tester.pumpAndSettle();
+
+          // then
+          expect(router.routeInformationProvider.value.uri.path, '/cars/1');
+          expect(find.byType(NavigationRail), findsOneWidget);
+          expect(find.byType(GarageListContent), findsOneWidget);
+          expect(find.text('Historial de mantenimientos'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+        },
+      );
+
+      testWidgets(
+        'given a cold maintenance deep link, when the back button is tapped, '
+        'then the URL is /cars/1 and the shell chrome remains when applicable',
+        (tester) async {
+          // given
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(1200, 900),
+            initial: '/cars/1/maintenances/m1',
+            maintenance: buildMaintenance(id: 'm1', carId: '1'),
+          );
+
+          // when
+          await tester.tap(find.byType(BackButton));
+          await tester.pumpAndSettle();
+
+          // then
+          expect(router.routeInformationProvider.value.uri.path, '/cars/1');
+          expect(find.byType(NavigationRail), findsOneWidget);
+          expect(find.byType(GarageListContent), findsOneWidget);
+        },
+      );
     });
 
     group('expanded delete selected', () {
@@ -474,10 +648,10 @@ void main() {
 
     group('maintenance cold deep link', () {
       testWidgets('given a cold start on a maintenance deep link, when the '
-          'back button is tapped, then it falls back to / without throwing', (
-        tester,
-      ) async {
-        // given — a compact, single-page stack at a maintenance deep link
+          'back button is tapped, then it pops to the embedded car detail '
+          'without throwing', (tester) async {
+        // given — a compact, cold start on a maintenance deep link; the shell
+        // branch stacks [car, maintenance], so there is a page to pop
         final (router, _) = await pumpApp(
           tester,
           size: const Size(400, 900),
@@ -489,9 +663,10 @@ void main() {
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
 
-        // then — no GoError: the guard falls back to /
-        expect(router.routeInformationProvider.value.uri.path, '/');
-        expect(find.text('Añadir vehículo'), findsOneWidget);
+        // then — back at the car detail, full screen, without a GoError
+        expect(router.routeInformationProvider.value.uri.path, '/cars/1');
+        expect(find.byType(NavigationRail), findsNothing);
+        expect(find.text('Historial de mantenimientos'), findsOneWidget);
       });
     });
   });
