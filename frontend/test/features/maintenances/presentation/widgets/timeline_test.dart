@@ -113,4 +113,67 @@ void main() {
       handle.dispose();
     });
   });
+
+  group('TimelineEntry interacción', () {
+    testWidgets('dada una entrada del timeline, '
+        'cuando se bombea, '
+        'entonces la tarjeta muestra el chevron_right a la derecha', (
+      tester,
+    ) async {
+      // given
+      final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
+
+      // when
+      await tester.pumpWidget(_pumpTimeline([m]));
+
+      // then
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+    });
+
+    testWidgets('dada una entrada del timeline, '
+        'cuando se bombea, '
+        'entonces el área de la tarjeta expone el cursor de enlace', (
+      tester,
+    ) async {
+      // given
+      final m = buildMaintenance(date: '2026-03-12');
+
+      // when
+      await tester.pumpWidget(_pumpTimeline([m]));
+
+      // then
+      final regions = tester.widgetList<MouseRegion>(
+        find.descendant(
+          of: find.byType(TimelineEntry),
+          matching: find.byType(MouseRegion),
+        ),
+      );
+      expect(regions.any((r) => r.cursor == SystemMouseCursors.click), isTrue);
+    });
+
+    testWidgets('dada una entrada del timeline, '
+        'cuando se pulsa la tarjeta, '
+        'entonces onOpen recibe su id', (tester) async {
+      // given
+      final m = buildMaintenance(id: 'm1', date: '2026-03-12');
+      final openedIds = <String>[];
+
+      // when
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Timeline(
+              maintenances: [m],
+              carId: 'car-1',
+              onOpen: openedIds.add,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Cambio de aceite'));
+
+      // then
+      expect(openedIds, ['m1']);
+    });
+  });
 }
