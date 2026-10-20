@@ -49,27 +49,15 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
     _costCtrl = TextEditingController(text: e == null ? '' : e.cost.toString());
     _garageCtrl = TextEditingController(text: e?.garage ?? '');
     _notesCtrl = TextEditingController(text: e?.notes ?? '');
-    _kmCtrl.addListener(_syncSaveState);
-    _costCtrl.addListener(_syncSaveState);
   }
 
   @override
   void dispose() {
-    _kmCtrl.removeListener(_syncSaveState);
-    _costCtrl.removeListener(_syncSaveState);
     _kmCtrl.dispose();
     _costCtrl.dispose();
     _garageCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
-  }
-
-  void _syncSaveState() => setState(() {});
-
-  bool get _canSave {
-    final cost = double.tryParse(_costCtrl.text.trim());
-    final km = int.tryParse(_kmCtrl.text.trim());
-    return cost != null && cost >= 0 && km != null && km >= 0;
   }
 
   void _submit() {
@@ -138,6 +126,14 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                         ],
                       ),
                       const SizedBox(height: 16),
+                      Text(
+                        'Datos del mantenimiento',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       DropdownButtonFormField<MaintenanceType>(
                         initialValue: _type,
                         decoration: const InputDecoration(
@@ -197,11 +193,16 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                               hint: 'Ej. 45000',
                               icon: Icons.speed_outlined,
                               keyboardType: TextInputType.number,
+                              textInputAction: TextInputAction.done,
                               inputFormatters: [
                                 FilteringTextInputFormatter.digitsOnly,
                               ],
+                              onSubmitted: _submit,
                               validator: (v) {
-                                final n = int.tryParse(v ?? '');
+                                if (v == null || v.trim().isEmpty) {
+                                  return 'Los kilómetros son obligatorios';
+                                }
+                                final n = int.tryParse(v.trim());
                                 if (n == null) return 'Km inválido';
                                 if (n < 0) return 'No puede ser negativo';
                                 return null;
@@ -219,24 +220,39 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
+                        textInputAction: TextInputAction.done,
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(
                             RegExp(r'^\d*\.?\d*$'),
                           ),
                         ],
+                        onSubmitted: _submit,
                         validator: (v) {
-                          final n = double.tryParse(v ?? '');
+                          if (v == null || v.trim().isEmpty) {
+                            return 'El coste es obligatorio';
+                          }
+                          final n = double.tryParse(v.trim());
                           if (n == null) return 'Coste inválido';
                           if (n < 0) return 'No puede ser negativo';
                           return null;
                         },
                       ),
                       const SizedBox(height: 12),
+                      Text(
+                        'Información adicional (opcional)',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       CustomFormField(
                         controller: _garageCtrl,
                         label: 'Taller',
                         hint: 'Ej. Taller Marín · Madrid',
                         icon: Icons.location_on_outlined,
+                        textInputAction: TextInputAction.done,
+                        onSubmitted: _submit,
                       ),
                       const SizedBox(height: 12),
                       CustomFormField(
@@ -249,7 +265,7 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                       ),
                       const SizedBox(height: 24),
                       FilledButton.icon(
-                        onPressed: _canSave ? _submit : null,
+                        onPressed: _submit,
                         icon: const Icon(Icons.check),
                         label: Text(isEditing ? 'Guardar cambios' : 'Guardar'),
                         style: FilledButton.styleFrom(
