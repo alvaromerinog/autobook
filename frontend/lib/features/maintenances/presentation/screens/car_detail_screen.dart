@@ -238,8 +238,8 @@ class CarDetailScreen extends ConsumerWidget {
                               _DetailActionButton(
                                 icon: Icons.delete_outlined,
                                 tooltip: 'Eliminar vehículo',
-                                discColor: cs.surface,
-                                iconColor: cs.error,
+                                discColor: cs.error,
+                                iconColor: cs.onError,
                                 onPressed: () =>
                                     _openDeleteCar(context, ref, selectedCar),
                               ),

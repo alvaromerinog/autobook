@@ -238,8 +238,8 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                       _DetailActionButton(
                         icon: Icons.delete_outlined,
                         tooltip: 'Eliminar',
-                        discColor: cs.surface,
-                        iconColor: cs.error,
+                        discColor: cs.error,
+                        iconColor: cs.onError,
                         onPressed: () => _delete(context, ref, m),
                       ),
                     ],
