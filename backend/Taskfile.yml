@@ -35,3 +35,18 @@ tasks:
     desc: Run backend tests with coverage report
     cmds:
       - pnpm test:cov
+
+  db:migrate:
+    desc: Apply pending Prisma migrations to the local database
+    cmds:
+      - pnpm db:migrate
+
+  db:migrate:dev:
+    desc: Create a new Prisma migration from schema changes and apply it
+    cmds:
+      - pnpm db:migrate:dev
+
+  db:generate:
+    desc: Regenerate the Prisma client from the Prisma schema
+    cmds:
+      - pnpm db:generate
