@@ -2,6 +2,7 @@ import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance_remote_sync_event.dart';
+import 'package:autobook/features/maintenances/domain/entities/maintenance_type.dart';
 import 'package:autobook/features/maintenances/domain/repositories/maintenance_repository.dart';
 import 'package:autobook/features/maintenances/domain/usecases/create_maintenance_usecase.dart';
 import 'package:autobook/features/maintenances/domain/usecases/get_maintenances_usecase.dart';
@@ -13,6 +14,8 @@ import 'package:autobook/features/maintenances/domain/usecases/update_maintenanc
 import 'package:autobook/features/maintenances/presentation/providers/usecase_providers.dart'
     as maint_usecases;
 import 'package:autobook/features/maintenances/presentation/screens/maintenance_detail_screen.dart';
+import 'package:autobook/features/maintenances/presentation/theme/maint_tints.dart';
+import 'package:autobook/features/maintenances/presentation/theme/maint_type_icons.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
@@ -212,6 +215,78 @@ void main() {
       });
     });
 
+    group('estilo de tarjetas', () {
+      testWidgets('dado un mantenimiento encontrado, cuando se bombea, '
+          'entonces el encabezado es tarjeta neutra con margen 20 px, esquinas '
+          'redondeadas y el tinte solo en la caja del icono', (tester) async {
+        // given
+        final mockCarRepo = MockCarRepository();
+        stubCarDefaults(mockCarRepo);
+
+        // when
+        await pumpDetailScreen(
+          tester,
+          mockCarRepo: mockCarRepo,
+          updateCalls: <(MaintenanceDraft, Maintenance)>[],
+        );
+
+        // then — primer Card del body = encabezado; segundo = stats
+        final headerCard = find.byType(Card).first;
+        final card = tester.widget<Card>(headerCard);
+        final element = tester.element(headerCard);
+        final theme = Theme.of(element);
+        final tint = getTint(MaintenanceType.oil, theme.brightness);
+
+        // fondo neutro del tema, distinto del tinte del tipo (FR-3, D-1)
+        expect(card.color, theme.colorScheme.surfaceContainerLow);
+        expect(card.color, isNot(tint.bg));
+
+        // margen lateral 20 px en encabezado y stats (alineados, FR-5)
+        expect(tester.getTopLeft(headerCard).dx, 20.0);
+        expect(tester.getTopLeft(find.byType(Card).last).dx, 20.0);
+
+        // esquinas redondeadas (shape M3 por defecto de Card, radio 12)
+        final material = tester.widget<Material>(
+          find
+              .descendant(of: headerCard, matching: find.byType(Material))
+              .first,
+        );
+        final shape = material.shape! as RoundedRectangleBorder;
+        expect(shape.borderRadius, BorderRadius.circular(12));
+
+        // el tinte del tipo sobrevive SOLO en la caja del icono 64×64
+        // (FR-3)
+        final iconBox = tester.widget<Container>(
+          find
+              .ancestor(
+                of: find.byIcon(maintTypeIcon(MaintenanceType.oil)),
+                matching: find.byType(Container),
+              )
+              .first,
+        );
+        final decoration = iconBox.decoration! as BoxDecoration;
+        expect(decoration.color, tint.bg);
+        expect(decoration.borderRadius, BorderRadius.circular(20));
+      });
+
+      testWidgets('dado un mantenimiento encontrado, cuando se bombea, '
+          'entonces no queda ningún Divider a sangre', (tester) async {
+        // given
+        final mockCarRepo = MockCarRepository();
+        stubCarDefaults(mockCarRepo);
+
+        // when
+        await pumpDetailScreen(
+          tester,
+          mockCarRepo: mockCarRepo,
+          updateCalls: <(MaintenanceDraft, Maintenance)>[],
+        );
+
+        // then — fixture sin garage: se eliminó el Divider full-bleed
+        expect(find.byType(Divider), findsNothing);
+      });
+    });
+
     group('acciones sobre la ficha de estadísticas', () {
       testWidgets('given a maintenance, when pumped, then the edit and delete '
           'buttons straddle the stats card bottom edge', (tester) async {
@@ -256,10 +331,6 @@ void main() {
               .first,
         );
         expect((editDisc.decoration! as BoxDecoration).color, cs.primary);
-
-        // and — FR-9: the stats Divider clears the hanging buttons
-        final dividerRect = tester.getRect(find.byType(Divider).first);
-        expect(dividerRect.top, greaterThan(deleteCenter.dy + 24.0 - 1.0));
       });
     });
 

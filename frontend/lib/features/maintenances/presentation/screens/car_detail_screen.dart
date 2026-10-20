@@ -292,7 +292,7 @@ class CarDetailScreen extends ConsumerWidget {
                             maintenances: s.maintenances,
                             carId: carId,
                             onOpen: (id) =>
-                                context.push('/cars/$carId/maintenances/$id'),
+                                context.go('/cars/$carId/maintenances/$id'),
                           ),
                   ),
                 ),

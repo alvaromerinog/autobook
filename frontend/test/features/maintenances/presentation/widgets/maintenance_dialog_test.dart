@@ -12,6 +12,11 @@ Future<MaintenanceDraft? Function()> _pumpDialog(
   WidgetTester tester, {
   Maintenance? existing,
 }) async {
+  // given — superficie alta para que el diálogo con scroll quepa entero
+  tester.view.physicalSize = const Size(1080, 2400);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+
   MaintenanceDraft? result;
   await tester.pumpWidget(
     MaterialApp(
@@ -104,6 +109,178 @@ void main() {
       // then
       expect(find.text('Frenos'), findsWidgets);
       expect(find.text('Taller Marín'), findsOneWidget);
+    });
+
+    testWidgets('given the dialog open in create mode, '
+        'when it renders, '
+        'then both section headers show above their fields', (tester) async {
+      // given / when
+      await _pumpDialog(tester);
+
+      // then — ambos encabezados presentes
+      final header1 = find.text('Datos del mantenimiento');
+      final header2 = find.text('Información adicional (opcional)');
+      expect(header1, findsOneWidget);
+      expect(header2, findsOneWidget);
+
+      // then — orden: header1 < Coste, header2 < Taller, header1 < header2
+      final yHeader1 = tester.getTopLeft(header1).dy;
+      final yHeader2 = tester.getTopLeft(header2).dy;
+      expect(yHeader1, lessThan(tester.getTopLeft(find.text('Coste')).dy));
+      expect(yHeader2, lessThan(tester.getTopLeft(find.text('Taller')).dy));
+      expect(yHeader1, lessThan(yHeader2));
+    });
+
+    testWidgets('given an empty Coste, '
+        'when the dialog renders, '
+        'then the save button stays enabled and validates on tap', (
+      tester,
+    ) async {
+      // given
+      final draft = await _pumpDialog(tester);
+
+      // when
+      final button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNotNull);
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      // then — el diálogo sigue abierto y el error inline aparece
+      expect(draft(), isNull);
+      expect(find.text('El coste es obligatorio'), findsOneWidget);
+    });
+
+    testWidgets('given a valid Coste but cleared Kilómetros, '
+        'when Guardar is tapped, '
+        'then the obligatory kilometers message is shown', (tester) async {
+      // given
+      final draft = await _pumpDialog(tester);
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Kilómetros'),
+        '',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Coste'),
+        '120.50',
+      );
+      await tester.pump();
+
+      // when
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      // then
+      expect(draft(), isNull);
+      expect(find.text('Los kilómetros son obligatorios'), findsOneWidget);
+    });
+
+    testWidgets('given valid Kilómetros and Coste, '
+        'when the done action fires on Kilómetros, '
+        'then the dialog pops a draft', (tester) async {
+      // given
+      final draft = await _pumpDialog(tester);
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Kilómetros'),
+        '45000',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Coste'),
+        '120.50',
+      );
+      await tester.pump();
+      await tester.tap(find.widgetWithText(TextFormField, 'Kilómetros'));
+      await tester.pump();
+
+      // when
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      // then
+      expect(draft(), isNotNull);
+      expect(draft()?.type, MaintenanceType.oil);
+      expect(draft()?.mileage, 45000);
+      expect(draft()?.cost, 120.5);
+    });
+
+    testWidgets('given an empty Coste, '
+        'when the done action fires on Kilómetros, '
+        'then the form validates and stays open', (tester) async {
+      // given
+      final draft = await _pumpDialog(tester);
+      await tester.tap(find.widgetWithText(TextFormField, 'Kilómetros'));
+      await tester.pump();
+
+      // when
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      // then
+      expect(draft(), isNull);
+      expect(find.text('El coste es obligatorio'), findsOneWidget);
+    });
+
+    testWidgets('given the Notas field, '
+        'when the done action fires on it, '
+        'then it keeps newline and never submits the form', (tester) async {
+      // given
+      final draft = await _pumpDialog(tester);
+      final notasField = find.descendant(
+        of: find.widgetWithText(TextFormField, 'Notas'),
+        matching: find.byType(TextField),
+      );
+
+      // then — Notas conserva la acción newline (nunca done)
+      expect(
+        tester.widget<TextField>(notasField).textInputAction,
+        TextInputAction.newline,
+      );
+
+      // when — se dispara done desde Notas sin coste válido
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Notas'),
+        'Revisar filtro',
+      );
+      await tester.pump();
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      // then — no se envía ni se valida el formulario
+      expect(draft(), isNull);
+      expect(find.text('El coste es obligatorio'), findsNothing);
+    });
+
+    testWidgets('given an existing maintenance, '
+        'when Guardar cambios is tapped, '
+        'then the edit dialog stays enabled and pops the draft', (
+      tester,
+    ) async {
+      // given
+      final draft = await _pumpDialog(
+        tester,
+        existing: buildMaintenance(
+          type: MaintenanceType.brakes,
+          date: '2026-02-10',
+          mileage: 30000,
+          cost: 80,
+          garage: 'Taller Marín',
+          notes: 'Pastillas nuevas',
+        ),
+      );
+
+      // when
+      final button = tester.widget<FilledButton>(find.byType(FilledButton));
+      expect(button.onPressed, isNotNull);
+      await tester.tap(find.text('Guardar cambios'));
+      await tester.pumpAndSettle();
+
+      // then
+      expect(draft(), isNotNull);
+      expect(draft()?.type, MaintenanceType.brakes);
+      expect(draft()?.date, '2026-02-10');
+      expect(draft()?.mileage, 30000);
+      expect(draft()?.cost, 80);
+      expect(draft()?.garage, 'Taller Marín');
+      expect(draft()?.notes, 'Pastillas nuevas');
     });
   });
 }
