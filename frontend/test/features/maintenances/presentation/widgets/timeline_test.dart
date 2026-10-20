@@ -112,6 +112,93 @@ void main() {
       );
       handle.dispose();
     });
+
+    testWidgets('given a long mileage and cost on a narrow screen, '
+        'when pumped, '
+        'then the entry does not overflow', (tester) async {
+      // given
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final m = buildMaintenance(
+        mileage: 189000,
+        cost: 120000,
+        date: '2026-03-12',
+      );
+
+      // when
+      await tester.pumpWidget(_pumpTimeline([m]));
+
+      // then
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('Timeline scroll', () {
+    testWidgets('given more maintenances than fit the viewport, '
+        'when pumped, '
+        'then the list scrolls instead of overflowing', (tester) async {
+      // given
+      final items = [
+        for (var i = 0; i < 30; i++)
+          buildMaintenance(id: 'm$i', date: '2026-03-${(i % 28) + 1}'),
+      ];
+
+      // when
+      await tester.pumpWidget(_pumpTimeline(items));
+
+      // then
+      expect(tester.takeException(), isNull);
+      expect(find.byType(CustomScrollView), findsOneWidget);
+    });
+
+    testWidgets('given maintenances in two years, '
+        'when scrolled inside the first year group, '
+        'then the year label stays pinned at the top', (tester) async {
+      // given
+      final items = [
+        for (var i = 0; i < 25; i++)
+          buildMaintenance(id: 'a$i', date: '2026-03-${(i % 28) + 1}'),
+        for (var i = 0; i < 25; i++)
+          buildMaintenance(id: 'b$i', date: '2025-03-${(i % 28) + 1}'),
+      ];
+      await tester.pumpWidget(_pumpTimeline(items));
+      final pinnedTop = tester.getTopLeft(find.text('2026')).dy;
+
+      // when
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
+      await tester.pumpAndSettle();
+
+      // then
+      expect(tester.getTopLeft(find.text('2026')).dy, pinnedTop);
+    });
+
+    testWidgets('given maintenances in two years, '
+        'when scrolled past the first year group, '
+        'then the next year label takes over the pinned slot', (tester) async {
+      // given
+      final items = [
+        for (var i = 0; i < 25; i++)
+          buildMaintenance(id: 'a$i', date: '2026-03-${(i % 28) + 1}'),
+        for (var i = 0; i < 25; i++)
+          buildMaintenance(id: 'b$i', date: '2025-03-${(i % 28) + 1}'),
+      ];
+      await tester.pumpWidget(_pumpTimeline(items));
+
+      // when
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -2600));
+      await tester.pumpAndSettle();
+
+      // then
+      expect(tester.getTopLeft(find.text('2025')).dy, lessThanOrEqualTo(20));
+      final previousYear = find.text('2026');
+      expect(
+        previousYear.evaluate().isEmpty ||
+            tester.getTopLeft(previousYear).dy < 0,
+        isTrue,
+      );
+    });
   });
 
   group('TimelineEntry interacción', () {

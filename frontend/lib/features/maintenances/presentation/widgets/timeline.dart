@@ -39,36 +39,87 @@ class Timeline extends StatelessWidget {
     final years = groups.keys.toList();
     final allFlat = [for (final y in years) ...groups[y]!];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Column(
-        children: [
-          for (int gi = 0; gi < years.length; gi++) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(40, 12, 0, 4),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  years[gi] == 0 ? 'Sin fecha' : years[gi].toString(),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    letterSpacing: 1,
-                  ),
+    // The list is the only scrollable part of the screen: the car header,
+    // the stat strip and the "Historial de mantenimientos" title stay put
+    // above it. The bottom padding keeps the last entry reachable from
+    // behind the floating action button.
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 88),
+          sliver: SliverMainAxisGroup(
+            slivers: [
+              for (final year in years)
+                SliverMainAxisGroup(
+                  slivers: [
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _YearHeaderDelegate(
+                        label: year == 0 ? 'Sin fecha' : year.toString(),
+                      ),
+                    ),
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final maintenance = groups[year]![index];
+                        return TimelineEntry(
+                          maintenance: maintenance,
+                          isFirst: identical(maintenance, allFlat.first),
+                          isLast: identical(maintenance, allFlat.last),
+                          onOpen: () => onOpen(maintenance.id),
+                        );
+                      }, childCount: groups[year]!.length),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            for (int i = 0; i < groups[years[gi]]!.length; i++)
-              TimelineEntry(
-                maintenance: groups[years[gi]]![i],
-                isFirst: identical(groups[years[gi]]![i], allFlat.first),
-                isLast: identical(groups[years[gi]]![i], allFlat.last),
-                onOpen: () => onOpen(groups[years[gi]]![i].id),
-              ),
-          ],
-        ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Sticky label for a year group: it stays pinned to the top of the list
+/// while its group is on screen and is pushed out by the next group's.
+class _YearHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _YearHeaderDelegate({required this.label});
+
+  final String label;
+
+  static const double _extent = 36;
+
+  @override
+  double get minExtent => _extent;
+
+  @override
+  double get maxExtent => _extent;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Container(
+      // Opaque so the entries sliding underneath do not show through.
+      color: cs.surface,
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.fromLTRB(40, 12, 0, 4),
+      child: Text(
+        label,
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: cs.onSurfaceVariant,
+          letterSpacing: 1,
+        ),
       ),
     );
   }
+
+  @override
+  bool shouldRebuild(covariant _YearHeaderDelegate oldDelegate) =>
+      oldDelegate.label != label;
 }
 
 class TimelineEntry extends StatelessWidget {
@@ -192,12 +243,19 @@ class TimelineEntry extends StatelessWidget {
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    Text(
-                                      '${kmFmt.format(maintenance.mileage)} km',
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: cs.onSurfaceVariant,
-                                          ),
+                                    // The mileage gives way first: on narrow
+                                    // screens the row would otherwise
+                                    // overflow instead of shrinking.
+                                    Flexible(
+                                      child: Text(
+                                        '${kmFmt.format(maintenance.mileage)} km',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                            ),
+                                      ),
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
