@@ -12,7 +12,9 @@ class AdaptiveAppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sizeClass = windowSizeClassOf(context);
-    final carId = GoRouterState.of(context).pathParameters['carId'];
+    final routeState = GoRouterState.of(context);
+    final carId = routeState.pathParameters['carId'];
+    final maintenanceId = routeState.pathParameters['id'];
     Widget layout;
     if (sizeClass == WindowSizeClass.compact) {
       layout = child;
@@ -50,13 +52,22 @@ class AdaptiveAppShell extends StatelessWidget {
     // Guard system / hardware / web back, which never goes through any
     // BackButton. Can't live on the screens themselves: go_router nests a
     // Navigator inside the shell, and the back dispatcher only interrogates
-    // the shell's own route. Navigate with `go`, never `pop`: a pop here
-    // would be re-intercepted while the Navigator is locked.
+    // the shell's own route. A true GoRouter canPop lets a pushed child pop;
+    // the callback's go is only the locked-shell fallback. Navigate with
+    // `go`, never `pop`: a pop here would be re-intercepted while the
+    // Navigator is locked.
+    final canPopSystem =
+        carId == null ||
+        (maintenanceId != null && GoRouter.of(context).canPop());
+    final fallbackLocation = maintenanceId == null || carId == null
+        ? '/'
+        : '/cars/$carId';
+
     return PopScope<Object?>(
-      canPop: carId == null,
+      canPop: canPopSystem,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        context.go('/');
+        context.go(fallbackLocation);
       },
       child: layout,
     );

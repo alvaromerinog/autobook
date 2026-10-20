@@ -16,15 +16,17 @@ final List<RouteBase> _routes = [
         path: '/cars/:carId',
         builder: (context, state) =>
             CarDetailScreen(carId: state.pathParameters['carId']!),
+        routes: [
+          GoRoute(
+            path: 'maintenances/:id',
+            builder: (context, state) => MaintenanceDetailScreen(
+              carId: state.pathParameters['carId']!,
+              maintenanceId: state.pathParameters['id']!,
+            ),
+          ),
+        ],
       ),
     ],
-  ),
-  GoRoute(
-    path: '/cars/:carId/maintenances/:id',
-    builder: (context, state) => MaintenanceDetailScreen(
-      carId: state.pathParameters['carId']!,
-      maintenanceId: state.pathParameters['id']!,
-    ),
   ),
 ];
 
