@@ -154,60 +154,79 @@ class MaintenanceDetailScreen extends ConsumerWidget {
       ),
       body: ListView(
         children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
-            color: tint.bg,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: const Color(0x40FFFFFF),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Icon(maintTypeIcon(m.type), size: 36, color: tint.fg),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Card(
+              elevation: 0,
+              margin: EdgeInsets.zero,
+              color: cs.surfaceContainerLow,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: tint.bg,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(
+                        maintTypeIcon(m.type),
+                        size: 36,
+                        color: tint.fg,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      car == null ? '—' : '${car.brand} ${car.model}',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      maintTypeLabel(m.type),
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: cs.onSurface,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  car == null ? '—' : '${car.brand} ${car.model}',
-                  style: theme.textTheme.labelLarge?.copyWith(color: tint.fg),
-                ),
-                Text(
-                  maintTypeLabel(m.type),
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: tint.fg,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Row(
-              children: [
-                BigStat(label: 'Coste', value: costFmt.format(m.cost)),
-                Container(
-                  width: 1,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  color: cs.outlineVariant,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Card(
+              elevation: 1,
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  children: [
+                    BigStat(label: 'Coste', value: costFmt.format(m.cost)),
+                    Container(
+                      width: 1,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      color: cs.outlineVariant,
+                    ),
+                    BigStat(
+                      label: 'Kilómetros',
+                      value: '${kmFmt.format(m.mileage)} km',
+                    ),
+                    Container(
+                      width: 1,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      color: cs.outlineVariant,
+                    ),
+                    BigStat(label: 'Fecha', value: dateFmt, sub: yearFmt),
+                  ],
                 ),
-                BigStat(
-                  label: 'Kilómetros',
-                  value: '${kmFmt.format(m.mileage)} km',
-                ),
-                Container(
-                  width: 1,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  color: cs.outlineVariant,
-                ),
-                BigStat(label: 'Fecha', value: dateFmt, sub: yearFmt),
-              ],
+              ),
             ),
           ),
-          const Divider(height: 1),
           if (m.garage != null) ...[
             ListTile(
               leading: Icon(
