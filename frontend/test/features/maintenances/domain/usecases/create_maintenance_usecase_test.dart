@@ -33,7 +33,6 @@ void main() {
     test(
       'returns a Maintenance with the generated id and given fields',
       () async {
-        // given
         const carId = 'car-1';
         const newId = 'new-m-1';
         const draft = (
@@ -47,10 +46,8 @@ void main() {
         when(() => ids.newId()).thenReturn(newId);
         when(() => repo.create(any())).thenAnswer((_) async {});
 
-        // when
         final result = await usecase(draft, carId);
 
-        // then
         expect(result.id, newId);
         expect(result.carId, carId);
         expect(result.type, MaintenanceType.oil);

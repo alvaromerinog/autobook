@@ -1,12 +1,6 @@
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance_type.dart';
 
-// ---------------------------------------------------------------------------
-// Named canonical instances
-// ---------------------------------------------------------------------------
-// Use these const values when a test needs a stable, value-equality-safe
-// Maintenance (e.g. inside const lists or direct expect() comparisons).
-
 const oilChangeMarch = Maintenance(
   id: '1',
   carId: 'car-1',

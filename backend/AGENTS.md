@@ -17,9 +17,11 @@ NestJS REST API for autobook. All commands must be run from the `backend/` direc
 
 ```bash
 pnpm install
-pnpm exec prisma generate   # Generate Prisma client
-pnpm exec prisma migrate dev  # Apply migrations (requires DATABASE_URL in env)
+pnpm db:migrate   # Apply pending migrations to the local database
+pnpm db:generate  # Regenerate the Prisma client
 ```
+
+Both scripts are also available as Taskfile tasks: `task db:migrate`, `task db:generate` (from `backend/`) or `task backend:db:migrate` (from the repo root).
 
 ## Development
 
@@ -48,12 +50,20 @@ The Prisma database wrapper (`src/prisma/infrastructure/prisma.database.ts`) str
 Prisma v7 separates the datasource URL from the schema:
 
 - **Schema** (`prisma/schema.prisma`): defines models only — no `url` in the `datasource` block
-- **CLI config** (`prisma.config.ts`): provides the URL to the Prisma CLI for migrations
+- **CLI config** (`prisma.config.ts`): provides the URL to the Prisma CLI for migrations. It reads `DATABASE_URL` and falls back to `file:./dev.db` (the local dev database), the same default the runtime wrapper uses
 - **Runtime** (`src/prisma/infrastructure/prisma.database.ts`): creates a `PrismaBetterSqlite3` adapter and passes it to the `PrismaClient` constructor
+
+Database scripts:
+
+| Command                | What it does                                                        |
+|------------------------|---------------------------------------------------------------------|
+| `pnpm db:migrate`      | Applies the pending migrations to the local database (`migrate deploy`, non-interactive) |
+| `pnpm db:migrate:dev`  | Creates a new migration from schema changes and applies it (`migrate dev`) |
+| `pnpm db:generate`     | Regenerates the Prisma client from the schema                        |
 
 To create a new migration after changing the schema:
 ```bash
-pnpm exec prisma migrate dev --name <migration-name>
+pnpm db:migrate:dev --name <migration-name>
 ```
 
 ## Testing

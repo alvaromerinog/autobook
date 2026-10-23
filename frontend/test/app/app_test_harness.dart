@@ -37,7 +37,6 @@ import '../features/vehicles/helpers/car_mocks.dart';
 
 class _MockIdGenerator extends Mock implements IdGenerator {}
 
-/// No-op repo handed to fake use cases whose `call` is overridden.
 class _UnusedMaintenanceRepo extends Mock implements IMaintenanceRepository {}
 
 class _StubGetCars extends GetCarsUseCase {
@@ -87,8 +86,6 @@ class _StubSyncPendingMaintenances extends SyncPendingMaintenancesUseCase {
   Future<void> call() async {}
 }
 
-/// Registers the mocktail fallbacks the harness stubs need. Call from
-/// `setUpAll`.
 void registerAppHarnessFallbacks() {
   registerCarFallbacks();
   registerFallbackValue(buildMaintenance());
@@ -106,8 +103,6 @@ Future<(GoRouter, MockCarRepository)> pumpApp(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
-  // given: cold provider graph whose data layer yields [cars] and a single
-  // maintenance for the pushed detail screens
   final maintenances = [maintenance ?? buildMaintenance()];
   final mockCarRepo = MockCarRepository();
   when(

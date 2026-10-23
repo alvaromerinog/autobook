@@ -39,14 +39,11 @@ void main() {
       'when call runs, '
       'then builds a car with a generated id, persists it and returns it',
       () async {
-        // given
         when(() => mockIds.newId()).thenReturn('generated-id');
         when(() => mockRepo.create(any())).thenAnswer((_) async {});
 
-        // when
         final result = await useCase(draft);
 
-        // then
         final expectedCar = buildCar(
           id: 'generated-id',
           color: 'Blanco',
@@ -61,11 +58,9 @@ void main() {
     test('given the repository throws a Failure, '
         'when call runs, '
         'then the Failure propagates', () async {
-      // given
       when(() => mockIds.newId()).thenReturn('generated-id');
       when(() => mockRepo.create(any())).thenThrow(const NetworkFailure());
 
-      // when / then
       await expectLater(() => useCase(draft), throwsA(isA<NetworkFailure>()));
     });
   });

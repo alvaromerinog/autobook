@@ -4,8 +4,6 @@ import 'package:uuid/uuid.dart';
 
 part 'uuid_id_generator.g.dart';
 
-/// [IdGenerator] adapter backed by the `uuid` package. The only place in the
-/// codebase that imports `package:uuid`.
 class UuidIdGenerator implements IdGenerator {
   const UuidIdGenerator();
 

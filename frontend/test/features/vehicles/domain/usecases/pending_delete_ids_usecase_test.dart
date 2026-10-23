@@ -22,15 +22,12 @@ void main() {
     test('given the repository returns pending delete ids, '
         'when call runs, '
         'then delegates to pendingDeleteIds', () async {
-      // given
       when(
         () => mockRepo.pendingDeleteIds(),
       ).thenAnswer((_) async => {'1', '2'});
 
-      // when
       final ids = await useCase();
 
-      // then
       expect(ids, {'1', '2'});
       verify(() => mockRepo.pendingDeleteIds()).called(1);
     });
@@ -38,12 +35,10 @@ void main() {
     test('given the repository throws a Failure, '
         'when call runs, '
         'then the Failure propagates', () async {
-      // given
       when(
         () => mockRepo.pendingDeleteIds(),
       ).thenThrow(const CacheFailure('db error'));
 
-      // when / then
       await expectLater(() => useCase(), throwsA(isA<CacheFailure>()));
     });
   });

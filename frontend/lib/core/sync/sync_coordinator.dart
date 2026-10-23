@@ -26,8 +26,6 @@ class SyncCoordinator {
   final _flushCallbacks = <Future<void> Function()>[];
   bool _isFlushing = false;
 
-  /// Registers a callback to be invoked when connectivity is restored.
-  /// Returns a function that removes the callback.
   void Function() register(Future<void> Function() callback) {
     _flushCallbacks.add(callback);
     return () => _flushCallbacks.remove(callback);

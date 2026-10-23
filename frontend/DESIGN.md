@@ -348,11 +348,13 @@ Circle of the given size (default 40), radius size/2, type tint `bg`/`fg`, cente
 
 - Groups maintenances by year (extracted from `date.split(' ').last`), sorted descending.
 - Each group starts with `labelLarge` `onSurfaceVariant` `letterSpacing 1` (year), padding `12 0 4 40`.
+- The timeline is the only scrollable area of the screen: the car header, the stat strip and the "Maintenance history" title stay fixed above it. Bottom padding `88` keeps the last entry reachable from behind the extended FAB.
+- The year label is a pinned header (`SliverPersistentHeader` inside a `SliverMainAxisGroup`): it sticks to the top of the list while its group is on screen and is pushed out by the next group's.
 - `TimelineEntry`:
   - Left gutter 40 px: 2 px connector line in `outlineVariant` (hidden above the first and below the last), circular dot 32×32 radius 16 with `3 px surface border` (content-box), background/foreground from the type tint, centered icon at 16.
   - Card on the right (`marginLeft 16`, `mb 12`, background `surfaceContainerLow` → `surfaceContainerHigh` on hover, radius 12, padding `12 14`):
     - `titleMedium` (type label) + `labelMedium` (day month in `onSurfaceVariant`).
-    - `bodyMedium` `onSurfaceVariant`: "{km} km · {cost} €" (cost with `fontWeight 500` and `onSurface`).
+    - `bodyMedium` `onSurfaceVariant`: "{km} km · {cost} €" (cost with `fontWeight 500` and `onSurface`). The mileage is `Flexible` + `ellipsis` so the row shrinks on narrow screens instead of overflowing; the cost keeps its natural width.
     - `bodySmall` shop.
 
 ### 6.3 Maintenance detail (`MaintDetailScreen`)

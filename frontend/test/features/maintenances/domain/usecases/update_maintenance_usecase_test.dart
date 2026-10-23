@@ -24,7 +24,6 @@ void main() {
     });
 
     test('returns a Maintenance copying id and carId from existing', () async {
-      // given
       const existing = Maintenance(
         id: 'm-1',
         carId: 'car-1',
@@ -45,10 +44,8 @@ void main() {
       );
       when(() => repo.update(any())).thenAnswer((_) async {});
 
-      // when
       final result = await usecase(draft, existing);
 
-      // then
       expect(result.id, existing.id);
       expect(result.carId, existing.carId);
       expect(result.type, MaintenanceType.tires);

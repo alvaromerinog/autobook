@@ -21,11 +21,8 @@ void main() {
       testWidgets('given an expanded surface at /, when pumped, then the '
           'sidebar, the list and the placeholder are shown in order without '
           'a back button', (tester) async {
-        // given — an expanded surface (1200x900) with one car in the garage
-        // when — the app is pumped at /
         await pumpApp(tester, size: const Size(1200, 900));
 
-        // then — three columns in order: sidebar, list, placeholder
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Toyota Corolla'), findsOneWidget);
         expect(find.text('Selecciona un vehículo'), findsOneWidget);
@@ -51,13 +48,10 @@ void main() {
       testWidgets('given an expanded surface at /, when a car card is '
           'tapped, then the URL goes to /cars/1 and the detail fills the '
           'third column without a back button', (tester) async {
-        // given — an expanded surface with one car
-        // when — a car card is tapped
         final (router, _) = await pumpApp(tester, size: const Size(1200, 900));
         await tester.tap(find.text('Toyota Corolla'));
         await tester.pumpAndSettle();
 
-        // then — URL updated and detail rendered embedded
         expect(router.routeInformationProvider.value.uri.path, '/cars/1');
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
         expect(find.byType(BackButton), findsNothing);
@@ -69,15 +63,12 @@ void main() {
           'car, then the third column shows the not found message', (
         tester,
       ) async {
-        // given — an expanded surface cold-started on /cars/no-existe
-        // when — the app is pumped
         await pumpApp(
           tester,
           size: const Size(1200, 900),
           initial: '/cars/no-existe',
         );
 
-        // then
         expect(find.text('Vehículo no encontrado'), findsOneWidget);
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Toyota Corolla'), findsOneWidget);
@@ -87,8 +78,6 @@ void main() {
           'selected, then its card is highlighted and the other is not', (
         tester,
       ) async {
-        // given — two cars in the garage
-        // when — the second car is selected
         final (router, _) = await pumpApp(
           tester,
           size: const Size(1200, 900),
@@ -97,7 +86,6 @@ void main() {
         await tester.tap(find.text('Ford Focus'));
         await tester.pumpAndSettle();
 
-        // then — the selected card is tinted, the other is not
         final selected = tester.widget<Card>(
           find.ancestor(
             of: find.text('Ford Focus'),
@@ -123,7 +111,6 @@ void main() {
       testWidgets('given an expanded surface at /cars/1, when resized to '
           'compact, then the detail fills the screen with a back button, '
           'and back to expanded restores the three columns', (tester) async {
-        // given — an expanded cold start at /cars/1
         final (router, _) = await pumpApp(
           tester,
           size: const Size(1200, 900),
@@ -132,21 +119,17 @@ void main() {
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.byType(BackButton), findsNothing);
 
-        // when — shrink to compact
         tester.view.physicalSize = const Size(400, 900);
         tester.view.devicePixelRatio = 1.0;
         await tester.pumpAndSettle();
 
-        // then — full-screen detail with a back button
         expect(find.byType(BackButton), findsOneWidget);
         expect(find.byType(NavigationRail), findsNothing);
 
-        // when — grow back to expanded
         tester.view.physicalSize = const Size(1200, 900);
         tester.view.devicePixelRatio = 1.0;
         await tester.pumpAndSettle();
 
-        // then — three columns with the same car still selected
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
         expect(router.routeInformationProvider.value.uri.path, '/cars/1');
@@ -155,23 +138,19 @@ void main() {
       testWidgets('given a car selected in expanded, when resized to '
           'medium and the back button is tapped, then the list is shown '
           'again', (tester) async {
-        // given — a car selected in expanded (go replaces the stack)
         final (router, _) = await pumpApp(tester, size: const Size(1200, 900));
         await tester.tap(find.text('Toyota Corolla'));
         await tester.pumpAndSettle();
         expect(router.routeInformationProvider.value.uri.path, '/cars/1');
 
-        // when — resize to medium (tablet vertical) and tap back
         tester.view.physicalSize = const Size(720, 900);
         tester.view.devicePixelRatio = 1.0;
         await tester.pumpAndSettle();
 
-        // then — this is the empty-stack fallback path, so back must go to /
         expect(router.canPop(), isFalse);
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
 
-        // then — back at / with the rail and the car list visible
         expect(router.routeInformationProvider.value.uri.path, '/');
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Toyota Corolla'), findsOneWidget);
@@ -179,17 +158,14 @@ void main() {
 
       testWidgets('given a car pushed in medium, when the back button is '
           'tapped, then pop returns to the list', (tester) async {
-        // given — a car detail pushed on a medium surface
         final (router, _) = await pumpApp(tester, size: const Size(720, 900));
         unawaited(router.push('/cars/1'));
         await tester.pumpAndSettle();
         expect(find.byType(BackButton), findsOneWidget);
 
-        // when — the back button is tapped
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
 
-        // then — popped back to the list
         expect(router.routeInformationProvider.value.uri.path, '/');
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Toyota Corolla'), findsOneWidget);
@@ -201,36 +177,29 @@ void main() {
           'surface is resized, then the shell swaps compact/medium/expanded', (
         tester,
       ) async {
-        // given — a compact surface (below 600) at /
         await pumpApp(tester, size: const Size(599, 900));
         expect(find.byType(NavigationRail), findsNothing);
         expect(find.text('Añadir vehículo'), findsOneWidget);
 
-        // when — grown to the first medium width
         tester.view.physicalSize = const Size(600, 900);
         tester.view.devicePixelRatio = 1.0;
         await tester.pumpAndSettle();
 
-        // then — the rail replaces the FAB
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Añadir vehículo'), findsNothing);
         expect(find.byTooltip('Añadir coche'), findsOneWidget);
 
-        // when — grown to the last medium width
         tester.view.physicalSize = const Size(839, 900);
         tester.view.devicePixelRatio = 1.0;
         await tester.pumpAndSettle();
 
-        // then — still the two-column rail + list (no placeholder)
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Selecciona un vehículo'), findsNothing);
 
-        // when — grown to the first expanded width
         tester.view.physicalSize = const Size(840, 900);
         tester.view.devicePixelRatio = 1.0;
         await tester.pumpAndSettle();
 
-        // then — the placeholder column appears
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Selecciona un vehículo'), findsOneWidget);
       });
@@ -242,7 +211,6 @@ void main() {
         'opened, then the detail occupies the third column and the rail and '
         'garage list remain visible',
         (tester) async {
-          // given
           final (router, _) = await pumpApp(
             tester,
             size: const Size(1200, 900),
@@ -250,11 +218,9 @@ void main() {
             maintenance: buildMaintenance(id: 'm1', carId: '1'),
           );
 
-          // when
           await tester.tap(find.text('Cambio de aceite'));
           await tester.pumpAndSettle();
 
-          // then
           expect(find.text('Cambio de aceite'), findsOneWidget);
           expect(
             router.routeInformationProvider.value.uri.path,
@@ -305,7 +271,6 @@ void main() {
         'then the detail fills the content column and the rail remains '
         'visible',
         (tester) async {
-          // given
           final (router, _) = await pumpApp(
             tester,
             size: const Size(720, 900),
@@ -313,11 +278,9 @@ void main() {
             maintenance: buildMaintenance(id: 'm1', carId: '1'),
           );
 
-          // when
           await tester.tap(find.text('Cambio de aceite'));
           await tester.pumpAndSettle();
 
-          // then
           expect(
             router.routeInformationProvider.value.uri.path,
             '/cars/1/maintenances/m1',
@@ -334,7 +297,6 @@ void main() {
         'given a compact surface at /cars/1, when a timeline entry is opened, '
         'then the detail is full-screen and no rail is visible',
         (tester) async {
-          // given
           final (router, _) = await pumpApp(
             tester,
             size: const Size(400, 900),
@@ -342,11 +304,9 @@ void main() {
             maintenance: buildMaintenance(id: 'm1', carId: '1'),
           );
 
-          // when
           await tester.tap(find.text('Cambio de aceite'));
           await tester.pumpAndSettle();
 
-          // then
           expect(
             router.routeInformationProvider.value.uri.path,
             '/cars/1/maintenances/m1',
@@ -363,7 +323,6 @@ void main() {
         'given an embedded maintenance detail reached from the history, when '
         'the back button is tapped, then /cars/1 and the history are restored',
         (tester) async {
-          // given
           final (router, _) = await pumpApp(
             tester,
             size: const Size(1200, 900),
@@ -373,11 +332,9 @@ void main() {
           await tester.tap(find.text('Cambio de aceite'));
           await tester.pumpAndSettle();
 
-          // when
           await tester.tap(find.byType(BackButton));
           await tester.pumpAndSettle();
 
-          // then
           expect(router.routeInformationProvider.value.uri.path, '/cars/1');
           expect(find.byType(NavigationRail), findsOneWidget);
           expect(find.byType(GarageListContent), findsOneWidget);
@@ -390,7 +347,6 @@ void main() {
         'system back is invoked, then /cars/1 and the shell chrome are '
         'restored',
         (tester) async {
-          // given
           final (router, _) = await pumpApp(
             tester,
             size: const Size(1200, 900),
@@ -400,11 +356,9 @@ void main() {
           await tester.tap(find.text('Cambio de aceite'));
           await tester.pumpAndSettle();
 
-          // when
           await tester.binding.handlePopRoute();
           await tester.pumpAndSettle();
 
-          // then
           expect(router.routeInformationProvider.value.uri.path, '/cars/1');
           expect(find.byType(NavigationRail), findsOneWidget);
           expect(find.byType(GarageListContent), findsOneWidget);
@@ -417,7 +371,6 @@ void main() {
         'given a cold maintenance deep link, when the back button is tapped, '
         'then the URL is /cars/1 and the shell chrome remains when applicable',
         (tester) async {
-          // given
           final (router, _) = await pumpApp(
             tester,
             size: const Size(1200, 900),
@@ -425,11 +378,9 @@ void main() {
             maintenance: buildMaintenance(id: 'm1', carId: '1'),
           );
 
-          // when
           await tester.tap(find.byType(BackButton));
           await tester.pumpAndSettle();
 
-          // then
           expect(router.routeInformationProvider.value.uri.path, '/cars/1');
           expect(find.byType(NavigationRail), findsOneWidget);
           expect(find.byType(GarageListContent), findsOneWidget);
@@ -441,7 +392,6 @@ void main() {
       testWidgets('given an expanded surface at /cars/1, when the car is '
           'deleted, then the URL goes back to / and the placeholder is '
           'shown', (tester) async {
-        // given — an expanded, non-embedded detail at /cars/1
         final (router, mockCarRepo) = await pumpApp(
           tester,
           size: const Size(1200, 900),
@@ -449,15 +399,11 @@ void main() {
         );
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
 
-        // when — open the delete flow from the AppBar menu and confirm
-        await tester.tap(find.byIcon(Icons.more_vert));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Eliminar vehículo'));
+        await tester.tap(find.byTooltip('Eliminar vehículo'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
 
-        // then — delete called once, URL back to /, placeholder restored
         verify(() => mockCarRepo.delete(any())).called(1);
         expect(router.routeInformationProvider.value.uri.path, '/');
         expect(find.text('Selecciona un vehículo'), findsOneWidget);
@@ -468,11 +414,8 @@ void main() {
     group('medium', () {
       testWidgets('given a medium surface at /, when pumped, then the rail '
           'and the car list are shown without the FAB', (tester) async {
-        // given — a medium surface with one car
-        // when — the app is pumped at /
         await pumpApp(tester, size: const Size(720, 900));
 
-        // then
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Toyota Corolla'), findsOneWidget);
         expect(find.text('Añadir vehículo'), findsNothing);
@@ -483,13 +426,10 @@ void main() {
           'rail stays in place and the detail fills the second column', (
         tester,
       ) async {
-        // given — a medium surface with one car
-        // when — the car detail is pushed
         final (router, _) = await pumpApp(tester, size: const Size(720, 900));
         unawaited(router.push('/cars/1'));
         await tester.pumpAndSettle();
 
-        // then — the rail persists next to the detail pane
         expect(find.byType(BackButton), findsOneWidget);
         expect(find.byType(NavigationRail), findsOneWidget);
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
@@ -500,7 +440,6 @@ void main() {
       testWidgets('given a medium surface with a long garage, when the list '
           'is scrolled, a car is pushed and back returns, then the scroll '
           'offset survives the round trip', (tester) async {
-        // given — a garage long enough to scroll on medium
         final cars = List.generate(
           30,
           (i) => buildCar(
@@ -516,20 +455,17 @@ void main() {
           cars: cars,
         );
 
-        // when — the list is scrolled down
         await tester.drag(find.byType(ListView), const Offset(0, -600));
         await tester.pump();
         final scrolled = garageListOffset(tester);
         expect(scrolled, greaterThan(0));
 
-        // and a car detail is pushed and popped
         unawaited(router.push('/cars/5'));
         await tester.pumpAndSettle();
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
 
-        // then — the same offset is restored
         expect(router.routeInformationProvider.value.uri.path, '/');
         expect(garageListOffset(tester), closeTo(scrolled, 1));
       });
@@ -538,11 +474,8 @@ void main() {
     group('compact', () {
       testWidgets('given a compact surface at /, when pumped, then the full '
           'home scaffold is shown without a NavigationRail', (tester) async {
-        // given — a compact surface with one car
-        // when — the app is pumped at /
         await pumpApp(tester, size: const Size(400, 900));
 
-        // then
         expect(find.text('Autobook'), findsOneWidget);
         expect(find.text('Añadir vehículo'), findsOneWidget);
         expect(find.byType(NavigationRail), findsNothing);
@@ -551,16 +484,12 @@ void main() {
 
       testWidgets('given a compact surface at /cars/1, when pushed, then the '
           'car detail is shown with a back button', (tester) async {
-        // given — a compact surface with one car
-        // when — the car detail is pushed
         final (router, _) = await pumpApp(tester, size: const Size(400, 900));
         unawaited(router.push('/cars/1'));
         await tester.pumpAndSettle();
 
-        // then
         expect(find.byType(BackButton), findsOneWidget);
         expect(find.byType(NavigationRail), findsNothing);
-        // the detail pane is reachable through the back stack
         expect(router.canPop(), isTrue);
       });
 
@@ -568,7 +497,6 @@ void main() {
           'when the car is deleted, then the empty-stack fallback goes to /', (
         tester,
       ) async {
-        // given — a compact, single-page stack at /cars/1
         final (router, mockCarRepo) = await pumpApp(
           tester,
           size: const Size(400, 900),
@@ -576,15 +504,11 @@ void main() {
         );
         expect(router.canPop(), isFalse);
 
-        // when — the car is deleted through the AppBar menu
-        await tester.tap(find.byIcon(Icons.more_vert));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Eliminar vehículo'));
+        await tester.tap(find.byTooltip('Eliminar vehículo'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
 
-        // then — delete was called and the app fell back to /
         verify(() => mockCarRepo.delete(any())).called(1);
         expect(router.routeInformationProvider.value.uri.path, '/');
         expect(find.text('Añadir vehículo'), findsOneWidget);
@@ -593,7 +517,6 @@ void main() {
       testWidgets('given a compact surface cold-deep-linked to /cars/1, '
           'when the system back is invoked, then the empty-stack fallback '
           'goes to /', (tester) async {
-        // given — a compact, single-page stack at /cars/1
         final (router, _) = await pumpApp(
           tester,
           size: const Size(400, 900),
@@ -601,11 +524,9 @@ void main() {
         );
         expect(router.canPop(), isFalse);
 
-        // when — the system (hardware/web) back is dispatched
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
 
-        // then — the PopScope guard redirected to /
         expect(router.routeInformationProvider.value.uri.path, '/');
         expect(find.text('Añadir vehículo'), findsOneWidget);
       });
@@ -615,18 +536,13 @@ void main() {
       testWidgets('given an expanded detail with the delete dialog open, '
           'when the surface shrinks to compact before confirming, then the '
           'delete flow navigates per the new layout', (tester) async {
-        // given — an expanded, non-embedded detail at /cars/1
         final (router, mockCarRepo) = await pumpApp(
           tester,
           size: const Size(1200, 900),
           initial: '/cars/1',
         );
 
-        // when — the delete dialog is opened and the surface shrinks to
-        // compact while it is still open
-        await tester.tap(find.byIcon(Icons.more_vert));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Eliminar vehículo'));
+        await tester.tap(find.byTooltip('Eliminar vehículo'));
         await tester.pumpAndSettle();
         expect(
           find.text('¿Seguro que quieres eliminar Toyota Corolla?'),
@@ -638,8 +554,6 @@ void main() {
         await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
 
-        // then — the size class is re-read after the flow, so on compact the
-        // single-page stack falls back to /
         verify(() => mockCarRepo.delete(any())).called(1);
         expect(router.routeInformationProvider.value.uri.path, '/');
         expect(find.text('Añadir vehículo'), findsOneWidget);
@@ -650,8 +564,6 @@ void main() {
       testWidgets('given a cold start on a maintenance deep link, when the '
           'back button is tapped, then it pops to the embedded car detail '
           'without throwing', (tester) async {
-        // given — a compact, cold start on a maintenance deep link; the shell
-        // branch stacks [car, maintenance], so there is a page to pop
         final (router, _) = await pumpApp(
           tester,
           size: const Size(400, 900),
@@ -659,11 +571,9 @@ void main() {
         );
         expect(find.text('Cambio de aceite'), findsWidgets);
 
-        // when — the back button is tapped
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
 
-        // then — back at the car detail, full screen, without a GoError
         expect(router.routeInformationProvider.value.uri.path, '/cars/1');
         expect(find.byType(NavigationRail), findsNothing);
         expect(find.text('Historial de mantenimientos'), findsOneWidget);

@@ -17,13 +17,10 @@ void main() {
     test('given repository syncs successfully, '
         'when call runs, '
         'then delegates to syncPending', () async {
-      // given
       when(() => mockRepo.syncPending()).thenAnswer((_) async {});
 
-      // when
       await useCase();
 
-      // then
       verify(() => mockRepo.syncPending()).called(1);
     });
   });

@@ -9,7 +9,6 @@ void main() {
       test('given 2 registered callbacks and the first throws, '
           'when flush runs, '
           'then both callbacks run and the coordinator resets', () async {
-        // given
         final coordinator = SyncCoordinator();
         var firstRan = false;
         var secondRan = false;
@@ -21,10 +20,8 @@ void main() {
           secondRan = true;
         });
 
-        // when
         await coordinator.flush();
 
-        // then
         expect(firstRan, isTrue);
         expect(secondRan, isTrue);
       });
@@ -32,7 +29,6 @@ void main() {
       test('given flush is already running, '
           'when flush is called again, '
           'then the second call is a no-op', () async {
-        // given
         final coordinator = SyncCoordinator();
         var callCount = 0;
         final completer = Completer<void>();
@@ -41,13 +37,11 @@ void main() {
           await completer.future;
         });
 
-        // when
         final flush1 = coordinator.flush();
         final flush2 = coordinator.flush();
         completer.complete();
         await Future.wait([flush1, flush2]);
 
-        // then
         expect(callCount, 1);
       });
     });
