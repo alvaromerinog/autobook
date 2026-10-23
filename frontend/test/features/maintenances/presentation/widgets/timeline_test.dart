@@ -6,12 +6,22 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../../fixtures/maintenance_fixtures.dart';
 
-Widget _pumpTimeline(List<Maintenance> items) {
+Widget _pumpTimeline(List<Maintenance> items, {ThemeData? theme}) {
   return MaterialApp(
+    theme: theme,
     home: Scaffold(
       body: Timeline(maintenances: items, carId: 'car-1', onOpen: (_) {}),
     ),
   );
+}
+
+Color _pinnedHeaderBackground(WidgetTester tester) {
+  final container = tester.widget<Container>(
+    find
+        .ancestor(of: find.text('2026'), matching: find.byType(Container))
+        .first,
+  );
+  return container.color!;
 }
 
 void main() {
@@ -132,6 +142,61 @@ void main() {
 
       // then
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('given an entry, '
+        'when pumped, '
+        'then the card paints its own Material instead of deferring the '
+        'decoration to the ambient Material', (tester) async {
+      // given
+      final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
+
+      // when
+      await tester.pumpWidget(_pumpTimeline([m]));
+
+      // then
+      expect(
+        find.descendant(
+          of: find.byType(TimelineEntry),
+          matching: find.byType(Ink),
+        ),
+        findsNothing,
+      );
+      final card = tester.widget<Material>(
+        find
+            .descendant(
+              of: find.byType(TimelineEntry),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+      final cs = Theme.of(
+        tester.element(find.byType(TimelineEntry)),
+      ).colorScheme;
+      expect(card.color, cs.surfaceContainerLow);
+    });
+
+    testWidgets('given the app theme changes, '
+        'when the timeline is rebuilt, '
+        'then the pinned year label sits on the new page background', (
+      tester,
+    ) async {
+      // given
+      final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
+      await tester.pumpWidget(
+        _pumpTimeline([m], theme: ThemeData(brightness: Brightness.light)),
+      );
+      final lightBackground = _pinnedHeaderBackground(tester);
+
+      // when
+      await tester.pumpWidget(
+        _pumpTimeline([m], theme: ThemeData(brightness: Brightness.dark)),
+      );
+      await tester.pumpAndSettle();
+      final darkBackground = _pinnedHeaderBackground(tester);
+
+      // then
+      expect(darkBackground, isNot(lightBackground));
     });
   });
 

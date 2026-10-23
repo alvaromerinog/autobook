@@ -139,164 +139,167 @@ class CarDetailScreen extends ConsumerWidget {
           ? const Center(child: CircularProgressIndicator())
           : selectedCar == null
           ? const Center(child: Text('Vehículo no encontrado'))
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${selectedCar.year} · ${selectedCar.brand}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                            Text(
-                              selectedCar.model,
-                              style: theme.textTheme.headlineLarge?.copyWith(
-                                color: cs.onSurface,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        height: 28,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: cs.surfaceContainer,
-                          border: Border.all(color: cs.outlineVariant),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          selectedCar.licensePlate,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                maintAsync.when(
-                  loading: () => const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                  error: (e, _) => Padding(
-                    padding: const EdgeInsets.all(40),
-                    child: Center(child: Text('Error: $e')),
-                  ),
-                  data: (s) {
-                    final totalSpent = s.maintenances.fold<double>(
-                      0,
-                      (sum, m) => sum + m.cost,
-                    );
-                    final locale = Localizations.localeOf(context).toString();
-                    final costFmt = NumberFormat.currency(
-                      locale: locale,
-                      symbol: '€',
-                      decimalDigits: 0,
-                    );
-                    return Stack(
-                      clipBehavior: Clip.none,
+          : ColoredBox(
+              color: cs.surface,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Padding(
-                          // Reserves the buttons' 24px overhang so their
-                          // centres stay inside the Stack's hit-test bounds
-                          // (a Positioned child past the edge is not tappable).
-                          padding: const EdgeInsets.only(bottom: 24),
-                          child: _StatStrip(
-                            km: selectedCar.mileage?.toString() ?? '—',
-                            spent: costFmt.format(totalSpent),
-                            entries: s.maintenances.length.toString(),
-                          ),
-                        ),
-                        Positioned(
-                          right: 36, // _StatStrip's padding 20 + 16px inset
-                          bottom: 0, // 24px reserve → centre on the card edge
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _DetailActionButton(
-                                icon: Icons.edit_outlined,
-                                tooltip: 'Editar vehículo',
-                                discColor: cs.primary,
-                                iconColor: cs.onPrimary,
-                                onPressed: () =>
-                                    _openEditCar(context, ref, selectedCar),
+                              Text(
+                                '${selectedCar.year} · ${selectedCar.brand}',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
                               ),
-                              const SizedBox(width: 8),
-                              _DetailActionButton(
-                                icon: Icons.delete_outlined,
-                                tooltip: 'Eliminar vehículo',
-                                discColor: cs.error,
-                                iconColor: cs.onError,
-                                onPressed: () =>
-                                    _openDeleteCar(context, ref, selectedCar),
+                              Text(
+                                selectedCar.model,
+                                style: theme.textTheme.headlineLarge?.copyWith(
+                                  color: cs.onSurface,
+                                  letterSpacing: -0.5,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    );
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 40, 20, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Historial de mantenimientos',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: cs.onSurface,
-                        ),
-                      ),
-                      Builder(
-                        builder: (context) {
-                          final count =
-                              maintAsync.value?.maintenances.length ?? 0;
-                          return Text(
-                            '$count ${count == 1 ? 'entrada' : 'entradas'}',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: maintAsync.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => Center(child: Text('Error: $e')),
-                    data: (s) => s.maintenances.isEmpty
-                        ? const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(40),
-                              child: Text('Sin mantenimientos registrados'),
-                            ),
-                          )
-                        : Timeline(
-                            maintenances: s.maintenances,
-                            carId: carId,
-                            onOpen: (id) =>
-                                context.go('/cars/$carId/maintenances/$id'),
+                        Container(
+                          height: 28,
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainer,
+                            border: Border.all(color: cs.outlineVariant),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          child: Text(
+                            selectedCar.licensePlate,
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  maintAsync.when(
+                    loading: () => const Padding(
+                      padding: EdgeInsets.all(40),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (e, _) => Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: Center(child: Text('Error: $e')),
+                    ),
+                    data: (s) {
+                      final totalSpent = s.maintenances.fold<double>(
+                        0,
+                        (sum, m) => sum + m.cost,
+                      );
+                      final locale = Localizations.localeOf(context).toString();
+                      final costFmt = NumberFormat.currency(
+                        locale: locale,
+                        symbol: '€',
+                        decimalDigits: 0,
+                      );
+                      return Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Padding(
+                            // Reserves the buttons' 24px overhang so their
+                            // centres stay inside the Stack's hit-test bounds
+                            // (a Positioned child past the edge is not tappable).
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: _StatStrip(
+                              km: selectedCar.mileage?.toString() ?? '—',
+                              spent: costFmt.format(totalSpent),
+                              entries: s.maintenances.length.toString(),
+                            ),
+                          ),
+                          Positioned(
+                            right: 36, // _StatStrip's padding 20 + 16px inset
+                            bottom: 0, // 24px reserve → centre on the card edge
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _DetailActionButton(
+                                  icon: Icons.edit_outlined,
+                                  tooltip: 'Editar vehículo',
+                                  discColor: cs.primary,
+                                  iconColor: cs.onPrimary,
+                                  onPressed: () =>
+                                      _openEditCar(context, ref, selectedCar),
+                                ),
+                                const SizedBox(width: 8),
+                                _DetailActionButton(
+                                  icon: Icons.delete_outlined,
+                                  tooltip: 'Eliminar vehículo',
+                                  discColor: cs.error,
+                                  iconColor: cs.onError,
+                                  onPressed: () =>
+                                      _openDeleteCar(context, ref, selectedCar),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 40, 20, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Historial de mantenimientos',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: cs.onSurface,
+                          ),
+                        ),
+                        Builder(
+                          builder: (context) {
+                            final count =
+                                maintAsync.value?.maintenances.length ?? 0;
+                            return Text(
+                              '$count ${count == 1 ? 'entrada' : 'entradas'}',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: maintAsync.when(
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (e, _) => Center(child: Text('Error: $e')),
+                      data: (s) => s.maintenances.isEmpty
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(40),
+                                child: Text('Sin mantenimientos registrados'),
+                              ),
+                            )
+                          : Timeline(
+                              maintenances: s.maintenances,
+                              carId: carId,
+                              onOpen: (id) =>
+                                  context.go('/cars/$carId/maintenances/$id'),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {

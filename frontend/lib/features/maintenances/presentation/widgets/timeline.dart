@@ -35,6 +35,7 @@ class Timeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final groups = _grouped;
     final years = groups.keys.toList();
     final allFlat = [for (final y in years) ...groups[y]!];
@@ -56,6 +57,8 @@ class Timeline extends StatelessWidget {
                       pinned: true,
                       delegate: _YearHeaderDelegate(
                         label: year == 0 ? 'Sin fecha' : year.toString(),
+                        background: cs.surface,
+                        foreground: cs.onSurfaceVariant,
                       ),
                     ),
                     SliverList(
@@ -82,9 +85,17 @@ class Timeline extends StatelessWidget {
 /// Sticky label for a year group: it stays pinned to the top of the list
 /// while its group is on screen and is pushed out by the next group's.
 class _YearHeaderDelegate extends SliverPersistentHeaderDelegate {
-  const _YearHeaderDelegate({required this.label});
+  const _YearHeaderDelegate({
+    required this.label,
+    required this.background,
+    required this.foreground,
+  });
 
   final String label;
+
+  final Color background;
+
+  final Color foreground;
 
   static const double _extent = 36;
 
@@ -101,16 +112,15 @@ class _YearHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final theme = Theme.of(context);
-    final cs = theme.colorScheme;
     return Container(
       // Opaque so the entries sliding underneath do not show through.
-      color: cs.surface,
+      color: background,
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.fromLTRB(40, 12, 0, 4),
       child: Text(
         label,
         style: theme.textTheme.labelLarge?.copyWith(
-          color: cs.onSurfaceVariant,
+          color: foreground,
           letterSpacing: 1,
         ),
       ),
@@ -119,7 +129,9 @@ class _YearHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant _YearHeaderDelegate oldDelegate) =>
-      oldDelegate.label != label;
+      oldDelegate.label != label ||
+      oldDelegate.background != background ||
+      oldDelegate.foreground != foreground;
 }
 
 class TimelineEntry extends StatelessWidget {
@@ -202,11 +214,10 @@ class TimelineEntry extends StatelessWidget {
             Expanded(
               child: Container(
                 margin: const EdgeInsets.only(bottom: 12),
-                child: Ink(
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                child: Material(
+                  color: cs.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                  clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: onOpen,
                     borderRadius: BorderRadius.circular(12),

@@ -177,6 +177,35 @@ void main() {
       });
     });
 
+    group('zona superior sólida', () {
+      testWidgets('given the detail screen, '
+          'when pumped, '
+          'then the upper zone sits on an opaque surface of the page '
+          'background colour', (tester) async {
+        // given
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+
+        // when
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+
+        // then
+        final heading = find.text('Historial de mantenimientos');
+        final solidZone = tester.widget<ColoredBox>(
+          find.ancestor(of: heading, matching: find.byType(ColoredBox)).first,
+        );
+        final cs = Theme.of(tester.element(heading)).colorScheme;
+        expect(solidZone.color, cs.surface);
+        expect(
+          find.ancestor(
+            of: find.byKey(const Key('stat-strip-card')),
+            matching: find.byType(ColoredBox),
+          ),
+          findsWidgets,
+        );
+      });
+    });
+
     group('FAB añadir mantenimiento', () {
       testWidgets('given the detail screen, '
           'when the FAB is tapped and the dialog is saved, '
