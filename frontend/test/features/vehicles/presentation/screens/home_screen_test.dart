@@ -84,14 +84,11 @@ void main() {
     group('pending delete row', () {
       testWidgets('given a car pending delete, then the row is translucent and '
           'shows the pending label', (tester) async {
-        // given
         stubSyncDefaults(mockRepo);
         when(() => mockRepo.pendingDeleteIds()).thenAnswer((_) async => {'1'});
 
-        // when
         await pumpHomeScreen(tester, mockRepo);
 
-        // then
         expect(find.text('Pendiente de borrado'), findsOneWidget);
         final opacity = tester.widget<Opacity>(
           find.ancestor(of: find.byType(Card), matching: find.byType(Opacity)),
@@ -103,23 +100,18 @@ void main() {
     group('ephemeral remote change banner', () {
       testWidgets('given a remote deletion event, then a snackbar is shown and '
           'the banner is cleared', (tester) async {
-        // given
         stubSyncDefaults(mockRepo);
         when(() => mockRepo.refreshFromRemote()).thenAnswer(
           (_) async => [const RemoteSyncEvent.remoteDeleted(toyotaCorolla)],
         );
 
-        // when
         await pumpHomeScreen(tester, mockRepo);
 
-        // then — snackbar shown with the event text
         expect(find.text('Coche Toyota Corolla eliminado'), findsOneWidget);
 
-        // when — let the snackbar auto-dismiss
         await tester.pump(const Duration(seconds: 4));
         await tester.pumpAndSettle();
 
-        // then — snackbar gone
         expect(find.text('Coche Toyota Corolla eliminado'), findsNothing);
       });
     });

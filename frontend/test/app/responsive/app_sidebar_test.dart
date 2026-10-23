@@ -29,8 +29,6 @@ Future<GoRouter> pumpSidebar(
   return router;
 }
 
-/// Renders the sidebar next to a placeholder page so the rail lives inside
-/// the Navigator (where an Overlay is available for tooltips).
 Widget _sidebarLayout(BuildContext context, bool extended) {
   final destination = GoRouterState.of(context).uri.path;
   return Scaffold(
@@ -58,10 +56,8 @@ void main() {
             'add-car button and the garage destination are visible', (
           tester,
         ) async {
-          // when
           await pumpSidebar(tester, extended: extended);
 
-          // then
           expect(find.byType(NavigationRail), findsOneWidget);
           expect(find.text('Autobook'), findsOneWidget);
           expect(find.byIcon(Icons.directions_car), findsOneWidget);
@@ -76,7 +72,6 @@ void main() {
 
         testWidgets('given the sidebar, when the add-car button is tapped, '
             'then the car dialog opens', (tester) async {
-          // when
           await pumpSidebar(tester, extended: extended);
           if (extended) {
             await tester.tap(find.text('Añadir coche'));
@@ -85,13 +80,11 @@ void main() {
           }
           await tester.pumpAndSettle();
 
-          // then
           expect(find.text('Datos del vehículo'), findsOneWidget);
         });
 
         testWidgets('given the sidebar on /cars/x, when the garage '
             'destination is tapped, then the URL goes to /', (tester) async {
-          // when
           final router = await pumpSidebar(
             tester,
             extended: extended,
@@ -104,7 +97,6 @@ void main() {
           }
           await tester.pumpAndSettle();
 
-          // then
           expect(router.routeInformationProvider.value.uri.path, '/');
         });
       });

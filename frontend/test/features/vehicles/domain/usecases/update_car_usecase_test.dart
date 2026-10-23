@@ -23,7 +23,6 @@ void main() {
     test('given a draft and an existing car, '
         'when call runs, '
         'then persists and returns the merged car', () async {
-      // given
       final mergedCar = buildCar(
         model: 'Corolla Hybrid',
         year: 2021,
@@ -33,10 +32,8 @@ void main() {
       );
       when(() => mockRepo.update(any())).thenAnswer((_) async {});
 
-      // when
       final result = await useCase(corollaDraft, toyotaCorolla);
 
-      // then
       expect(result, mergedCar);
       verify(() => mockRepo.update(mergedCar)).called(1);
     });
@@ -44,10 +41,8 @@ void main() {
     test('given the repository throws a Failure, '
         'when call runs, '
         'then the Failure propagates', () async {
-      // given
       when(() => mockRepo.update(any())).thenThrow(const NetworkFailure());
 
-      // when / then
       await expectLater(
         () => useCase(corollaDraft, toyotaCorolla),
         throwsA(isA<NetworkFailure>()),

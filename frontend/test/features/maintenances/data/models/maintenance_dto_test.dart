@@ -17,25 +17,18 @@ void main() {
     );
 
     test('fromDomain then toDomain round-trips all fields', () {
-      // given -- maintenance above
-
-      // when
       final dto = MaintenanceDto.fromDomain(maintenance);
       final back = dto.toDomain();
 
-      // then
       expect(back, maintenance);
     });
 
     test('toJson then fromJson round-trips all fields', () {
-      // given
       final dto = MaintenanceDto.fromDomain(maintenance);
 
-      // when
       final json = dto.toJson();
       final back = MaintenanceDto.fromJson(json).toDomain();
 
-      // then
       expect(back, maintenance);
     });
   });

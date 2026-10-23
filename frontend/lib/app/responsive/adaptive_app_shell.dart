@@ -49,13 +49,6 @@ class AdaptiveAppShell extends StatelessWidget {
       }
     }
 
-    // Guard system / hardware / web back, which never goes through any
-    // BackButton. Can't live on the screens themselves: go_router nests a
-    // Navigator inside the shell, and the back dispatcher only interrogates
-    // the shell's own route. A true GoRouter canPop lets a pushed child pop;
-    // the callback's go is only the locked-shell fallback. Navigate with
-    // `go`, never `pop`: a pop here would be re-intercepted while the
-    // Navigator is locked.
     final canPopSystem =
         carId == null ||
         (maintenanceId != null && GoRouter.of(context).canPop());

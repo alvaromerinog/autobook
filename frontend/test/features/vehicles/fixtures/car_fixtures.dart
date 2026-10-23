@@ -1,12 +1,6 @@
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 
-// ---------------------------------------------------------------------------
-// Named canonical instances
-// ---------------------------------------------------------------------------
-// Use these const values when a test needs a stable, value-equality-safe Car
-// (e.g. inside const lists or direct expect() comparisons).
-
 const toyotaCorolla = Car(
   id: '1',
   brand: 'Toyota',
@@ -63,10 +57,8 @@ const alfaGiulia = Car(
   licensePlate: '5555 FFF',
 );
 
-/// Canonical single-element list, shared across tests that need one Car.
 const oneCarList = [toyotaCorolla];
 
-/// Canonical CarDraft, used by update/create flows to exercise draft input.
 const CarDraft corollaDraft = (
   brand: 'Toyota',
   model: 'Corolla Hybrid',
@@ -75,12 +67,6 @@ const CarDraft corollaDraft = (
   color: 'Red',
   mileage: 45000,
 );
-
-// ---------------------------------------------------------------------------
-// Factory builder
-// ---------------------------------------------------------------------------
-// Use buildCar() when you need a Car with custom fields or want to document
-// which field is relevant to a specific test. Defaults mirror toyotaCorolla.
 
 Car buildCar({
   String id = '1',

@@ -23,23 +23,18 @@ void main() {
     test('given delete succeeds, '
         'when call(car) runs, '
         'then repository.delete is called once and returns', () async {
-      // given
       when(() => mockRepo.delete(any())).thenAnswer((_) async {});
 
-      // when
       await useCase(toyotaCorolla);
 
-      // then
       verify(() => mockRepo.delete(toyotaCorolla)).called(1);
     });
 
     test('given repository.delete throws a Failure, '
         'when call(car) runs, '
         'then the Failure propagates', () async {
-      // given
       when(() => mockRepo.delete(any())).thenThrow(const NetworkFailure());
 
-      // when / then
       await expectLater(
         () => useCase(toyotaCorolla),
         throwsA(isA<NetworkFailure>()),

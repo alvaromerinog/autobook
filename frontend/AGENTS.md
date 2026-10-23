@@ -65,7 +65,7 @@ Test files live in `test/` mirroring the `lib/` structure: a file at `lib/a/b/fo
 
 ### Test conventions
 
-- Structure every test body with `// given`, `// when`, `// then` comment blocks. Keep lines within each block together; separate blocks with one blank line.
+- Structure every test body in three phases — setup, action, assertions — keeping the lines of each phase together and separating the phases with one blank line.
 - Group tests with `group()` — at minimum one top-level group per class, with nested groups per method (`getAll`, `create`, `syncPending`, etc.).
 - Create a `setUp` that builds fresh mocks and the system-under-test; call `addTearDown(container.dispose)` immediately after creating any `ProviderContainer`.
 - Use cases and repositories are tested by injecting mocks through their constructor (no `ProviderContainer` needed) — e.g. `CreateCarUseCase(mockRepo, mockIds)` with `MockCarRepository`/`MockIdGenerator` implementing the ports. Their tests live in `test/features/vehicles/domain/usecases/`.
@@ -93,6 +93,7 @@ fvm dart format lib/ test/  # Format Dart source files
 - The whole `domain/` layer is pure Dart — **no** imports of Flutter, Riverpod, `uuid`, Dio/Drift, or the `data/` layer. Entities and ports use only `freezed_annotation` (compile-time code-gen). Dependencies point inward only: `data → domain` and `presentation → domain`.
 - Domain entities use `freezed` for value equality and `copyWith`; they carry no factories that pull in infrastructure (e.g. id generation goes through the `IdGenerator` port, see below)
 - Maximum line length is 80 characters
+- Do not write comments in the code — no inline, doc or explanatory comments. Express the intent through naming, structure and types, and keep the rationale in the commit message or `DESIGN.md`
 
 ### Variable naming
 

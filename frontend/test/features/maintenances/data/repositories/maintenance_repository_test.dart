@@ -71,12 +71,10 @@ void main() {
       test('given the local data source throws, '
           'when getAll runs, '
           'then maps the error to a CacheFailure', () async {
-        // given
         when(
           () => mockLocal.getAll('car-1'),
         ).thenThrow(StateError('database unavailable'));
 
-        // when / then
         await expectLater(
           () => repo.getAll('car-1'),
           throwsA(isA<CacheFailure>()),
@@ -88,15 +86,12 @@ void main() {
       test('given device is offline, '
           'when refreshFromRemote runs, '
           'then skips the remote call and returns no events', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => false);
 
-        // when
         final events = await repo.refreshFromRemote('car-1');
 
-        // then
         expect(events, isEmpty);
         verifyNever(() => mockRemote.fetchForCar(any()));
       });
@@ -104,7 +99,6 @@ void main() {
       test('given api returns two maintenances, '
           'when refreshFromRemote runs, '
           'then upserts both rows', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -122,10 +116,8 @@ void main() {
         when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         final events = await repo.refreshFromRemote('car-1');
 
-        // then
         final captured = verify(
           () => mockLocal.upsertAll(captureAny()),
         ).captured;
@@ -139,7 +131,6 @@ void main() {
       test('given api throws a DioException with a response, '
           'when refreshFromRemote runs, '
           'then throws ServerFailure with status code', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -154,7 +145,6 @@ void main() {
           ),
         );
 
-        // when / then
         await expectLater(
           () => repo.refreshFromRemote('car-1'),
           throwsA(isA<ServerFailure>()),
@@ -164,7 +154,6 @@ void main() {
       test('given api throws a generic exception, '
           'when refreshFromRemote runs, '
           'then throws NetworkFailure', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -172,7 +161,6 @@ void main() {
           () => mockRemote.fetchForCar('car-1'),
         ).thenThrow(Exception('network error'));
 
-        // when / then
         await expectLater(
           () => repo.refreshFromRemote('car-1'),
           throwsA(isA<NetworkFailure>()),
@@ -182,7 +170,6 @@ void main() {
       test('given getAllWithStates throws, '
           'when refreshFromRemote runs, '
           'then throws CacheFailure', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -193,7 +180,6 @@ void main() {
           () => mockLocal.getAllWithStates('car-1'),
         ).thenThrow(StateError('database unavailable'));
 
-        // when / then
         await expectLater(
           () => repo.refreshFromRemote('car-1'),
           throwsA(isA<CacheFailure>()),
@@ -203,7 +189,6 @@ void main() {
       test('given upsertAll throws after a successful fetch, '
           'when refreshFromRemote runs, '
           'then throws CacheFailure', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -217,7 +202,6 @@ void main() {
           () => mockLocal.upsertAll(any()),
         ).thenThrow(StateError('db error'));
 
-        // when / then
         await expectLater(
           () => repo.refreshFromRemote('car-1'),
           throwsA(isA<CacheFailure>()),
@@ -227,7 +211,6 @@ void main() {
       test('given a local pendingUpdate id exists remotely, '
           'when refreshFromRemote runs, '
           'then upsertAll skips that id', () async {
-        // given
         final staleRemote = oilChangeMarch.copyWith(cost: 99);
         when(
           () => mockConnectivity.isConnected(),
@@ -248,10 +231,8 @@ void main() {
         when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         final events = await repo.refreshFromRemote('car-1');
 
-        // then
         final captured = verify(
           () => mockLocal.upsertAll(captureAny()),
         ).captured;
@@ -263,7 +244,6 @@ void main() {
       test('given a local pendingCreate id exists remotely, '
           'when refreshFromRemote runs, '
           'then upsertAll skips that id too', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -283,10 +263,8 @@ void main() {
         when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         final events = await repo.refreshFromRemote('car-1');
 
-        // then
         final captured = verify(
           () => mockLocal.upsertAll(captureAny()),
         ).captured;
@@ -298,7 +276,6 @@ void main() {
       test('given a synced row missing from the remote list, '
           'when refreshFromRemote runs, '
           'then hard deletes it and emits a remoteDeleted event', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -313,10 +290,8 @@ void main() {
         when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         final events = await repo.refreshFromRemote('car-1');
 
-        // then
         verify(() => mockLocal.hardDelete('1')).called(1);
         expect(events, [
           const MaintenanceRemoteSyncEvent.remoteDeleted(oilChangeMarch),
@@ -326,7 +301,6 @@ void main() {
       test('given a pendingUpdate row missing from the remote list, '
           'when refreshFromRemote runs, '
           'then hard deletes it and emits the discarded-edit event', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -344,10 +318,8 @@ void main() {
         when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         final events = await repo.refreshFromRemote('car-1');
 
-        // then
         verify(() => mockLocal.hardDelete('1')).called(1);
         expect(events, [
           const MaintenanceRemoteSyncEvent.remoteDeletedWithPendingUpdate(
@@ -359,7 +331,6 @@ void main() {
       test('given a pendingDelete row missing from the remote list, '
           'when refreshFromRemote runs, '
           'then hard deletes it without an event', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -377,10 +348,8 @@ void main() {
         when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         final events = await repo.refreshFromRemote('car-1');
 
-        // then
         verify(() => mockLocal.hardDelete('1')).called(1);
         expect(events, isEmpty);
       });
@@ -388,7 +357,6 @@ void main() {
       test('given a pendingDelete row still present remotely, '
           'when refreshFromRemote runs, '
           'then it is not reconciled and nothing is deleted', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -408,10 +376,8 @@ void main() {
         when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         final events = await repo.refreshFromRemote('car-1');
 
-        // then
         verifyNever(() => mockLocal.hardDelete(any()));
         expect(events, isEmpty);
       });
@@ -419,7 +385,6 @@ void main() {
       test('given a pendingCreate row missing from the remote list, '
           'when refreshFromRemote runs, '
           'then it is left intact and no event is emitted', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -437,10 +402,8 @@ void main() {
         when(() => mockLocal.upsertAll(any())).thenAnswer((_) async {});
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         final events = await repo.refreshFromRemote('car-1');
 
-        // then
         verifyNever(() => mockLocal.hardDelete(any()));
         expect(events, isEmpty);
       });
@@ -452,7 +415,6 @@ void main() {
         'when create is called with a new maintenance, '
         'then inserts as pending, pushes to remote, and marks synced',
         () async {
-          // given
           const newMaintenance = coolantFlushJune;
           when(
             () => mockConnectivity.isConnected(),
@@ -461,10 +423,8 @@ void main() {
           when(() => mockRemote.create(any(), any())).thenAnswer((_) async {});
           when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
 
-          // when
           await repo.create(newMaintenance);
 
-          // then
           verify(() => mockLocal.insertPending(newMaintenance)).called(1);
           verify(
             () => mockRemote.create(
@@ -479,17 +439,14 @@ void main() {
       test('given device is offline, '
           'when create is called, '
           'then inserts as pendingCreate and does not call remote', () async {
-        // given
         const newMaintenance = coolantFlushJune;
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => false);
         when(() => mockLocal.insertPending(any())).thenAnswer((_) async {});
 
-        // when
         await repo.create(newMaintenance);
 
-        // then
         verify(() => mockLocal.insertPending(newMaintenance)).called(1);
         verifyNever(() => mockRemote.create(any(), any()));
         verifyNever(() => mockLocal.markSynced(any()));
@@ -498,7 +455,6 @@ void main() {
       test('given device is online but api throws, '
           'when create is called, '
           'then throws Failure and row stays pending', () async {
-        // given
         const newMaintenance = coolantFlushJune;
         when(
           () => mockConnectivity.isConnected(),
@@ -508,7 +464,6 @@ void main() {
           () => mockRemote.create(any(), any()),
         ).thenThrow(Exception('server error'));
 
-        // when / then
         await expectLater(
           () => repo.create(newMaintenance),
           throwsA(isA<NetworkFailure>()),
@@ -520,7 +475,6 @@ void main() {
       test('given api throws a connectionTimeout DioException, '
           'when create is called, '
           'then throws NetworkFailure and row stays pending', () async {
-        // given
         const newMaintenance = coolantFlushJune;
         when(
           () => mockConnectivity.isConnected(),
@@ -533,7 +487,6 @@ void main() {
           ),
         );
 
-        // when / then
         await expectLater(
           () => repo.create(newMaintenance),
           throwsA(isA<NetworkFailure>()),
@@ -544,7 +497,6 @@ void main() {
       test('given remote create returns 409, '
           'when create is called, '
           'then settles via markSynced and does not throw', () async {
-        // given
         const newMaintenance = coolantFlushJune;
         when(
           () => mockConnectivity.isConnected(),
@@ -562,10 +514,8 @@ void main() {
         );
         when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
 
-        // when
         await repo.create(newMaintenance);
 
-        // then
         verify(() => mockLocal.markSynced('n1')).called(1);
       });
     });
@@ -576,7 +526,6 @@ void main() {
         'when update is called, '
         'then upserts as pendingUpdate, pushes to remote, and marks synced',
         () async {
-          // given
           when(
             () => mockConnectivity.isConnected(),
           ).thenAnswer((_) async => true);
@@ -591,10 +540,8 @@ void main() {
           ).thenAnswer((_) async {});
           when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
 
-          // when
           await repo.update(oilChangeMarch);
 
-          // then
           verify(
             () => mockLocal.upsertPending(
               oilChangeMarch,
@@ -615,7 +562,6 @@ void main() {
       test('given device is offline, '
           'when update is called, '
           'then upserts as pendingUpdate and does not call remote', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => false);
@@ -626,10 +572,8 @@ void main() {
           ),
         ).thenAnswer((_) async {});
 
-        // when
         await repo.update(oilChangeMarch);
 
-        // then
         verify(
           () => mockLocal.upsertPending(
             oilChangeMarch,
@@ -643,7 +587,6 @@ void main() {
       test('given remote update returns 404, '
           'when update push runs, '
           'then hard-deletes locally and does not throw', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -667,10 +610,8 @@ void main() {
         );
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         await repo.update(oilChangeMarch);
 
-        // then
         verify(() => mockLocal.hardDelete('1')).called(1);
         verifyNever(() => mockLocal.markSynced(any()));
       });
@@ -678,7 +619,6 @@ void main() {
       test('given remote update returns a server error, '
           'when update is called, '
           'then throws ServerFailure and row stays pending', () async {
-        // given
         when(
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => true);
@@ -701,7 +641,6 @@ void main() {
           ),
         );
 
-        // when / then
         await expectLater(
           () => repo.update(oilChangeMarch),
           throwsA(isA<ServerFailure>()),
@@ -716,7 +655,6 @@ void main() {
         'when delete is called, '
         'then marks pending delete, pushes to remote and hard deletes',
         () async {
-          // given
           when(
             () => mockLocal.syncStateOf('1'),
           ).thenAnswer((_) async => SyncStateEnum.synced);
@@ -729,10 +667,8 @@ void main() {
           when(() => mockRemote.delete(any(), any())).thenAnswer((_) async {});
           when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-          // when
           await repo.delete(oilChangeMarch);
 
-          // then
           verify(() => mockLocal.markPendingDelete('1')).called(1);
           verify(() => mockRemote.delete('car-1', '1')).called(1);
           verify(() => mockLocal.hardDelete('1')).called(1);
@@ -742,16 +678,13 @@ void main() {
       test('given row is pendingCreate, '
           'when delete is called, '
           'then hard deletes locally and never calls remote', () async {
-        // given
         when(
           () => mockLocal.syncStateOf('pend1'),
         ).thenAnswer((_) async => SyncStateEnum.pendingCreate);
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         await repo.delete(brakesPending);
 
-        // then
         verify(() => mockLocal.hardDelete('pend1')).called(1);
         verifyNever(() => mockRemote.delete(any(), any()));
         verifyNever(() => mockLocal.markPendingDelete(any()));
@@ -760,7 +693,6 @@ void main() {
       test('given a pendingCreate row whose push is awaiting connectivity, '
           'when delete of the same row runs, '
           'then throws CacheFailure and does not hard delete', () async {
-        // given
         final gate = Completer<void>();
         when(
           () => mockConnectivity.isConnected(),
@@ -775,14 +707,12 @@ void main() {
         final createFuture = repo.create(brakesPending);
         await pumpEventQueue();
 
-        // when / then
         await expectLater(
           () => repo.delete(brakesPending),
           throwsA(isA<CacheFailure>()),
         );
         verifyNever(() => mockLocal.hardDelete(any()));
 
-        // when — complete the in-flight push so no future leaks
         gate.complete();
         await createFuture;
       });
@@ -790,7 +720,6 @@ void main() {
       test('given device is offline and row is synced, '
           'when delete is called, '
           'then marks pending delete and never calls remote', () async {
-        // given
         when(
           () => mockLocal.syncStateOf('1'),
         ).thenAnswer((_) async => SyncStateEnum.synced);
@@ -799,10 +728,8 @@ void main() {
           () => mockConnectivity.isConnected(),
         ).thenAnswer((_) async => false);
 
-        // when
         await repo.delete(oilChangeMarch);
 
-        // then
         verify(() => mockLocal.markPendingDelete('1')).called(1);
         verifyNever(() => mockRemote.delete(any(), any()));
         verifyNever(() => mockLocal.hardDelete(any()));
@@ -811,7 +738,6 @@ void main() {
       test('given remote delete returns 404, '
           'when delete is called, '
           'then treats it as success and hard deletes', () async {
-        // given
         when(
           () => mockLocal.syncStateOf('1'),
         ).thenAnswer((_) async => SyncStateEnum.synced);
@@ -833,17 +759,14 @@ void main() {
         );
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         await repo.delete(oilChangeMarch);
 
-        // then
         verify(() => mockLocal.hardDelete('1')).called(1);
       });
 
       test('given remote delete returns 500, '
           'when delete is called, '
           'then throws ServerFailure and row stays pending delete', () async {
-        // given
         when(
           () => mockLocal.syncStateOf('1'),
         ).thenAnswer((_) async => SyncStateEnum.synced);
@@ -864,7 +787,6 @@ void main() {
           ),
         );
 
-        // when / then
         await expectLater(
           () => repo.delete(oilChangeMarch),
           throwsA(isA<ServerFailure>()),
@@ -876,7 +798,6 @@ void main() {
       test('given remote delete times out, '
           'when delete is called, '
           'then throws NetworkFailure and row stays pending delete', () async {
-        // given
         when(
           () => mockLocal.syncStateOf('1'),
         ).thenAnswer((_) async => SyncStateEnum.synced);
@@ -891,7 +812,6 @@ void main() {
           ),
         );
 
-        // when / then
         await expectLater(
           () => repo.delete(oilChangeMarch),
           throwsA(isA<NetworkFailure>()),
@@ -905,38 +825,30 @@ void main() {
       test('given pending rows exist, '
           'when hasPending runs, '
           'then returns true', () async {
-        // given
         when(() => mockLocal.countPending('car-1')).thenAnswer((_) async => 2);
 
-        // when
         final pending = await repo.hasPending('car-1');
 
-        // then
         expect(pending, isTrue);
       });
 
       test('given no pending rows, '
           'when hasPending runs, '
           'then returns false', () async {
-        // given
         when(() => mockLocal.countPending('car-1')).thenAnswer((_) async => 0);
 
-        // when
         final pending = await repo.hasPending('car-1');
 
-        // then
         expect(pending, isFalse);
       });
 
       test('given the local data source throws, '
           'when hasPending runs, '
           'then maps the error to a CacheFailure', () async {
-        // given
         when(
           () => mockLocal.countPending('car-1'),
         ).thenThrow(StateError('database unavailable'));
 
-        // when / then
         await expectLater(
           () => repo.hasPending('car-1'),
           throwsA(isA<CacheFailure>()),
@@ -948,27 +860,22 @@ void main() {
       test('given the local data source returns ids, '
           'when pendingDeleteIds is called, '
           'then returns the same set', () async {
-        // given
         when(
           () => mockLocal.pendingDeleteIds('car-1'),
         ).thenAnswer((_) async => {'a', 'b'});
 
-        // when
         final ids = await repo.pendingDeleteIds('car-1');
 
-        // then
         expect(ids, {'a', 'b'});
       });
 
       test('given the local data source throws, '
           'when pendingDeleteIds is called, '
           'then maps the error to a CacheFailure', () async {
-        // given
         when(
           () => mockLocal.pendingDeleteIds('car-1'),
         ).thenThrow(StateError('database unavailable'));
 
-        // when / then
         await expectLater(
           () => repo.pendingDeleteIds('car-1'),
           throwsA(isA<CacheFailure>()),
@@ -980,7 +887,6 @@ void main() {
       test('given one pendingCreate row and device is online, '
           'when syncPending is called, '
           'then pushes to api and marks synced', () async {
-        // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [
             (
@@ -995,10 +901,8 @@ void main() {
         when(() => mockRemote.create(any(), any())).thenAnswer((_) async {});
         when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
 
-        // when
         await repo.syncPending();
 
-        // then
         verify(() => mockRemote.create(any(), any())).called(1);
         verify(() => mockLocal.markSynced('pend1')).called(1);
       });
@@ -1006,7 +910,6 @@ void main() {
       test('given 2 pending rows and the second fails, '
           'when syncPending is called, '
           'then first is synced and second stays pending', () async {
-        // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [
             (
@@ -1029,10 +932,8 @@ void main() {
         });
         when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
 
-        // when
         await repo.syncPending();
 
-        // then
         verify(() => mockLocal.markSynced('pend1')).called(1);
         verifyNever(() => mockLocal.markSynced('pend2'));
       });
@@ -1040,7 +941,6 @@ void main() {
       test('given all create pushes fail, '
           'when syncPending is called, '
           'then all pending rows stay pending', () async {
-        // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [
             (
@@ -1056,22 +956,18 @@ void main() {
           () => mockRemote.create(any(), any()),
         ).thenThrow(Exception('server error'));
 
-        // when
         await repo.syncPending();
 
-        // then
         verifyNever(() => mockLocal.markSynced(any()));
       });
 
       test('given getPending throws, '
           'when syncPending is called, '
           'then throws CacheFailure', () async {
-        // given
         when(
           () => mockLocal.getPending(),
         ).thenThrow(StateError('database unavailable'));
 
-        // when / then
         await expectLater(
           () => repo.syncPending(),
           throwsA(isA<CacheFailure>()),
@@ -1081,7 +977,6 @@ void main() {
       test('given one pendingUpdate row and device is online, '
           'when syncPending is called, '
           'then calls remote update and marks synced', () async {
-        // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [
             (
@@ -1098,10 +993,8 @@ void main() {
         ).thenAnswer((_) async {});
         when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
 
-        // when
         await repo.syncPending();
 
-        // then
         verify(() => mockRemote.update('car-1', 'pend1', any())).called(1);
         verifyNever(() => mockRemote.create(any(), any()));
         verify(() => mockLocal.markSynced('pend1')).called(1);
@@ -1110,7 +1003,6 @@ void main() {
       test('given a pendingUpdate row receives a 404, '
           'when syncPending is called, '
           'then hard-deletes the row and completes without throwing', () async {
-        // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [
             (
@@ -1138,10 +1030,8 @@ void main() {
         );
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         await repo.syncPending();
 
-        // then
         verify(() => mockLocal.hardDelete('pend1')).called(1);
         verifyNever(() => mockLocal.markSynced(any()));
       });
@@ -1149,7 +1039,6 @@ void main() {
       test('given a pendingDelete row and device is online, '
           'when syncPending is called, '
           'then calls remote delete and hard deletes', () async {
-        // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [
             (
@@ -1164,10 +1053,8 @@ void main() {
         when(() => mockRemote.delete(any(), any())).thenAnswer((_) async {});
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         await repo.syncPending();
 
-        // then
         verify(() => mockRemote.delete('car-1', 'pend1')).called(1);
         verify(() => mockLocal.hardDelete('pend1')).called(1);
       });
@@ -1175,7 +1062,6 @@ void main() {
       test('given a pendingDelete row receives a 404, '
           'when syncPending is called, '
           'then hard deletes without throwing', () async {
-        // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [
             (
@@ -1203,17 +1089,14 @@ void main() {
         );
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         await repo.syncPending();
 
-        // then
         verify(() => mockLocal.hardDelete('pend1')).called(1);
       });
 
       test('given a pendingDelete row fails with a 500, '
           'when syncPending is called, '
           'then hard delete is not called and the row stays pending', () async {
-        // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [
             (
@@ -1240,17 +1123,14 @@ void main() {
           ),
         );
 
-        // when
         await repo.syncPending();
 
-        // then
         verifyNever(() => mockLocal.hardDelete(any()));
       });
 
       test('given remote create returns 409 during the flush, '
           'when syncPending is called, '
           'then marks synced to stop retrying', () async {
-        // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [
             (
@@ -1274,10 +1154,8 @@ void main() {
         );
         when(() => mockLocal.markSynced(any())).thenAnswer((_) async {});
 
-        // when
         await repo.syncPending();
 
-        // then
         verify(() => mockLocal.markSynced('pend1')).called(1);
       });
 
@@ -1285,7 +1163,6 @@ void main() {
           'when syncPending is called, '
           'then both are processed in order and one failure does not abort '
           'the other', () async {
-        // given
         when(() => mockLocal.getPending()).thenAnswer(
           (_) async => [
             (
@@ -1314,10 +1191,8 @@ void main() {
         when(() => mockRemote.delete(any(), any())).thenAnswer((_) async {});
         when(() => mockLocal.hardDelete(any())).thenAnswer((_) async {});
 
-        // when
         await repo.syncPending();
 
-        // then
         verify(() => mockRemote.delete('car-1', 'pend2')).called(1);
         verify(() => mockLocal.hardDelete('pend2')).called(1);
       });

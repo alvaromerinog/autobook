@@ -18,7 +18,6 @@ void main() {
     });
 
     test('delegates to repo.getAll with the carId', () async {
-      // given
       const carId = 'car-1';
       final cached = [
         const Maintenance(
@@ -32,10 +31,8 @@ void main() {
       ];
       when(() => repo.getAll(carId)).thenAnswer((_) async => cached);
 
-      // when
       final result = await usecase(carId);
 
-      // then
       expect(result, cached);
       verify(() => repo.getAll(carId)).called(1);
     });

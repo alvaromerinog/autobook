@@ -35,23 +35,19 @@ void main() {
   group('DeleteCarDialog', () {
     testWidgets('given the dialog, when Eliminar is pressed, '
         'then it pops with true and closes', (tester) async {
-      // given
       final result = <bool?>[null];
       await pumpDialog(tester, toyotaCorolla, result);
       expect(find.text('Eliminar vehículo'), findsOneWidget);
 
-      // when
       await tester.tap(find.text('Eliminar'));
       await tester.pumpAndSettle();
 
-      // then
       expect(result[0], isTrue);
       expect(find.text('Eliminar vehículo'), findsNothing);
     });
 
     testWidgets('given the dialog, when Cancelar is pressed, '
         'then it pops with false and closes', (tester) async {
-      // given
       final result = <bool?>[null];
       await pumpDialog(tester, toyotaCorolla, result);
       expect(
@@ -59,11 +55,9 @@ void main() {
         findsOneWidget,
       );
 
-      // when
       await tester.tap(find.text('Cancelar'));
       await tester.pumpAndSettle();
 
-      // then
       expect(result[0], isFalse);
       expect(find.text('Eliminar vehículo'), findsNothing);
     });

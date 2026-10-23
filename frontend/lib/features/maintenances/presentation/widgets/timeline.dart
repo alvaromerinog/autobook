@@ -35,40 +35,96 @@ class Timeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final groups = _grouped;
     final years = groups.keys.toList();
     final allFlat = [for (final y in years) ...groups[y]!];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Column(
-        children: [
-          for (int gi = 0; gi < years.length; gi++) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(40, 12, 0, 4),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  years[gi] == 0 ? 'Sin fecha' : years[gi].toString(),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    letterSpacing: 1,
-                  ),
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 88),
+          sliver: SliverMainAxisGroup(
+            slivers: [
+              for (final year in years)
+                SliverMainAxisGroup(
+                  slivers: [
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _YearHeaderDelegate(
+                        label: year == 0 ? 'Sin fecha' : year.toString(),
+                        background: cs.surface,
+                        foreground: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final maintenance = groups[year]![index];
+                        return TimelineEntry(
+                          maintenance: maintenance,
+                          isFirst: identical(maintenance, allFlat.first),
+                          isLast: identical(maintenance, allFlat.last),
+                          onOpen: () => onOpen(maintenance.id),
+                        );
+                      }, childCount: groups[year]!.length),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            for (int i = 0; i < groups[years[gi]]!.length; i++)
-              TimelineEntry(
-                maintenance: groups[years[gi]]![i],
-                isFirst: identical(groups[years[gi]]![i], allFlat.first),
-                isLast: identical(groups[years[gi]]![i], allFlat.last),
-                onOpen: () => onOpen(groups[years[gi]]![i].id),
-              ),
-          ],
-        ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _YearHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _YearHeaderDelegate({
+    required this.label,
+    required this.background,
+    required this.foreground,
+  });
+
+  final String label;
+
+  final Color background;
+
+  final Color foreground;
+
+  static const double _extent = 36;
+
+  @override
+  double get minExtent => _extent;
+
+  @override
+  double get maxExtent => _extent;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final theme = Theme.of(context);
+    return Container(
+      color: background,
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.fromLTRB(40, 12, 0, 4),
+      child: Text(
+        label,
+        style: theme.textTheme.labelLarge?.copyWith(
+          color: foreground,
+          letterSpacing: 1,
+        ),
       ),
     );
   }
+
+  @override
+  bool shouldRebuild(covariant _YearHeaderDelegate oldDelegate) =>
+      oldDelegate.label != label ||
+      oldDelegate.background != background ||
+      oldDelegate.foreground != foreground;
 }
 
 class TimelineEntry extends StatelessWidget {
@@ -151,11 +207,10 @@ class TimelineEntry extends StatelessWidget {
             Expanded(
               child: Container(
                 margin: const EdgeInsets.only(bottom: 12),
-                child: Ink(
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                child: Material(
+                  color: cs.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                  clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: onOpen,
                     borderRadius: BorderRadius.circular(12),
@@ -192,12 +247,16 @@ class TimelineEntry extends StatelessWidget {
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    Text(
-                                      '${kmFmt.format(maintenance.mileage)} km',
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color: cs.onSurfaceVariant,
-                                          ),
+                                    Flexible(
+                                      child: Text(
+                                        '${kmFmt.format(maintenance.mileage)} km',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                            ),
+                                      ),
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
