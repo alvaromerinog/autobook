@@ -18,8 +18,10 @@ NestJS REST API for autobook. All commands must be run from the `backend/` direc
 ```bash
 pnpm install
 pnpm db:migrate   # Apply pending migrations to the local database
-pnpm db:generate  # Regenerate the Prisma client
+pnpm db:generate  # Regenerate the Prisma client (also runs automatically via postinstall)
 ```
+
+The generated client lives inside the Prisma package in `node_modules`, so dependency installs/updates wipe it. The `postinstall` script (`prisma generate`) regenerates it automatically after every `pnpm install`/`pnpm update`.
 
 Both scripts are also available as Taskfile tasks: `task db:migrate`, `task db:generate` (from `backend/`) or `task backend:db:migrate` (from the repo root).
 
