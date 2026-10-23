@@ -212,9 +212,6 @@ class CarDetailScreen extends ConsumerWidget {
                         clipBehavior: Clip.none,
                         children: [
                           Padding(
-                            // Reserves the buttons' 24px overhang so their
-                            // centres stay inside the Stack's hit-test bounds
-                            // (a Positioned child past the edge is not tappable).
                             padding: const EdgeInsets.only(bottom: 24),
                             child: _StatStrip(
                               km: selectedCar.mileage?.toString() ?? '—',
@@ -223,8 +220,8 @@ class CarDetailScreen extends ConsumerWidget {
                             ),
                           ),
                           Positioned(
-                            right: 36, // _StatStrip's padding 20 + 16px inset
-                            bottom: 0, // 24px reserve → centre on the card edge
+                            right: 36,
+                            bottom: 0,
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [

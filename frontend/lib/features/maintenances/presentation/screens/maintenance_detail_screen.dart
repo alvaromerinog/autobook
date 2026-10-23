@@ -191,9 +191,6 @@ class MaintenanceDetailScreen extends ConsumerWidget {
               clipBehavior: Clip.none,
               children: [
                 Padding(
-                  // Reserves the buttons' 24px overhang so their centres
-                  // stay inside the Stack's hit-test bounds (a Positioned
-                  // child past the edge is not tappable).
                   padding: const EdgeInsets.only(bottom: 24),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -235,8 +232,8 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                   ),
                 ),
                 Positioned(
-                  right: 36, // outer padding 20 + 16px card inset
-                  bottom: 0, // 24px reserve → centre on the card edge
+                  right: 36,
+                  bottom: 0,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

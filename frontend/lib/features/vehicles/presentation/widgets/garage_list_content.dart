@@ -316,7 +316,6 @@ class _CarCard extends ConsumerWidget {
                               color: colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 4),
-                            // TODO: Cambiar a km o mi según los ajustes del usuario
                             Text(
                               '${_formatMileage(context, car.mileage!)} km',
                               style: theme.textTheme.bodySmall?.copyWith(

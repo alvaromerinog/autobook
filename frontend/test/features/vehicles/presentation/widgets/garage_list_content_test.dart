@@ -81,40 +81,31 @@ void main() {
     testWidgets('given one car, when pumped, then the car card is shown', (
       tester,
     ) async {
-      // given
       stubDefaults(mockRepo);
 
-      // when
       await pumpGarageList(tester, mockRepo);
 
-      // then
       expect(find.text('Toyota Corolla'), findsOneWidget);
     });
 
     testWidgets('given an empty garage, when pumped, then the empty state '
         'is shown', (tester) async {
-      // given
       stubDefaults(mockRepo, cars: const []);
 
-      // when
       await pumpGarageList(tester, mockRepo);
 
-      // then
       expect(find.text('Tu garaje está vacío'), findsOneWidget);
     });
 
     testWidgets('given a remote deletion event, when the list settles, '
         'then the snackbar is shown', (tester) async {
-      // given
       stubDefaults(mockRepo);
       when(() => mockRepo.refreshFromRemote()).thenAnswer(
         (_) async => [const RemoteSyncEvent.remoteDeleted(toyotaCorolla)],
       );
 
-      // when
       await pumpGarageList(tester, mockRepo);
 
-      // then — snackbar shown with the event text
       expect(find.text('Coche Toyota Corolla eliminado'), findsOneWidget);
     });
   });

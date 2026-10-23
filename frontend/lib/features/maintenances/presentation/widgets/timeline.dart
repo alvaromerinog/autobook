@@ -40,10 +40,6 @@ class Timeline extends StatelessWidget {
     final years = groups.keys.toList();
     final allFlat = [for (final y in years) ...groups[y]!];
 
-    // The list is the only scrollable part of the screen: the car header,
-    // the stat strip and the "Historial de mantenimientos" title stay put
-    // above it. The bottom padding keeps the last entry reachable from
-    // behind the floating action button.
     return CustomScrollView(
       slivers: [
         SliverPadding(
@@ -82,8 +78,6 @@ class Timeline extends StatelessWidget {
   }
 }
 
-/// Sticky label for a year group: it stays pinned to the top of the list
-/// while its group is on screen and is pushed out by the next group's.
 class _YearHeaderDelegate extends SliverPersistentHeaderDelegate {
   const _YearHeaderDelegate({
     required this.label,
@@ -113,7 +107,6 @@ class _YearHeaderDelegate extends SliverPersistentHeaderDelegate {
   ) {
     final theme = Theme.of(context);
     return Container(
-      // Opaque so the entries sliding underneath do not show through.
       color: background,
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.fromLTRB(40, 12, 0, 4),
@@ -254,9 +247,6 @@ class TimelineEntry extends StatelessWidget {
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    // The mileage gives way first: on narrow
-                                    // screens the row would otherwise
-                                    // overflow instead of shrinking.
                                     Flexible(
                                       child: Text(
                                         '${kmFmt.format(maintenance.mileage)} km',

@@ -40,7 +40,6 @@ void main() {
     });
 
     test('build emits cached maintenances from local', () async {
-      // given
       const carId = 'car-1';
       final cached = [
         const Maintenance(
@@ -62,19 +61,16 @@ void main() {
       ).thenAnswer((_) async => <MaintenanceRemoteSyncEvent>[]);
       when(() => repo.syncPending()).thenAnswer((_) async {});
       container.listen(maintenanceListProvider(carId), (_, _) {});
-      container.read(syncCoordinatorProvider); // ensure coordinator exists
+      container.read(syncCoordinatorProvider);
 
-      // when
       await container.read(maintenanceListProvider(carId).future);
 
-      // then
       final state = container.read(maintenanceListProvider(carId));
       expect(state.value!.maintenances, cached);
       expect(state.value!.hasPendingSync, false);
     });
 
     test('add delegates to repo.create via the create use case', () async {
-      // given
       const carId = 'car-1';
       when(() => repo.getAll(carId)).thenAnswer((_) async => <Maintenance>[]);
       when(() => repo.hasPending(carId)).thenAnswer((_) async => false);
@@ -99,17 +95,14 @@ void main() {
         notes: null,
       );
 
-      // when
       await container.read(maintenanceListProvider(carId).notifier).add(draft);
 
-      // then
       verify(() => repo.create(any())).called(1);
     });
 
     test('given provider disposed mid-mutation, '
         'when the mutation completes, '
         'then no error escapes', () async {
-      // given
       const carId = 'car-1';
       const maintenance = Maintenance(
         id: 'm1',
@@ -141,21 +134,18 @@ void main() {
       midFlightContainer.listen(maintenanceListProvider(carId), (_, _) {});
       await midFlightContainer.read(maintenanceListProvider(carId).future);
 
-      // when
       final mutation = midFlightContainer
           .read(maintenanceListProvider(carId).notifier)
           .deleteMaint(maintenance);
       midFlightContainer.dispose();
       deleteGate.complete();
 
-      // then
       await expectLater(mutation, completes);
     });
 
     test('given provider disposed while post-mutation reads are in flight, '
         'when the reads complete, '
         'then no error escapes', () async {
-      // given
       const carId = 'car-1';
       const maintenance = Maintenance(
         id: 'm1',
@@ -189,7 +179,6 @@ void main() {
       final readGate = Completer<List<Maintenance>>();
       when(() => repo.getAll(carId)).thenAnswer((_) => readGate.future);
 
-      // when
       final mutation = midFlightContainer
           .read(maintenanceListProvider(carId).notifier)
           .deleteMaint(maintenance);
@@ -197,12 +186,10 @@ void main() {
       midFlightContainer.dispose();
       readGate.complete([maintenance]);
 
-      // then
       await expectLater(mutation, completes);
     });
 
     test('deleteMaint rethrows ServerFailure as Failure', () async {
-      // given
       const carId = 'car-1';
       const maintenance = Maintenance(
         id: 'm1',
@@ -226,7 +213,6 @@ void main() {
       container.read(syncCoordinatorProvider);
       await container.read(maintenanceListProvider(carId).future);
 
-      // when / then
       await expectLater(
         container
             .read(maintenanceListProvider(carId).notifier)

@@ -22,8 +22,6 @@ import '../../helpers/car_mocks.dart';
 
 class MockIdGenerator extends Mock implements IdGenerator {}
 
-/// Harness that exposes [addCar] behind a button so the helper can be
-/// exercised with a real BuildContext and WidgetRef.
 class _AddCarHarness extends ConsumerWidget {
   const _AddCarHarness();
 
@@ -114,38 +112,32 @@ void main() {
   group('addCar', () {
     testWidgets('given a filled dialog, when saved, then repo.create is '
         'invoked once', (tester) async {
-      // given
       stubDefaults(mockRepo);
       when(() => mockRepo.create(any())).thenAnswer((_) async {});
       final mockIds = MockIdGenerator();
       when(() => mockIds.newId()).thenReturn('new-1');
 
-      // when — open dialog and save
       await pumpHarness(tester, mockRepo, mockIds);
       await tester.tap(find.text('Abrir añadir'));
       await tester.pumpAndSettle();
       expect(find.text('Datos del vehículo'), findsOneWidget);
       await fillAndSave(tester);
 
-      // then
       verify(() => mockRepo.create(any())).called(1);
     });
 
     testWidgets('given repo.create throws a ServerFailure, then a snackbar '
         'with Reintentar is shown', (tester) async {
-      // given
       stubDefaults(mockRepo);
       when(() => mockRepo.create(any())).thenThrow(const ServerFailure(500));
       final mockIds = MockIdGenerator();
       when(() => mockIds.newId()).thenReturn('new-1');
 
-      // when — open dialog and save
       await pumpHarness(tester, mockRepo, mockIds);
       await tester.tap(find.text('Abrir añadir'));
       await tester.pumpAndSettle();
       await fillAndSave(tester);
 
-      // then
       expect(find.text('Error al crear el vehículo'), findsOneWidget);
       expect(find.text('Reintentar'), findsOneWidget);
     });

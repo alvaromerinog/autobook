@@ -29,13 +29,10 @@ void main() {
     testWidgets('given one maintenance with yyyy-MM-dd date, '
         'when pumped, '
         'then the type label and year are painted', (tester) async {
-      // given
       final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
 
-      // when
       await tester.pumpWidget(_pumpTimeline([m]));
 
-      // then
       expect(find.text('2026'), findsOneWidget);
       expect(find.text('Cambio de aceite'), findsOneWidget);
     });
@@ -43,13 +40,10 @@ void main() {
     testWidgets('given one maintenance with ISO datetime date, '
         'when pumped, '
         'then no exception is thrown and year is correct', (tester) async {
-      // given
       final m = buildMaintenance(date: '2026-08-25T10:30:00.000Z');
 
-      // when
       await tester.pumpWidget(_pumpTimeline([m]));
 
-      // then
       expect(find.text('2026'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -59,15 +53,12 @@ void main() {
         'then years are desc and entries within a year are date desc', (
       tester,
     ) async {
-      // given
       final jan = buildMaintenance(id: 'jan', date: '2026-01-05');
       final mar = buildMaintenance(id: 'mar', date: '2026-03-12');
       final nov = buildMaintenance(id: 'nov', date: '2025-11-18');
 
-      // when
       await tester.pumpWidget(_pumpTimeline([jan, mar, nov]));
 
-      // then — year labels appear desc: 2026 before 2025
       final yearWidgets = find
           .byType(Text)
           .evaluate()
@@ -80,7 +71,6 @@ void main() {
           .toList();
       expect(yearWidgets, isNotEmpty);
       expect(year2025, isNotEmpty);
-      // Within 2026, 'mar' (Cambio de aceite) renders before 'jan'
       final labels = find
           .byType(Text)
           .evaluate()
@@ -93,13 +83,10 @@ void main() {
     testWidgets('given an unparseable date, '
         'when pumped, '
         'then no exception is thrown', (tester) async {
-      // given
       final m = buildMaintenance(date: 'no-es-una-fecha');
 
-      // when
       await tester.pumpWidget(_pumpTimeline([m]));
 
-      // then
       expect(tester.takeException(), isNull);
     });
 
@@ -108,14 +95,11 @@ void main() {
         'then the entry exposes a semantics label with type and date', (
       tester,
     ) async {
-      // given
       final handle = tester.ensureSemantics();
       final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
 
-      // when
       await tester.pumpWidget(_pumpTimeline([m]));
 
-      // then
       expect(
         find.bySemanticsLabel(RegExp(r'Cambio de aceite.*')),
         findsOneWidget,
@@ -126,7 +110,6 @@ void main() {
     testWidgets('given a long mileage and cost on a narrow screen, '
         'when pumped, '
         'then the entry does not overflow', (tester) async {
-      // given
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -137,10 +120,8 @@ void main() {
         date: '2026-03-12',
       );
 
-      // when
       await tester.pumpWidget(_pumpTimeline([m]));
 
-      // then
       expect(tester.takeException(), isNull);
     });
 
@@ -148,13 +129,10 @@ void main() {
         'when pumped, '
         'then the card paints its own Material instead of deferring the '
         'decoration to the ambient Material', (tester) async {
-      // given
       final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
 
-      // when
       await tester.pumpWidget(_pumpTimeline([m]));
 
-      // then
       expect(
         find.descendant(
           of: find.byType(TimelineEntry),
@@ -181,21 +159,18 @@ void main() {
         'then the pinned year label sits on the new page background', (
       tester,
     ) async {
-      // given
       final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
       await tester.pumpWidget(
         _pumpTimeline([m], theme: ThemeData(brightness: Brightness.light)),
       );
       final lightBackground = _pinnedHeaderBackground(tester);
 
-      // when
       await tester.pumpWidget(
         _pumpTimeline([m], theme: ThemeData(brightness: Brightness.dark)),
       );
       await tester.pumpAndSettle();
       final darkBackground = _pinnedHeaderBackground(tester);
 
-      // then
       expect(darkBackground, isNot(lightBackground));
     });
   });
@@ -204,16 +179,13 @@ void main() {
     testWidgets('given more maintenances than fit the viewport, '
         'when pumped, '
         'then the list scrolls instead of overflowing', (tester) async {
-      // given
       final items = [
         for (var i = 0; i < 30; i++)
           buildMaintenance(id: 'm$i', date: '2026-03-${(i % 28) + 1}'),
       ];
 
-      // when
       await tester.pumpWidget(_pumpTimeline(items));
 
-      // then
       expect(tester.takeException(), isNull);
       expect(find.byType(CustomScrollView), findsOneWidget);
     });
@@ -221,7 +193,6 @@ void main() {
     testWidgets('given maintenances in two years, '
         'when scrolled inside the first year group, '
         'then the year label stays pinned at the top', (tester) async {
-      // given
       final items = [
         for (var i = 0; i < 25; i++)
           buildMaintenance(id: 'a$i', date: '2026-03-${(i % 28) + 1}'),
@@ -231,18 +202,15 @@ void main() {
       await tester.pumpWidget(_pumpTimeline(items));
       final pinnedTop = tester.getTopLeft(find.text('2026')).dy;
 
-      // when
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -300));
       await tester.pumpAndSettle();
 
-      // then
       expect(tester.getTopLeft(find.text('2026')).dy, pinnedTop);
     });
 
     testWidgets('given maintenances in two years, '
         'when scrolled past the first year group, '
         'then the next year label takes over the pinned slot', (tester) async {
-      // given
       final items = [
         for (var i = 0; i < 25; i++)
           buildMaintenance(id: 'a$i', date: '2026-03-${(i % 28) + 1}'),
@@ -251,11 +219,9 @@ void main() {
       ];
       await tester.pumpWidget(_pumpTimeline(items));
 
-      // when
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -2600));
       await tester.pumpAndSettle();
 
-      // then
       expect(tester.getTopLeft(find.text('2025')).dy, lessThanOrEqualTo(20));
       final previousYear = find.text('2026');
       expect(
@@ -272,13 +238,10 @@ void main() {
         'entonces la tarjeta muestra el chevron_right a la derecha', (
       tester,
     ) async {
-      // given
       final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
 
-      // when
       await tester.pumpWidget(_pumpTimeline([m]));
 
-      // then
       expect(find.byIcon(Icons.chevron_right), findsOneWidget);
     });
 
@@ -287,13 +250,10 @@ void main() {
         'entonces el área de la tarjeta expone el cursor de enlace', (
       tester,
     ) async {
-      // given
       final m = buildMaintenance(date: '2026-03-12');
 
-      // when
       await tester.pumpWidget(_pumpTimeline([m]));
 
-      // then
       final regions = tester.widgetList<MouseRegion>(
         find.descendant(
           of: find.byType(TimelineEntry),
@@ -306,11 +266,9 @@ void main() {
     testWidgets('dada una entrada del timeline, '
         'cuando se pulsa la tarjeta, '
         'entonces onOpen recibe su id', (tester) async {
-      // given
       final m = buildMaintenance(id: 'm1', date: '2026-03-12');
       final openedIds = <String>[];
 
-      // when
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -324,7 +282,6 @@ void main() {
       );
       await tester.tap(find.text('Cambio de aceite'));
 
-      // then
       expect(openedIds, ['m1']);
     });
   });

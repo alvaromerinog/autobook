@@ -15,8 +15,6 @@ void main() {
       'router is pumped at 400px, then the detail is full-screen without a '
       'rail and the visible back control exists',
       (tester) async {
-        // given
-        // when
         final (router, _) = await pumpApp(
           tester,
           size: const Size(400, 900),
@@ -24,7 +22,6 @@ void main() {
           maintenance: buildMaintenance(carId: '1'),
         );
 
-        // then
         expect(
           router.routeInformationProvider.value.uri.path,
           '/cars/1/maintenances/m1',
@@ -40,8 +37,6 @@ void main() {
       'router is pumped at 720px, then the detail and NavigationRail are '
       'present in the shell',
       (tester) async {
-        // given
-        // when
         final (router, _) = await pumpApp(
           tester,
           size: const Size(720, 900),
@@ -49,7 +44,6 @@ void main() {
           maintenance: buildMaintenance(carId: '1'),
         );
 
-        // then
         expect(
           router.routeInformationProvider.value.uri.path,
           '/cars/1/maintenances/m1',
@@ -64,8 +58,6 @@ void main() {
       'router is pumped at 1200px, then the detail and NavigationRail are '
       'present in the shell',
       (tester) async {
-        // given
-        // when
         final (router, _) = await pumpApp(
           tester,
           size: const Size(1200, 900),
@@ -73,7 +65,6 @@ void main() {
           maintenance: buildMaintenance(carId: '1'),
         );
 
-        // then
         expect(
           router.routeInformationProvider.value.uri.path,
           '/cars/1/maintenances/m1',
@@ -87,7 +78,6 @@ void main() {
       'given a cold maintenance deep link with no previous page, when system '
       'back is invoked, then the URL is /cars/1 rather than /',
       (tester) async {
-        // given
         final (router, _) = await pumpApp(
           tester,
           size: const Size(400, 900),
@@ -95,11 +85,9 @@ void main() {
           maintenance: buildMaintenance(carId: '1'),
         );
 
-        // when
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
 
-        // then
         expect(router.routeInformationProvider.value.uri.path, '/cars/1');
         expect(tester.takeException(), isNull);
       },
@@ -110,7 +98,6 @@ void main() {
       'recreated at that location, then carId, maintenanceId, and the same '
       'detail are selected',
       (tester) async {
-        // given
         final (firstRouter, _) = await pumpApp(
           tester,
           size: const Size(1200, 900),
@@ -121,7 +108,6 @@ void main() {
         await tester.pumpWidget(const SizedBox.shrink());
         await tester.pump();
 
-        // when
         final (secondRouter, _) = await pumpApp(
           tester,
           size: const Size(1200, 900),
@@ -129,7 +115,6 @@ void main() {
           maintenance: buildMaintenance(carId: '1'),
         );
 
-        // then
         expect(
           secondRouter.routeInformationProvider.value.uri.path,
           '/cars/1/maintenances/m1',

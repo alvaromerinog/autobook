@@ -41,7 +41,6 @@ import '../../fixtures/maintenance_fixtures.dart';
 
 class _MockIdGenerator extends Mock implements IdGenerator {}
 
-/// No-op repo handed to fake use cases whose `call` is overridden.
 class _UnusedMaintenanceRepo extends Mock implements IMaintenanceRepository {}
 
 class _StubGetMaintenances extends GetMaintenancesUseCase {
@@ -182,7 +181,6 @@ void main() {
       testWidgets('given edit saved in the maintenance dialog flow, '
           'when the draft is saved, '
           'then the update use case is invoked once with it', (tester) async {
-        // given
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.reset);
@@ -197,7 +195,6 @@ void main() {
           updateCalls: calledWith,
         );
 
-        // when — Editar abre el diálogo precargado; guardar cambios
         await tester.tap(find.byTooltip('Editar'));
         await tester.pumpAndSettle();
         await tester.enterText(
@@ -208,7 +205,6 @@ void main() {
         await tester.tap(find.text('Guardar cambios'));
         await tester.pumpAndSettle();
 
-        // then
         expect(calledWith, hasLength(1));
         expect(calledWith.first.$1.cost, 99.9);
         expect(calledWith.first.$2.id, existing.id);
@@ -219,33 +215,27 @@ void main() {
       testWidgets('dado un mantenimiento encontrado, cuando se bombea, '
           'entonces el encabezado es tarjeta neutra con margen 20 px, esquinas '
           'redondeadas y el tinte solo en la caja del icono', (tester) async {
-        // given
         final mockCarRepo = MockCarRepository();
         stubCarDefaults(mockCarRepo);
 
-        // when
         await pumpDetailScreen(
           tester,
           mockCarRepo: mockCarRepo,
           updateCalls: <(MaintenanceDraft, Maintenance)>[],
         );
 
-        // then — primer Card del body = encabezado; segundo = stats
         final headerCard = find.byType(Card).first;
         final card = tester.widget<Card>(headerCard);
         final element = tester.element(headerCard);
         final theme = Theme.of(element);
         final tint = getTint(MaintenanceType.oil, theme.brightness);
 
-        // fondo neutro del tema, distinto del tinte del tipo (FR-3, D-1)
         expect(card.color, theme.colorScheme.surfaceContainerLow);
         expect(card.color, isNot(tint.bg));
 
-        // margen lateral 20 px en encabezado y stats (alineados, FR-5)
         expect(tester.getTopLeft(headerCard).dx, 20.0);
         expect(tester.getTopLeft(find.byType(Card).last).dx, 20.0);
 
-        // esquinas redondeadas (shape M3 por defecto de Card, radio 12)
         final material = tester.widget<Material>(
           find
               .descendant(of: headerCard, matching: find.byType(Material))
@@ -254,8 +244,6 @@ void main() {
         final shape = material.shape! as RoundedRectangleBorder;
         expect(shape.borderRadius, BorderRadius.circular(12));
 
-        // el tinte del tipo sobrevive SOLO en la caja del icono 64×64
-        // (FR-3)
         final iconBox = tester.widget<Container>(
           find
               .ancestor(
@@ -271,18 +259,15 @@ void main() {
 
       testWidgets('dado un mantenimiento encontrado, cuando se bombea, '
           'entonces no queda ningún Divider a sangre', (tester) async {
-        // given
         final mockCarRepo = MockCarRepository();
         stubCarDefaults(mockCarRepo);
 
-        // when
         await pumpDetailScreen(
           tester,
           mockCarRepo: mockCarRepo,
           updateCalls: <(MaintenanceDraft, Maintenance)>[],
         );
 
-        // then — fixture sin garage: se eliminó el Divider full-bleed
         expect(find.byType(Divider), findsNothing);
       });
     });
@@ -290,14 +275,12 @@ void main() {
     group('acciones sobre la ficha de estadísticas', () {
       testWidgets('given a maintenance, when pumped, then the edit and delete '
           'buttons straddle the stats card bottom edge', (tester) async {
-        // given
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.reset);
         final mockCarRepo = MockCarRepository();
         stubCarDefaults(mockCarRepo);
 
-        // when
         await pumpDetailScreen(
           tester,
           mockCarRepo: mockCarRepo,
@@ -308,7 +291,6 @@ void main() {
         final editCenter = tester.getCenter(find.byTooltip('Editar'));
         final deleteCenter = tester.getCenter(find.byTooltip('Eliminar'));
 
-        // then — the card's bottom edge crosses each button's centre (±1px)
         expect(find.byKey(cardKey), findsOneWidget);
         expect((editCenter.dy - cardRect.bottom).abs(), lessThan(1.0));
         expect((deleteCenter.dy - cardRect.bottom).abs(), lessThan(1.0));
@@ -318,7 +300,6 @@ void main() {
         expect(find.text('KILÓMETROS'), findsOneWidget);
         expect(find.text('FECHA'), findsOneWidget);
 
-        // and — the edit disc uses the app blue
         final cs = Theme.of(
           tester.element(find.byTooltip('Editar')),
         ).colorScheme;
@@ -338,38 +319,31 @@ void main() {
       testWidgets('given a maintenance, when the delete button is tapped and '
           'Cancelar is chosen, then the confirmation dialog is shown and '
           'closes without deleting', (tester) async {
-        // given
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.reset);
         final mockCarRepo = MockCarRepository();
         stubCarDefaults(mockCarRepo);
 
-        // when
         await pumpDetailScreen(
           tester,
           mockCarRepo: mockCarRepo,
           updateCalls: <(MaintenanceDraft, Maintenance)>[],
         );
 
-        // then — no AppBar overflow menu; both actions are on the card
         expect(find.byTooltip('Editar'), findsOneWidget);
         expect(find.byTooltip('Eliminar'), findsOneWidget);
         expect(find.byIcon(Icons.more_vert), findsNothing);
         expect(find.byType(PopupMenuButton<String>), findsNothing);
 
-        // when — the trash button opens the confirmation dialog
         await tester.tap(find.byTooltip('Eliminar'));
         await tester.pumpAndSettle();
 
-        // then
         expect(find.text('Eliminar mantenimiento'), findsOneWidget);
 
-        // when — cancel
         await tester.tap(find.text('Cancelar'));
         await tester.pumpAndSettle();
 
-        // then
         expect(find.text('Eliminar mantenimiento'), findsNothing);
       });
     });

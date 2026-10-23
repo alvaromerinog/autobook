@@ -19,15 +19,12 @@ void main() {
     test('given repository refreshes successfully, '
         'when call runs, '
         'then delegates to refreshFromRemote and returns events', () async {
-      // given
       when(
         () => mockRepo.refreshFromRemote(),
       ).thenAnswer((_) async => <RemoteSyncEvent>[]);
 
-      // when
       final events = await useCase();
 
-      // then
       expect(events, isEmpty);
       verify(() => mockRepo.refreshFromRemote()).called(1);
     });
@@ -35,12 +32,10 @@ void main() {
     test('given repository throws a Failure, '
         'when call runs, '
         'then the Failure propagates', () async {
-      // given
       when(
         () => mockRepo.refreshFromRemote(),
       ).thenThrow(const ServerFailure(500));
 
-      // when / then
       await expectLater(() => useCase(), throwsA(isA<ServerFailure>()));
     });
   });

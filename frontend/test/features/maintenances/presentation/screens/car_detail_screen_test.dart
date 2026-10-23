@@ -139,7 +139,6 @@ void main() {
       testWidgets('given one maintenance, '
           'when pumped, '
           'then the count says "1 entrada"', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
         when(() => mockMaintRepo.getAll('1')).thenAnswer(
@@ -148,10 +147,8 @@ void main() {
           ],
         );
 
-        // when
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
 
-        // then
         expect(find.text('1 entrada'), findsOneWidget);
         expect(find.text('1 entradas'), findsNothing);
       });
@@ -159,7 +156,6 @@ void main() {
       testWidgets('given two maintenances, '
           'when pumped, '
           'then the count says "2 entradas"', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
         when(() => mockMaintRepo.getAll('1')).thenAnswer(
@@ -169,10 +165,8 @@ void main() {
           ],
         );
 
-        // when
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
 
-        // then
         expect(find.text('2 entradas'), findsOneWidget);
       });
     });
@@ -182,14 +176,11 @@ void main() {
           'when pumped, '
           'then the upper zone sits on an opaque surface of the page '
           'background colour', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
 
-        // when
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
 
-        // then
         final heading = find.text('Historial de mantenimientos');
         final solidZone = tester.widget<ColoredBox>(
           find.ancestor(of: heading, matching: find.byType(ColoredBox)).first,
@@ -210,13 +201,11 @@ void main() {
       testWidgets('given the detail screen, '
           'when the FAB is tapped and the dialog is saved, '
           'then repo.create is called with a MaintenanceDraft', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
         when(() => mockMaintRepo.getAll('1')).thenAnswer((_) async => []);
         when(() => mockMaintRepo.create(any())).thenAnswer((_) async {});
 
-        // when — abrir diálogo desde el FAB
         await pumpCarDetailScreen(
           tester,
           mockCarRepo,
@@ -227,7 +216,6 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Nuevo mantenimiento'), findsOneWidget);
 
-        // rellenar y guardar
         await tester.enterText(
           find.widgetWithText(TextFormField, 'Kilómetros'),
           '5000',
@@ -240,7 +228,6 @@ void main() {
         await tester.tap(find.text('Guardar'));
         await tester.pumpAndSettle();
 
-        // then
         verify(() => mockMaintRepo.create(any())).called(1);
       });
     });
@@ -248,36 +235,29 @@ void main() {
     group('edit vehicle', () {
       testWidgets('given a car, when the edit icon is tapped, then the edit '
           'dialog opens pre-filled', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
 
-        // when
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
         await tester.tap(find.byTooltip('Editar vehículo'));
         await tester.pumpAndSettle();
 
-        // then — edit dialog is shown (edit-mode submit label + subtitle
-        // are unique to the editing variant of showCarDialog)
         expect(find.text('Guardar cambios'), findsOneWidget);
         expect(find.text('Datos del vehículo'), findsOneWidget);
       });
 
       testWidgets('given the edit dialog, when Guardar cambios is tapped, '
           'then repo.update is called once', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
         when(() => mockCarRepo.update(any())).thenAnswer((_) async {});
 
-        // when
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
         await tester.tap(find.byTooltip('Editar vehículo'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Guardar cambios'));
         await tester.pumpAndSettle();
 
-        // then
         verify(() => mockCarRepo.update(any())).called(1);
       });
     });
@@ -287,34 +267,27 @@ void main() {
           'is chosen, then the dialog closes and delete is never called', (
         tester,
       ) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
 
-        // when
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
 
-        // then — no AppBar overflow menu; both actions live on the stat card
         expect(find.byIcon(Icons.more_vert), findsNothing);
         expect(find.byType(PopupMenuButton<String>), findsNothing);
         expect(find.byTooltip('Editar vehículo'), findsOneWidget);
         expect(find.byTooltip('Eliminar vehículo'), findsOneWidget);
 
-        // when — the stat card's trash button opens the confirmation dialog
         await tester.tap(find.byTooltip('Eliminar vehículo'));
         await tester.pumpAndSettle();
 
-        // then — confirm dialog is shown
         expect(
           find.text('¿Seguro que quieres eliminar Toyota Corolla?'),
           findsOneWidget,
         );
 
-        // when — cancel
         await tester.tap(find.text('Cancelar'));
         await tester.pumpAndSettle();
 
-        // then
         expect(
           find.text('¿Seguro que quieres eliminar Toyota Corolla?'),
           findsNothing,
@@ -324,19 +297,16 @@ void main() {
 
       testWidgets('given a car, when the delete button is tapped and Eliminar '
           'is chosen, then repo.delete is called once', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
         when(() => mockCarRepo.delete(any())).thenAnswer((_) async {});
 
-        // when
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
         await tester.tap(find.byTooltip('Eliminar vehículo'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
 
-        // then
         verify(() => mockCarRepo.delete(any())).called(1);
       });
     });
@@ -344,11 +314,9 @@ void main() {
     group('acciones sobre la ficha de estadísticas', () {
       testWidgets('given a car, when pumped, then the edit and delete buttons '
           'straddle the stat card bottom edge', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
 
-        // when
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
         final cardRect = tester.getRect(
           find.byKey(const Key('stat-strip-card')),
@@ -358,13 +326,11 @@ void main() {
           find.byTooltip('Eliminar vehículo'),
         );
 
-        // then — the card's bottom edge crosses each button's centre (±1px)
         expect(find.byKey(const Key('stat-strip-card')), findsOneWidget);
         expect((editCenter.dy - cardRect.bottom).abs(), lessThan(1.0));
         expect((deleteCenter.dy - cardRect.bottom).abs(), lessThan(1.0));
-        expect(editCenter.dx, lessThan(deleteCenter.dx)); // delete right-most
+        expect(editCenter.dx, lessThan(deleteCenter.dx));
 
-        // and — the edit disc uses the app blue
         final cs = Theme.of(
           tester.element(find.byTooltip('Editar vehículo')),
         ).colorScheme;
@@ -378,7 +344,6 @@ void main() {
         );
         expect((editDisc.decoration! as BoxDecoration).color, cs.primary);
 
-        // and — FR-9: the historial block clears the hanging buttons
         final historialTop = tester
             .getTopLeft(find.text('Historial de mantenimientos'))
             .dy;
@@ -389,11 +354,9 @@ void main() {
     group('responsive embedded', () {
       testWidgets('given an expanded surface, when pumped, then no back '
           'button is shown', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
 
-        // when
         await pumpCarDetailScreen(
           tester,
           mockCarRepo,
@@ -401,18 +364,15 @@ void main() {
           size: const Size(1200, 900),
         );
 
-        // then
         expect(find.byType(BackButton), findsNothing);
         expect(find.byTooltip('Back'), findsNothing);
       });
 
       testWidgets('given a compact surface, when pumped, then the back '
           'button is shown', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
 
-        // when
         await pumpCarDetailScreen(
           tester,
           mockCarRepo,
@@ -420,7 +380,6 @@ void main() {
           size: const Size(400, 900),
         );
 
-        // then
         expect(find.byType(BackButton), findsOneWidget);
       });
     });
@@ -429,11 +388,9 @@ void main() {
       testWidgets('given a compact surface with a single-page stack, '
           'when the back button is tapped, '
           'then it navigates to /', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
 
-        // when
         await pumpCarDetailScreen(
           tester,
           mockCarRepo,
@@ -443,7 +400,6 @@ void main() {
         await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
 
-        // then
         expect(find.text('home'), findsOneWidget);
       });
     });
@@ -451,11 +407,9 @@ void main() {
     group('vehículo no encontrado', () {
       testWidgets('given a non-existent carId, when pumped, then the not '
           'found message is shown', (tester) async {
-        // given
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
 
-        // when
         await pumpCarDetailScreen(
           tester,
           mockCarRepo,
@@ -463,7 +417,6 @@ void main() {
           carId: 'no-existe',
         );
 
-        // then
         expect(find.text('Vehículo no encontrado'), findsOneWidget);
         expect(find.byTooltip('Editar vehículo'), findsNothing);
         expect(find.byTooltip('Eliminar vehículo'), findsNothing);
