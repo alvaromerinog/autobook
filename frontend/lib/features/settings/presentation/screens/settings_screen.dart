@@ -43,6 +43,7 @@ class SettingsScreen extends ConsumerWidget {
           Card(
             elevation: 0,
             margin: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: colorScheme.outlineVariant),
