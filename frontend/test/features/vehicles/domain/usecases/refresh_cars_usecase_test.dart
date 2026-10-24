@@ -1,0 +1,42 @@
+import 'package:autobook/core/error/failures.dart';
+import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
+import 'package:autobook/features/vehicles/domain/usecases/refresh_cars_usecase.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
+import '../../helpers/car_mocks.dart';
+
+void main() {
+  late MockCarRepository mockRepo;
+  late RefreshCarsUseCase useCase;
+
+  setUp(() {
+    mockRepo = MockCarRepository();
+    useCase = RefreshCarsUseCase(mockRepo);
+  });
+
+  group('RefreshCarsUseCase', () {
+    test('given repository refreshes successfully, '
+        'when call runs, '
+        'then delegates to refreshFromRemote and returns events', () async {
+      when(
+        () => mockRepo.refreshFromRemote(),
+      ).thenAnswer((_) async => <RemoteSyncEvent>[]);
+
+      final events = await useCase();
+
+      expect(events, isEmpty);
+      verify(() => mockRepo.refreshFromRemote()).called(1);
+    });
+
+    test('given repository throws a Failure, '
+        'when call runs, '
+        'then the Failure propagates', () async {
+      when(
+        () => mockRepo.refreshFromRemote(),
+      ).thenThrow(const ServerFailure(500));
+
+      await expectLater(() => useCase(), throwsA(isA<ServerFailure>()));
+    });
+  });
+}

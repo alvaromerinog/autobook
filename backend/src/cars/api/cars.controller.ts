@@ -1,0 +1,75 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  ConflictException,
+  NotFoundException,
+  Param,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiConflictResponse,
+} from '@nestjs/swagger';
+import { CarsService } from '../application/cars.service';
+import { CarDto } from './dto/car.dto';
+import { GetCarsResponseDto } from './dto/getCarsResponse.dto';
+import { CreateCarResponseDto } from './dto/createCarResponse.dto';
+import { UpdateCarResponseDto } from './dto/updateCarResponse.dto';
+import { CarConflictError } from '../domain/errors/car-conflict.error';
+
+@Controller('cars')
+export class CarsController {
+  constructor(private readonly carsService: CarsService) {}
+
+  @Get()
+  @ApiOkResponse({ type: GetCarsResponseDto })
+  async getCars(): Promise<GetCarsResponseDto> {
+    const { cars } = await this.carsService.getCars();
+    return new GetCarsResponseDto(cars.map((car) => CarDto.fromDomain(car)));
+  }
+
+  @Post()
+  @ApiCreatedResponse({ type: CreateCarResponseDto })
+  @ApiConflictResponse()
+  async createCar(@Body() body: CarDto): Promise<CreateCarResponseDto> {
+    const carData = body.toDomain();
+    try {
+      const car = await this.carsService.createCar(carData);
+      return new CreateCarResponseDto(car.id);
+    } catch (error) {
+      if (error instanceof CarConflictError)
+        throw new ConflictException(error.message);
+      throw error;
+    }
+  }
+
+  @Put(':id')
+  @ApiOkResponse({ type: UpdateCarResponseDto })
+  @ApiNotFoundResponse()
+  async updateCar(
+    @Param('id') id: string,
+    @Body() body: CarDto,
+  ): Promise<UpdateCarResponseDto> {
+    const carData = body.toDomain();
+    const result = await this.carsService.updateCar({ ...carData, id });
+    if (!result) throw new NotFoundException();
+    return new UpdateCarResponseDto(result.id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse()
+  @ApiNotFoundResponse()
+  async deleteCar(@Param('id') id: string): Promise<void> {
+    const result = await this.carsService.deleteCar(id);
+    if (!result) throw new NotFoundException();
+  }
+}

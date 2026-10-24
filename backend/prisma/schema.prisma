@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Car {
+  id           String    @id @default(uuid())
+  brand        String
+  model        String
+  year         Int
+  licensePlate String
+  color        String?
+  mileage      Int?
+  deletedAt    DateTime?
+  maintenances Maintenance[]
+}
+
+model Maintenance {
+  id        String   @id @default(uuid())
+  carId     String
+  type      String
+  date      String
+  mileage   Int
+  cost      Float
+  garage    String?
+  notes     String?
+  deletedAt DateTime?
+  car       Car      @relation(fields: [carId], references: [id])
+}
