@@ -1,6 +1,7 @@
 import 'package:autobook/app/responsive/app_sidebar.dart';
 import 'package:autobook/app/responsive/breakpoints.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/garage_list_content.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,6 +16,7 @@ class AdaptiveAppShell extends StatelessWidget {
     final routeState = GoRouterState.of(context);
     final carId = routeState.pathParameters['carId'];
     final maintenanceId = routeState.pathParameters['id'];
+    final isSettings = routeState.uri.path == '/settings';
     Widget layout;
     if (sizeClass == WindowSizeClass.compact) {
       layout = child;
@@ -26,7 +28,9 @@ class AdaptiveAppShell extends StatelessWidget {
               const AppSidebar(extended: false),
               const VerticalDivider(width: 1),
               Expanded(
-                child: carId == null ? const GarageListContent() : child,
+                child: isSettings || carId != null
+                    ? child
+                    : const GarageListContent(),
               ),
             ],
           ),
@@ -37,12 +41,19 @@ class AdaptiveAppShell extends StatelessWidget {
             children: [
               const AppSidebar(extended: true),
               const VerticalDivider(width: 1),
-              Expanded(flex: 2, child: GarageListContent(selectedCarId: carId)),
-              const VerticalDivider(width: 1),
-              Expanded(
-                flex: 3,
-                child: carId == null ? const _DetailPlaceholder() : child,
-              ),
+              if (isSettings)
+                Expanded(child: child)
+              else ...[
+                Expanded(
+                  flex: 2,
+                  child: GarageListContent(selectedCarId: carId),
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(
+                  flex: 3,
+                  child: carId == null ? const _DetailPlaceholder() : child,
+                ),
+              ],
             ],
           ),
         );
@@ -85,7 +96,7 @@ class _DetailPlaceholder extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Selecciona un vehículo',
+            AppLocalizations.of(context)!.selectVehicle,
             style: theme.textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),

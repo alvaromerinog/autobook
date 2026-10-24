@@ -17,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../app/localization_test_harness.dart';
 import '../../fixtures/car_fixtures.dart';
 import '../../helpers/car_mocks.dart';
 
@@ -50,7 +51,7 @@ Future<void> pumpHomeScreen(
         updateCarUseCaseProvider.overrideWithValue(UpdateCarUseCase(mockRepo)),
         deleteCarUseCaseProvider.overrideWithValue(DeleteCarUseCase(mockRepo)),
       ],
-      child: const MaterialApp(home: HomeScreen()),
+      child: localizedTestApp(home: const HomeScreen()),
     ),
   );
   await tester.pumpAndSettle();

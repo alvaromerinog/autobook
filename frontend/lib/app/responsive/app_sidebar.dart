@@ -1,4 +1,5 @@
 import 'package:autobook/features/vehicles/presentation/widgets/add_car_action.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,10 +13,13 @@ class AppSidebar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final isSettings = GoRouterState.of(context).uri.path == '/settings';
     return NavigationRail(
       extended: extended,
-      selectedIndex: 0,
-      onDestinationSelected: (_) => context.go('/'),
+      selectedIndex: isSettings ? 1 : 0,
+      onDestinationSelected: (index) =>
+          context.go(index == 0 ? '/' : '/settings'),
       leading: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -40,20 +44,24 @@ class AppSidebar extends ConsumerWidget {
             FilledButton.tonalIcon(
               onPressed: () => addCar(context, ref),
               icon: const Icon(Icons.add),
-              label: const Text('Añadir coche'),
+              label: Text(l10n.addCar),
             )
           else
             IconButton(
               onPressed: () => addCar(context, ref),
-              tooltip: 'Añadir coche',
+              tooltip: l10n.addCar,
               icon: const Icon(Icons.add),
             ),
         ],
       ),
-      destinations: const [
+      destinations: [
         NavigationRailDestination(
-          icon: Icon(Icons.garage),
-          label: Text('Garaje'),
+          icon: const Icon(Icons.garage),
+          label: Text(l10n.garage),
+        ),
+        NavigationRailDestination(
+          icon: const Icon(Icons.settings),
+          label: Text(l10n.settingsTitle),
         ),
       ],
     );
