@@ -7,7 +7,7 @@ Flutter application for autobook. All commands must be run from the `frontend/` 
 - **Framework**: Flutter (stable channel, managed via FVM)
 - **Language**: Dart >=3.1.0
 - **Architecture**: DDD + Hexagonal, feature-based folder structure
-- **State management**: Riverpod (flutter_riverpod ^2.5.1) with code generation
+- **State management**: Riverpod (flutter_riverpod ^3.0.0, riverpod_annotation ^4.0.0) with code generation
 - **Code generation**: riverpod_generator + freezed + json_serializable + retrofit_generator + drift_dev + build_runner
 - **Linter**: flutter_lints + riverpod_lint + custom_lint
 - **Local storage**: Drift (SQLite via drift_flutter)
