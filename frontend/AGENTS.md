@@ -15,7 +15,7 @@ Flutter application for autobook. All commands must be run from the `frontend/` 
 - **Routing**: go_router
 - **Connectivity**: connectivity_plus
 - **Testing mocks**: mocktail
-- **Other**: intl (i18n), uuid (only in `core/di/uuid_id_generator.dart`), freezed_annotation, json_annotation, shared_preferences
+- **Other**: intl + flutter_localizations + gen-l10n (i18n), uuid (only in `core/di/uuid_id_generator.dart`), freezed_annotation, json_annotation, shared_preferences
 
 ## Setup
 
@@ -53,6 +53,46 @@ fvm dart run build_runner watch --delete-conflicting-outputs     # Watch mode (d
 ```
 
 Generated files (`*.g.dart`, `*.freezed.dart`) are **gitignored** — do not commit them. They are regenerated on each build or via the commands above.
+
+Flutter localization output (`lib/l10n/app_localizations*.dart`) is also **gitignored** — see [Internationalization](#internationalization-l10n).
+
+## Internationalization (l10n)
+
+The app is localized with Flutter's gen-l10n workflow (`flutter_localizations` + `intl`). The **ARB files are the source of truth** for all user-facing text:
+
+- `lib/l10n/app_en.arb` — English (template and fallback).
+- `lib/l10n/app_es.arb` — Spanish.
+- `l10n.yaml` — gen-l10n config (`arb-dir`, `template-arb-file`, `output-localization-file`).
+
+Generated files (`lib/l10n/app_localizations*.dart`) are **gitignored**; they regenerate automatically on `fvm flutter pub get` and on every build because `pubspec.yaml` sets `generate: true`.
+
+### Adding a new string
+
+1. Add the key and English value to `app_en.arb`, and the same key and Spanish value to `app_es.arb`. Every key requires `@key` translator metadata:
+
+   ```json
+   {
+     "saveVehicle": "Save vehicle",
+     "@saveVehicle": { "description": "Submit label on the add/edit vehicle form" }
+   }
+   ```
+
+2. Regenerate: `fvm flutter gen-l10n` (or just `fvm flutter pub get`).
+
+3. Read it in presentation code with `AppLocalizations.of(context)!.saveVehicle`. `AppLocalizations.of(context)` is nullable — use `!`.
+
+Both catalogs must carry the same keys. The data-driven test in `test/l10n/app_localizations_test.dart` fails if a key or its `@key` metadata is missing from either file.
+
+### Parameterized and plural messages
+
+- Interpolated values use ARB placeholders (never locale-specific string concatenation): e.g. `vehicleRemoteDeleted(brand, model)` with typed `@…` placeholder metadata.
+- Counts use ICU plurals: `maintenanceEntryCount(count)` → `{count, plural, …}`. No `count == 1` conditionals.
+
+### Locale selection
+
+- `AppLanguage` (`spanish`/`english`) and `appLocaleProvider` hold the persisted override (`app_language` under `shared_preferences`); `null` means follow the system locale.
+- The selector lives in `features/settings/`; its labels are fixed endonyms (`Español` / `English`) and are never localized.
+- `resolveAppLocale` (`app/localization/app_locale_provider.dart`) resolves the system locale against English/Spanish with English fallback.
 
 ## Testing
 
@@ -163,6 +203,9 @@ fvm flutter build macos         # macOS desktop
 lib/
 ├── main.dart               # Entry point: ProviderScope + MaterialApp.router
 ├── config.dart             # App-wide constants (AUTOBOOK_API_URL via --dart-define)
+├── l10n/                   # gen-l10n ARB catalogs (source of truth for user-facing text)
+│   ├── app_en.arb          # English messages + @key metadata (template)
+│   └── app_es.arb          # Spanish messages + @key metadata
 │
 ├── core/                   # Cross-cutting infrastructure, no feature business logic
 │   ├── error/              # Sealed Failure hierarchy shared across features
@@ -202,11 +245,16 @@ lib/
 │           ├── providers/  # usecase_providers.dart (@riverpod wiring) + MaintenanceList notifier (family per carId)
 │           ├── screens/    # CarDetailScreen (car timeline), AddMaintenanceScreen dialog returning MaintenanceDraft, MaintenanceDetailScreen
 │           ├── widgets/    # Feature-scoped reusable widgets (Timeline, MaintTypePill, MaintTypeIcon, BigStat)
-│           └── theme/      # Per-type icon/tint mappings (maint_type_icons.dart, maint_tints.dart)
+│           ├── theme/      # Per-type icon/tint mappings (maint_type_icons.dart, maint_tints.dart)
+│           └── localization/ # maintTypeLabel / maintTypeShort (presentation-boundary type labels)
+│   └── settings/           # Language selector + Settings screen
+│       └── presentation/
+│           └── screens/    # SettingsScreen (endonym rows, immediate select via appLocaleProvider)
 │
 └── app/
     ├── router/             # GoRouter configuration (appRouterProvider) + shared back navigation helper
     ├── responsive/         # Adaptive layout: breakpoints (600/840), AdaptiveAppShell, AppSidebar
+    ├── localization/       # AppLanguage enum + appLocaleProvider (persist/resolve the active locale)
     └── theme/              # AppTheme (light/dark ThemeData)
 
 ### Responsive layout (`app/responsive/`)
