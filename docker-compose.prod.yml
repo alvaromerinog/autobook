@@ -1,0 +1,20 @@
+services:
+  backend:
+    image: ghcr.io/alvaromerinog/autobook-backend:${TAG:-latest}
+    ports:
+      - "30000:3000"
+    volumes:
+      - backend_data:/data
+    environment:
+      DATABASE_URL: file:/data/autobook.db
+      NODE_ENV: production
+
+  frontend:
+    image: ghcr.io/alvaromerinog/autobook-frontend:${TAG:-latest}
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  backend_data:

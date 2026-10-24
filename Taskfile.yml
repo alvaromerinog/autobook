@@ -9,6 +9,35 @@ includes:
     dir: frontend
 
 tasks:
+  # ── Local dev ────────────────────────────────────────────────────────────────
+
+  dev:
+    aliases: [dev:start]
+    desc: Run backend and frontend in a tmux session (TMUX_SESSION=autobook by default)
+    cmds:
+      - |
+        command -v tmux >/dev/null || { echo "tmux is not installed" >&2; exit 1; }
+        session="${TMUX_SESSION:-autobook}"
+        if tmux has-session -t "$session" 2>/dev/null; then
+          echo "tmux session '$session' already exists, attaching to it"
+        else
+          tmux new-session -d -s "$session" -n backend -c "{{.TASKFILE_DIR}}"
+          tmux send-keys -t "${session}:backend" 'task backend:start' C-m
+          tmux new-window -t "$session" -n frontend -c "{{.TASKFILE_DIR}}"
+          tmux send-keys -t "${session}:frontend" 'task frontend:run' C-m
+          tmux select-window -t "${session}:backend"
+        fi
+        if [ -n "$TMUX" ]; then
+          tmux switch-client -t "$session"
+        else
+          tmux attach -t "$session"
+        fi
+
+  dev:stop:
+    desc: Kill the tmux dev session started by task dev
+    cmds:
+      - tmux kill-session -t "${TMUX_SESSION:-autobook}" 2>/dev/null || true
+
   # ── Docker ───────────────────────────────────────────────────────────────────
 
   docker/start:
@@ -25,3 +54,13 @@ tasks:
     desc: Build and start services in dev mode with source volumes for hot reload
     cmds:
       - docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+  docker/prod:
+    desc: Run the published GHCR images (TAG=<version>, default latest)
+    cmds:
+      - docker compose -f docker-compose.prod.yml up -d
+
+  docker/prod:pull:
+    desc: Pull the published GHCR images (TAG=<version>, default latest)
+    cmds:
+      - docker compose -f docker-compose.prod.yml pull
