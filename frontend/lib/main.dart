@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:autobook/app/router/app_router.dart';
 import 'package:autobook/app/theme/app_theme.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,6 +26,8 @@ class AutobookApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(appRouterProvider()),
     );
   }

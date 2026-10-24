@@ -1,0 +1,51 @@
+{
+  "@@locale": "es",
+  "cancel": "Cancelar",
+  "@cancel": {
+    "description": "Dismisses a dialog or form without saving changes."
+  },
+  "delete": "Eliminar",
+  "@delete": {
+    "description": "Removes the selected record permanently."
+  },
+  "edit": "Editar",
+  "@edit": {
+    "description": "Opens the editor for the selected record."
+  },
+  "retry": "Reintentar",
+  "@retry": {
+    "description": "Retries the failed network or sync operation."
+  },
+  "close": "Cerrar",
+  "@close": {
+    "description": "Closes the current screen or overlay."
+  },
+  "saveChanges": "Guardar cambios",
+  "@saveChanges": {
+    "description": "Persists the edits made in a form."
+  },
+  "garage": "Garaje",
+  "@garage": {
+    "description": "Navigation label for the list of the user's cars."
+  },
+  "settingsTitle": "Ajustes",
+  "@settingsTitle": {
+    "description": "Title of the settings screen."
+  },
+  "languageLabel": "Idioma",
+  "@languageLabel": {
+    "description": "Label for the language selector in settings."
+  },
+  "addCar": "Añadir coche",
+  "@addCar": {
+    "description": "Action that opens the form to create a car."
+  },
+  "addVehicle": "Añadir vehículo",
+  "@addVehicle": {
+    "description": "Title of the form that creates a vehicle."
+  },
+  "selectVehicle": "Selecciona un vehículo",
+  "@selectVehicle": {
+    "description": "Placeholder prompting the user to pick a car first."
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "@@locale": "en",
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Dismisses a dialog or form without saving changes."
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Removes the selected record permanently."
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "Opens the editor for the selected record."
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retries the failed network or sync operation."
+  },
+  "close": "Close",
+  "@close": {
+    "description": "Closes the current screen or overlay."
+  },
+  "saveChanges": "Save changes",
+  "@saveChanges": {
+    "description": "Persists the edits made in a form."
+  },
+  "garage": "Garage",
+  "@garage": {
+    "description": "Navigation label for the list of the user's cars."
+  },
+  "settingsTitle": "Settings",
+  "@settingsTitle": {
+    "description": "Title of the settings screen."
+  },
+  "languageLabel": "Language",
+  "@languageLabel": {
+    "description": "Label for the language selector in settings."
+  },
+  "addCar": "Add car",
+  "@addCar": {
+    "description": "Action that opens the form to create a car."
+  },
+  "addVehicle": "Add vehicle",
+  "@addVehicle": {
+    "description": "Title of the form that creates a vehicle."
+  },
+  "selectVehicle": "Select a vehicle",
+  "@selectVehicle": {
+    "description": "Placeholder prompting the user to pick a car first."
+  }
+}
