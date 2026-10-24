@@ -1,13 +1,68 @@
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance_type.dart';
+import 'package:autobook/features/maintenances/presentation/widgets/maint_type_pill.dart';
 import 'package:autobook/features/maintenances/presentation/widgets/timeline.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../app/localization_test_harness.dart';
 import '../../fixtures/maintenance_fixtures.dart';
 
-Widget _pumpTimeline(List<Maintenance> items, {ThemeData? theme}) {
-  return MaterialApp(
+const _fullLabelsSpanish = <MaintenanceType, String>{
+  MaintenanceType.oil: 'Cambio de aceite',
+  MaintenanceType.coolant: 'Refrigerante',
+  MaintenanceType.belt: 'Correa de distribución',
+  MaintenanceType.itv: 'ITV',
+  MaintenanceType.repair: 'Reparación general',
+  MaintenanceType.filter: 'Filtro de aire',
+  MaintenanceType.battery: 'Batería',
+  MaintenanceType.brakes: 'Frenos',
+  MaintenanceType.tires: 'Neumáticos',
+};
+
+const _fullLabelsEnglish = <MaintenanceType, String>{
+  MaintenanceType.oil: 'Oil change',
+  MaintenanceType.coolant: 'Coolant',
+  MaintenanceType.belt: 'Timing belt',
+  MaintenanceType.itv: 'Vehicle inspection',
+  MaintenanceType.repair: 'General repair',
+  MaintenanceType.filter: 'Air filter',
+  MaintenanceType.battery: 'Battery',
+  MaintenanceType.brakes: 'Brakes',
+  MaintenanceType.tires: 'Tires',
+};
+
+const _shortLabelsSpanish = <MaintenanceType, String>{
+  MaintenanceType.oil: 'Aceite',
+  MaintenanceType.coolant: 'Refrigerante',
+  MaintenanceType.belt: 'Distribución',
+  MaintenanceType.itv: 'ITV',
+  MaintenanceType.repair: 'Reparación',
+  MaintenanceType.filter: 'Filtro',
+  MaintenanceType.battery: 'Batería',
+  MaintenanceType.brakes: 'Frenos',
+  MaintenanceType.tires: 'Ruedas',
+};
+
+const _shortLabelsEnglish = <MaintenanceType, String>{
+  MaintenanceType.oil: 'Oil',
+  MaintenanceType.coolant: 'Coolant',
+  MaintenanceType.belt: 'Belt',
+  MaintenanceType.itv: 'ITV',
+  MaintenanceType.repair: 'Repair',
+  MaintenanceType.filter: 'Filter',
+  MaintenanceType.battery: 'Battery',
+  MaintenanceType.brakes: 'Brakes',
+  MaintenanceType.tires: 'Tires',
+};
+
+Widget _pumpTimeline(
+  List<Maintenance> items, {
+  ThemeData? theme,
+  Locale locale = const Locale('es'),
+}) {
+  return localizedTestApp(
+    locale: locale,
     theme: theme,
     home: Scaffold(
       body: Timeline(maintenances: items, carId: 'car-1', onOpen: (_) {}),
@@ -81,13 +136,27 @@ void main() {
     });
 
     testWidgets('given an unparseable date, '
-        'when pumped, '
-        'then no exception is thrown', (tester) async {
+        'when pumped in Spanish, '
+        'then the no-date header is shown and no exception is thrown', (
+      tester,
+    ) async {
       final m = buildMaintenance(date: 'no-es-una-fecha');
 
       await tester.pumpWidget(_pumpTimeline([m]));
 
+      expect(find.text('Sin fecha'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('given an unparseable date, '
+        'when pumped in English, '
+        'then the English no-date header is shown', (tester) async {
+      final m = buildMaintenance(date: 'no-es-una-fecha');
+
+      await tester.pumpWidget(_pumpTimeline([m], locale: const Locale('en')));
+
+      expect(find.text('No date'), findsOneWidget);
+      expect(find.text('Sin fecha'), findsNothing);
     });
 
     testWidgets('given one maintenance, '
@@ -102,6 +171,23 @@ void main() {
 
       expect(
         find.bySemanticsLabel(RegExp(r'Cambio de aceite.*')),
+        findsOneWidget,
+      );
+      handle.dispose();
+    });
+
+    testWidgets('given the English locale, '
+        'when pumped, '
+        'then the semantics label uses the English type and month', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final m = buildMaintenance(type: MaintenanceType.oil, date: '2026-03-12');
+
+      await tester.pumpWidget(_pumpTimeline([m], locale: const Locale('en')));
+
+      expect(
+        find.bySemanticsLabel(RegExp(r'^Oil change on 12 Mar')),
         findsOneWidget,
       );
       handle.dispose();
@@ -172,6 +258,91 @@ void main() {
       final darkBackground = _pinnedHeaderBackground(tester);
 
       expect(darkBackground, isNot(lightBackground));
+    });
+  });
+
+  group('Timeline labels in Spanish', () {
+    testWidgets('given every type, when pumped, then the full label is shown', (
+      tester,
+    ) async {
+      for (final type in MaintenanceType.values) {
+        await tester.pumpWidget(
+          _pumpTimeline([buildMaintenance(type: type, date: '2026-03-12')]),
+        );
+
+        expect(find.text(_fullLabelsSpanish[type]!), findsOneWidget);
+      }
+    });
+
+    testWidgets('given an entry, when pumped, then mileage, cost and month '
+        'follow the Spanish formatting', (tester) async {
+      final m = buildMaintenance(mileage: 189000, cost: 1234.5);
+
+      await tester.pumpWidget(_pumpTimeline([m]));
+
+      expect(find.text('189.000 km'), findsOneWidget);
+      expect(find.text('1.234,50\u00A0€'), findsOneWidget);
+      expect(find.text('12 mar'), findsOneWidget);
+    });
+  });
+
+  group('Timeline labels in English', () {
+    testWidgets('given every type, when pumped, then the full label is shown', (
+      tester,
+    ) async {
+      for (final type in MaintenanceType.values) {
+        await tester.pumpWidget(
+          _pumpTimeline([
+            buildMaintenance(type: type, date: '2026-03-12'),
+          ], locale: const Locale('en')),
+        );
+
+        expect(find.text(_fullLabelsEnglish[type]!), findsOneWidget);
+      }
+    });
+
+    testWidgets('given an entry, when pumped, then mileage, cost and month '
+        'follow the English formatting', (tester) async {
+      final m = buildMaintenance(mileage: 189000, cost: 1234.5);
+
+      await tester.pumpWidget(_pumpTimeline([m], locale: const Locale('en')));
+
+      expect(find.text('189,000 km'), findsOneWidget);
+      expect(find.text('€1,234.50'), findsOneWidget);
+      expect(find.text('12 Mar'), findsOneWidget);
+    });
+  });
+
+  group('MaintTypePill', () {
+    testWidgets('given every type, when pumped in Spanish, then the short '
+        'label is shown', (tester) async {
+      for (final type in MaintenanceType.values) {
+        await tester.pumpWidget(
+          localizedTestApp(
+            home: Scaffold(
+              body: Center(child: MaintTypePill(type: type)),
+            ),
+          ),
+        );
+
+        expect(find.text(_shortLabelsSpanish[type]!), findsOneWidget);
+      }
+    });
+
+    testWidgets('given every type, when pumped in English, then the short '
+        'label is shown', (tester) async {
+      for (final type in MaintenanceType.values) {
+        await tester.pumpWidget(
+          localizedTestApp(
+            locale: const Locale('en'),
+            home: Scaffold(
+              body: Center(child: MaintTypePill(type: type)),
+            ),
+          ),
+        );
+
+        expect(find.text(_shortLabelsEnglish[type]!), findsOneWidget);
+      }
     });
   });
 
@@ -270,7 +441,7 @@ void main() {
       final openedIds = <String>[];
 
       await tester.pumpWidget(
-        MaterialApp(
+        localizedTestApp(
           home: Scaffold(
             body: Timeline(
               maintenances: [m],

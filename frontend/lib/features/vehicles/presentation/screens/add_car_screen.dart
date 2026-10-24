@@ -1,12 +1,14 @@
 import 'package:autobook/features/vehicles/domain/usecases/create_car_usecase.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/blur_dialog.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/custom_form_field.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 Future<CarDraft?> showCarDialog(BuildContext context, {CarDraft? initial}) {
   return showBlurDialog<CarDraft>(
     context: context,
+    barrierLabel: AppLocalizations.of(context)!.close,
     pageBuilder: (_) => _AddCarDialog(initial: initial),
   );
 }
@@ -77,6 +79,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final isEditing = widget.initial != null;
 
     return Center(
@@ -109,7 +112,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              isEditing ? 'Editar vehículo' : 'Añadir vehículo',
+                              isEditing ? l10n.editVehicle : l10n.addVehicle,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -117,6 +120,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                           ),
                           IconButton(
                             icon: const Icon(Icons.close),
+                            tooltip: l10n.close,
                             onPressed: () => Navigator.of(context).pop(),
                             style: IconButton.styleFrom(
                               foregroundColor: colorScheme.onSurfaceVariant,
@@ -126,7 +130,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Datos del vehículo',
+                        l10n.vehicleDetailsSection,
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w600,
@@ -135,21 +139,21 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                       const SizedBox(height: 16),
                       CustomFormField(
                         controller: _brandController,
-                        label: 'Marca',
-                        hint: 'Ej. Toyota, Ford, BMW...',
+                        label: l10n.vehicleBrandLabel,
+                        hint: l10n.vehicleBrandHint,
                         icon: Icons.sell_outlined,
                         validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'La marca es obligatoria'
+                            ? l10n.vehicleBrandRequired
                             : null,
                       ),
                       const SizedBox(height: 14),
                       CustomFormField(
                         controller: _modelController,
-                        label: 'Modelo',
-                        hint: 'Ej. Corolla, Focus, Serie 3...',
+                        label: l10n.vehicleModelLabel,
+                        hint: l10n.vehicleModelHint,
                         icon: Icons.car_repair,
                         validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'El modelo es obligatorio'
+                            ? l10n.vehicleModelRequired
                             : null,
                       ),
                       const SizedBox(height: 14),
@@ -158,8 +162,8 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                           Expanded(
                             child: CustomFormField(
                               controller: _yearController,
-                              label: 'Año',
-                              hint: 'Ej. 2020',
+                              label: l10n.vehicleYearLabel,
+                              hint: l10n.vehicleYearHint,
                               icon: Icons.calendar_today_outlined,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
@@ -167,13 +171,15 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                               ],
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
-                                  return 'Obligatorio';
+                                  return l10n.fieldRequired;
                                 }
                                 final year = int.tryParse(v.trim());
-                                if (year == null) return 'Año inválido';
+                                if (year == null) {
+                                  return l10n.vehicleYearInvalid;
+                                }
                                 final current = DateTime.now().year;
                                 if (year < 1886 || year > current + 1) {
-                                  return 'Fuera de rango';
+                                  return l10n.vehicleYearOutOfRange;
                                 }
                                 return null;
                               },
@@ -183,12 +189,12 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                           Expanded(
                             child: CustomFormField(
                               controller: _licensePlateController,
-                              label: 'Matrícula',
-                              hint: 'Ej. 1234 ABC',
+                              label: l10n.vehicleLicensePlateLabel,
+                              hint: l10n.vehicleLicensePlateHint,
                               icon: Icons.badge_outlined,
                               textCapitalization: TextCapitalization.characters,
                               validator: (v) => (v == null || v.trim().isEmpty)
-                                  ? 'Obligatoria'
+                                  ? l10n.vehicleLicensePlateRequired
                                   : null,
                             ),
                           ),
@@ -196,7 +202,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        'Información adicional (opcional)',
+                        l10n.vehicleAdditionalInfoSection,
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w600,
@@ -208,8 +214,8 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                           Expanded(
                             child: CustomFormField(
                               controller: _colorController,
-                              label: 'Color',
-                              hint: 'Ej. Blanco...',
+                              label: l10n.vehicleColorLabel,
+                              hint: l10n.vehicleColorHint,
                               icon: Icons.palette_outlined,
                             ),
                           ),
@@ -217,8 +223,8 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                           Expanded(
                             child: CustomFormField(
                               controller: _mileageController,
-                              label: 'Kilometraje',
-                              hint: 'Ej. 45000',
+                              label: l10n.vehicleMileageLabel,
+                              hint: l10n.vehicleMileageHint,
                               icon: Icons.speed_outlined,
                               keyboardType: TextInputType.number,
                               inputFormatters: [
@@ -230,7 +236,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                                   return null;
                                 }
                                 if (int.tryParse(v.trim()) == null) {
-                                  return 'Kilometraje inválido';
+                                  return l10n.vehicleMileageInvalid;
                                 }
                                 return null;
                               },
@@ -244,7 +250,7 @@ class _AddCarDialogState extends State<_AddCarDialog> {
                         onPressed: _submit,
                         icon: const Icon(Icons.check),
                         label: Text(
-                          isEditing ? 'Guardar cambios' : 'Guardar vehículo',
+                          isEditing ? l10n.saveChanges : l10n.saveVehicle,
                         ),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),

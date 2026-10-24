@@ -1,11 +1,13 @@
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/blur_dialog.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<bool?> showDeleteConfirmDialog(BuildContext context, Car car) {
   return showBlurDialog<bool>(
     context: context,
+    barrierLabel: AppLocalizations.of(context)!.close,
     pageBuilder: (_) => _DeleteConfirmDialog(car: car),
   );
 }
@@ -19,6 +21,7 @@ class _DeleteConfirmDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Center(
       child: ConstrainedBox(
@@ -42,7 +45,7 @@ class _DeleteConfirmDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Eliminar vehículo',
+                    l10n.deleteVehicleTitle,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -50,7 +53,7 @@ class _DeleteConfirmDialog extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '¿Seguro que quieres eliminar ${car.brand} ${car.model}?',
+                    l10n.deleteVehicleConfirmation('${car.brand} ${car.model}'),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
@@ -62,7 +65,7 @@ class _DeleteConfirmDialog extends ConsumerWidget {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('Cancelar'),
+                          child: Text(l10n.cancel),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -73,7 +76,7 @@ class _DeleteConfirmDialog extends ConsumerWidget {
                             backgroundColor: colorScheme.error,
                             foregroundColor: colorScheme.onError,
                           ),
-                          child: const Text('Eliminar'),
+                          child: Text(l10n.delete),
                         ),
                       ),
                     ],

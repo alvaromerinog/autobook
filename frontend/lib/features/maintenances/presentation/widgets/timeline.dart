@@ -1,6 +1,8 @@
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
+import 'package:autobook/features/maintenances/presentation/localization/maintenance_type_localizations.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_tints.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_type_icons.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -36,6 +38,7 @@ class Timeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final groups = _grouped;
     final years = groups.keys.toList();
     final allFlat = [for (final y in years) ...groups[y]!];
@@ -52,7 +55,9 @@ class Timeline extends StatelessWidget {
                     SliverPersistentHeader(
                       pinned: true,
                       delegate: _YearHeaderDelegate(
-                        label: year == 0 ? 'Sin fecha' : year.toString(),
+                        label: year == 0
+                            ? l10n.timelineNoDate
+                            : year.toString(),
                         background: cs.surface,
                         foreground: cs.onSurfaceVariant,
                       ),
@@ -145,6 +150,7 @@ class TimelineEntry extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final tint = getTint(maintenance.type, theme.brightness);
     final locale = Localizations.localeOf(context).toString();
     final kmFmt = NumberFormat.decimalPattern(locale);
@@ -161,7 +167,10 @@ class TimelineEntry extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: '${maintTypeLabel(maintenance.type)} $dateLabel',
+      label: l10n.timelineEntrySemantics(
+        maintTypeLabel(context, maintenance.type),
+        dateLabel,
+      ),
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -230,7 +239,10 @@ class TimelineEntry extends StatelessWidget {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        maintTypeLabel(maintenance.type),
+                                        maintTypeLabel(
+                                          context,
+                                          maintenance.type,
+                                        ),
                                         style: theme.textTheme.titleMedium
                                             ?.copyWith(color: cs.onSurface),
                                       ),

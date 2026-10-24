@@ -4,6 +4,7 @@ import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/domain/entities/remote_sync_event.dart';
 import 'package:autobook/features/vehicles/presentation/providers/car_list_provider.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/info_chip.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,24 +15,28 @@ class GarageListContent extends ConsumerWidget {
 
   final String? selectedCarId;
 
-  String _friendlyError(Failure failure) => switch (failure) {
-    NetworkFailure() => 'No se pudo conectar con el servidor.',
-    ServerFailure() =>
-      'No se pudieron cargar los vehículos. Inténtalo de nuevo.',
-    CacheFailure() => 'Error al acceder al almacenamiento local.',
-  };
+  String _friendlyError(AppLocalizations l10n, Failure failure) =>
+      switch (failure) {
+        NetworkFailure() => l10n.vehicleNetworkFailure,
+        ServerFailure() => l10n.vehicleServerFailure,
+        CacheFailure() => l10n.vehicleCacheFailure,
+      };
 
-  String _remoteEventMessage(RemoteSyncEvent event) => switch (event) {
-    RemoteDeleted(car: final car) =>
-      'Coche ${car.brand} ${car.model} eliminado',
-    RemoteDeletedWithPendingUpdate(car: final car) =>
-      'Coche ${car.brand} ${car.model} eliminado, edición descartada',
-  };
+  String _remoteEventMessage(AppLocalizations l10n, RemoteSyncEvent event) =>
+      switch (event) {
+        RemoteDeleted(car: final car) => l10n.vehicleRemoteDeleted(
+          car.brand,
+          car.model,
+        ),
+        RemoteDeletedWithPendingUpdate(car: final car) =>
+          l10n.vehicleRemoteDeletedDiscarded(car.brand, car.model),
+      };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final carsAsync = ref.watch(carListProvider);
 
     String? bannerKind(CarListState? state) {
@@ -56,7 +61,11 @@ class GarageListContent extends ConsumerWidget {
         if (prevMessages != nextMessages && nextMessages.isNotEmpty) {
           messenger.showSnackBar(
             SnackBar(
-              content: Text(nextMessages.map(_remoteEventMessage).join('\n')),
+              content: Text(
+                nextMessages
+                    .map((event) => _remoteEventMessage(l10n, event))
+                    .join('\n'),
+              ),
             ),
           );
           ref.read(carListProvider.notifier).clearRemoteChangeBanner();
@@ -70,13 +79,15 @@ class GarageListContent extends ConsumerWidget {
 
         messenger.hideCurrentMaterialBanner();
         if (nextKind == 'error') {
-          final pendingSuffix = carsState.hasPendingSync
-              ? ' Hay vehículos pendientes de sincronización.'
-              : '';
+          final failure = carsState.syncError!;
+          final errorText = _friendlyError(l10n, failure);
+          final message = carsState.hasPendingSync
+              ? l10n.vehicleSyncErrorWithPending(errorText)
+              : errorText;
           messenger.showMaterialBanner(
             MaterialBanner(
               content: Text(
-                '${_friendlyError(carsState.syncError!)}$pendingSuffix',
+                message,
                 style: TextStyle(color: colorScheme.onErrorContainer),
               ),
               backgroundColor: colorScheme.errorContainer,
@@ -87,7 +98,7 @@ class GarageListContent extends ConsumerWidget {
                     ref.invalidate(carListProvider);
                   },
                   child: Text(
-                    'Reintentar',
+                    l10n.retry,
                     style: TextStyle(color: colorScheme.onErrorContainer),
                   ),
                 ),
@@ -98,7 +109,7 @@ class GarageListContent extends ConsumerWidget {
           messenger.showMaterialBanner(
             MaterialBanner(
               content: Text(
-                'Vehículos pendientes de sincronización',
+                l10n.vehiclesPendingSync,
                 style: TextStyle(color: colorScheme.onSecondaryContainer),
               ),
               backgroundColor: colorScheme.secondaryContainer,
@@ -109,7 +120,7 @@ class GarageListContent extends ConsumerWidget {
                     ref.read(carListProvider.notifier).syncPendingCars();
                   },
                   child: Text(
-                    'Sincronizar',
+                    l10n.syncAction,
                     style: TextStyle(color: colorScheme.onSecondaryContainer),
                   ),
                 ),
@@ -136,9 +147,10 @@ class GarageListContent extends ConsumerWidget {
     Object error,
   ) {
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final message = error is Failure
-        ? _friendlyError(error)
-        : 'Error cargando vehículos: $error';
+        ? _friendlyError(l10n, error)
+        : l10n.vehicleLoadErrorDetails(error.toString());
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -156,7 +168,7 @@ class GarageListContent extends ConsumerWidget {
             FilledButton.icon(
               onPressed: () => ref.invalidate(carListProvider),
               icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
+              label: Text(l10n.retry),
             ),
           ],
         ),
@@ -170,6 +182,7 @@ class GarageListContent extends ConsumerWidget {
     ThemeData theme,
   ) {
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -191,14 +204,14 @@ class GarageListContent extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Tu garaje está vacío',
+              l10n.garageEmptyTitle,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Añade tu primer vehículo para empezar a llevar el registro de sus mantenimientos.',
+              l10n.garageEmptyHint,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
@@ -231,6 +244,7 @@ class _CarCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final isPendingDelete = ref.watch(
       carListProvider.select(
         (async) => async.value?.pendingDeleteIds.contains(car.id) ?? false,
@@ -290,7 +304,7 @@ class _CarCard extends ConsumerWidget {
                       if (isPendingDelete) ...[
                         const SizedBox(height: 4),
                         Text(
-                          'Pendiente de borrado',
+                          l10n.vehiclePendingDelete,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.error,
                           ),

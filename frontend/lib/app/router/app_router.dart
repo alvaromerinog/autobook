@@ -1,6 +1,7 @@
 import 'package:autobook/app/responsive/adaptive_app_shell.dart';
 import 'package:autobook/features/maintenances/presentation/screens/car_detail_screen.dart';
 import 'package:autobook/features/maintenances/presentation/screens/maintenance_detail_screen.dart';
+import 'package:autobook/features/settings/presentation/screens/settings_screen.dart';
 import 'package:autobook/features/vehicles/presentation/screens/home_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -12,6 +13,7 @@ final List<RouteBase> _routes = [
     builder: (context, state, child) => AdaptiveAppShell(child: child),
     routes: [
       GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+      GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
       GoRoute(
         path: '/cars/:carId',
         builder: (context, state) =>
