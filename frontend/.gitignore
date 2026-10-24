@@ -52,3 +52,6 @@ app.*.map.json
 # Generated Dart/Riverpod code (regenerate with: dart run build_runner build)
 lib/**/*.g.dart
 lib/**/*.freezed.dart
+
+# Generated Flutter localizations (regenerate with: flutter gen-l10n / flutter pub get)
+lib/l10n/app_localizations*.dart
