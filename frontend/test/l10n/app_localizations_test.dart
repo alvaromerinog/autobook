@@ -86,6 +86,222 @@ void main() {
         expect(spanish.selectVehicle, 'Selecciona un vehículo');
       });
     });
+
+    group('vehicle garage states', () {
+      test('garage empty copy is translated in both catalogs', () {
+        expect(english.garageEmptyTitle, 'Your garage is empty');
+        expect(spanish.garageEmptyTitle, 'Tu garaje está vacío');
+        expect(
+          english.garageEmptyHint,
+          'Add your first vehicle to start tracking its maintenance.',
+        );
+        expect(
+          spanish.garageEmptyHint,
+          'Añade tu primer vehículo para empezar a llevar el registro de '
+          'sus mantenimientos.',
+        );
+      });
+
+      test('failure messages are translated in both catalogs', () {
+        expect(
+          english.vehicleNetworkFailure,
+          'Could not connect to the server.',
+        );
+        expect(
+          spanish.vehicleNetworkFailure,
+          'No se pudo conectar con el '
+          'servidor.',
+        );
+        expect(
+          english.vehicleServerFailure,
+          'The vehicles could not be loaded. Please try again.',
+        );
+        expect(
+          spanish.vehicleServerFailure,
+          'No se pudieron cargar los vehículos. Inténtalo de nuevo.',
+        );
+        expect(english.vehicleCacheFailure, 'Could not access local storage.');
+        expect(
+          spanish.vehicleCacheFailure,
+          'Error al acceder al almacenamiento '
+          'local.',
+        );
+      });
+
+      test('load error details keep the diagnostic error in both catalogs', () {
+        expect(
+          english.vehicleLoadErrorDetails('Connection closed'),
+          'Error loading vehicles: Connection closed',
+        );
+        expect(
+          spanish.vehicleLoadErrorDetails('Connection closed'),
+          'Error cargando vehículos: Connection closed',
+        );
+      });
+
+      test('pending sync copy is translated in both catalogs', () {
+        expect(english.vehiclesPendingSync, 'Vehicles pending synchronization');
+        expect(
+          spanish.vehiclesPendingSync,
+          'Vehículos pendientes de '
+          'sincronización',
+        );
+        expect(english.syncAction, 'Sync');
+        expect(spanish.syncAction, 'Sincronizar');
+        expect(english.vehiclePendingDelete, 'Pending deletion');
+        expect(spanish.vehiclePendingDelete, 'Pendiente de borrado');
+      });
+
+      test('combined sync error and pending copy keeps the error', () {
+        expect(
+          english.vehicleSyncErrorWithPending(
+            'Could not connect to the server.',
+          ),
+          'Could not connect to the server. Some vehicles are pending '
+          'synchronization.',
+        );
+        expect(
+          spanish.vehicleSyncErrorWithPending(
+            'Could not connect to the server.',
+          ),
+          'Could not connect to the server. Hay vehículos pendientes de '
+          'sincronización.',
+        );
+      });
+    });
+
+    group('vehicle remote events', () {
+      test('remote deletion is translated in both catalogs', () {
+        expect(
+          english.vehicleRemoteDeleted('Ford', 'Focus'),
+          'Car Ford Focus deleted',
+        );
+        expect(
+          spanish.vehicleRemoteDeleted('Ford', 'Focus'),
+          'Coche Ford Focus eliminado',
+        );
+      });
+
+      test('discarded edit is translated in both catalogs', () {
+        expect(
+          english.vehicleRemoteDeletedDiscarded('Ford', 'Focus'),
+          'Car Ford Focus deleted, edits discarded',
+        );
+        expect(
+          spanish.vehicleRemoteDeletedDiscarded('Ford', 'Focus'),
+          'Coche Ford Focus eliminado, edición descartada',
+        );
+      });
+
+      test('remote messages preserve brand and model placeholders', () {
+        expect(
+          english.vehicleRemoteDeleted('Ford', 'Focus RS'),
+          contains('Ford Focus RS'),
+        );
+        expect(
+          spanish.vehicleRemoteDeletedDiscarded('Ford', 'Focus RS'),
+          contains('Ford Focus RS'),
+        );
+        expect(
+          spanish.vehicleRemoteDeleted('Ford', 'Focus RS'),
+          contains('Ford Focus RS'),
+        );
+      });
+    });
+
+    group('vehicle form', () {
+      test('headings and sections are translated in both catalogs', () {
+        expect(english.editVehicle, 'Edit vehicle');
+        expect(spanish.editVehicle, 'Editar vehículo');
+        expect(english.vehicleDetailsSection, 'Vehicle details');
+        expect(spanish.vehicleDetailsSection, 'Datos del vehículo');
+        expect(
+          english.vehicleAdditionalInfoSection,
+          'Additional information (optional)',
+        );
+        expect(
+          spanish.vehicleAdditionalInfoSection,
+          'Información adicional (opcional)',
+        );
+        expect(english.saveVehicle, 'Save vehicle');
+        expect(spanish.saveVehicle, 'Guardar vehículo');
+      });
+
+      test('field labels and hints are translated in both catalogs', () {
+        expect(english.vehicleBrandLabel, 'Brand');
+        expect(spanish.vehicleBrandLabel, 'Marca');
+        expect(english.vehicleBrandHint, 'E.g. Toyota, Ford, BMW...');
+        expect(spanish.vehicleBrandHint, 'Ej. Toyota, Ford, BMW...');
+        expect(english.vehicleModelLabel, 'Model');
+        expect(spanish.vehicleModelLabel, 'Modelo');
+        expect(english.vehicleModelHint, 'E.g. Corolla, Focus, 3 Series...');
+        expect(spanish.vehicleModelHint, 'Ej. Corolla, Focus, Serie 3...');
+        expect(english.vehicleYearLabel, 'Year');
+        expect(spanish.vehicleYearLabel, 'Año');
+        expect(english.vehicleYearHint, 'E.g. 2020');
+        expect(spanish.vehicleYearHint, 'Ej. 2020');
+        expect(english.vehicleLicensePlateLabel, 'License plate');
+        expect(spanish.vehicleLicensePlateLabel, 'Matrícula');
+        expect(english.vehicleLicensePlateHint, 'E.g. 1234 ABC');
+        expect(spanish.vehicleLicensePlateHint, 'Ej. 1234 ABC');
+        expect(english.vehicleColorLabel, 'Color');
+        expect(spanish.vehicleColorLabel, 'Color');
+        expect(english.vehicleColorHint, 'E.g. White...');
+        expect(spanish.vehicleColorHint, 'Ej. Blanco...');
+        expect(english.vehicleMileageLabel, 'Mileage');
+        expect(spanish.vehicleMileageLabel, 'Kilometraje');
+        expect(english.vehicleMileageHint, 'E.g. 45000');
+        expect(spanish.vehicleMileageHint, 'Ej. 45000');
+      });
+
+      test('validation messages are translated in both catalogs', () {
+        expect(english.vehicleBrandRequired, 'Brand is required');
+        expect(spanish.vehicleBrandRequired, 'La marca es obligatoria');
+        expect(english.vehicleModelRequired, 'Model is required');
+        expect(spanish.vehicleModelRequired, 'El modelo es obligatorio');
+        expect(english.fieldRequired, 'Required');
+        expect(spanish.fieldRequired, 'Obligatorio');
+        expect(
+          english.vehicleLicensePlateRequired,
+          'License plate is required',
+        );
+        expect(spanish.vehicleLicensePlateRequired, 'Obligatoria');
+        expect(english.vehicleYearInvalid, 'Invalid year');
+        expect(spanish.vehicleYearInvalid, 'Año inválido');
+        expect(english.vehicleYearOutOfRange, 'Out of range');
+        expect(spanish.vehicleYearOutOfRange, 'Fuera de rango');
+        expect(english.vehicleMileageInvalid, 'Invalid mileage');
+        expect(spanish.vehicleMileageInvalid, 'Kilometraje inválido');
+      });
+    });
+
+    group('vehicle mutations', () {
+      test('delete confirmation and title are translated in both catalogs', () {
+        expect(english.deleteVehicleTitle, 'Delete vehicle');
+        expect(spanish.deleteVehicleTitle, 'Eliminar vehículo');
+        expect(
+          english.deleteVehicleConfirmation('Toyota Corolla'),
+          'Are you sure you want to delete Toyota Corolla?',
+        );
+        expect(
+          spanish.deleteVehicleConfirmation('Toyota Corolla'),
+          '¿Seguro que quieres eliminar Toyota Corolla?',
+        );
+        expect(
+          english.deleteVehicleConfirmation('Toyota Corolla'),
+          contains('Toyota Corolla'),
+        );
+      });
+
+      test('mutation failure messages are translated in both catalogs', () {
+        expect(english.vehicleCreateError, 'Could not create the vehicle');
+        expect(spanish.vehicleCreateError, 'Error al crear el vehículo');
+        expect(english.vehicleUpdateError, 'Could not update the vehicle');
+        expect(spanish.vehicleUpdateError, 'Error al actualizar el vehículo');
+        expect(english.vehicleDeleteError, 'Could not delete the vehicle');
+        expect(spanish.vehicleDeleteError, 'Error al eliminar el vehículo');
+      });
+    });
   });
 
   group('localizedTestApp', () {

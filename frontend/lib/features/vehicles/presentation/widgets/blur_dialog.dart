@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 Future<T?> showBlurDialog<T>({
   required BuildContext context,
   required WidgetBuilder pageBuilder,
+  required String barrierLabel,
   bool barrierDismissible = true,
-  String barrierLabel = 'Cerrar',
 }) {
   return showGeneralDialog<T>(
     context: context,

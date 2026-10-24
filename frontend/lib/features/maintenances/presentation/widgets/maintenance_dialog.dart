@@ -5,6 +5,7 @@ import 'package:autobook/features/maintenances/presentation/theme/maint_type_ico
 import 'package:autobook/features/maintenances/presentation/widgets/maint_type_icon.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/blur_dialog.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/custom_form_field.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -15,6 +16,7 @@ Future<MaintenanceDraft?> showMaintenanceDialog(
 }) {
   return showBlurDialog<MaintenanceDraft>(
     context: context,
+    barrierLabel: AppLocalizations.of(context)!.close,
     pageBuilder: (_) => _MaintenanceDialog(existing: existing),
   );
 }

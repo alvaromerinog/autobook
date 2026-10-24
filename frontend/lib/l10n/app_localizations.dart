@@ -169,6 +169,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select a vehicle'**
   String get selectVehicle;
+
+  /// Heading shown when the user has no vehicles yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your garage is empty'**
+  String get garageEmptyTitle;
+
+  /// Explanation shown under the empty garage heading.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first vehicle to start tracking its maintenance.'**
+  String get garageEmptyHint;
+
+  /// Shown when a vehicle sync fails because the network is unreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect to the server.'**
+  String get vehicleNetworkFailure;
+
+  /// Shown when the backend rejects the vehicle request.
+  ///
+  /// In en, this message translates to:
+  /// **'The vehicles could not be loaded. Please try again.'**
+  String get vehicleServerFailure;
+
+  /// Shown when the local vehicle database cannot be read.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not access local storage.'**
+  String get vehicleCacheFailure;
+
+  /// Prefix for an unexpected vehicle load error.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading vehicles: {error}'**
+  String vehicleLoadErrorDetails(String error);
+
+  /// Banner telling the user that vehicles wait to be synced.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicles pending synchronization'**
+  String get vehiclesPendingSync;
+
+  /// Starts synchronizing the pending records.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get syncAction;
+
+  /// Sync failure banner combined with the pending vehicles notice.
+  ///
+  /// In en, this message translates to:
+  /// **'{error} Some vehicles are pending synchronization.'**
+  String vehicleSyncErrorWithPending(String error);
+
+  /// Snackbar reporting a vehicle removed by another device.
+  ///
+  /// In en, this message translates to:
+  /// **'Car {brand} {model} deleted'**
+  String vehicleRemoteDeleted(String brand, String model);
+
+  /// Snackbar reporting a remotely deleted vehicle with unsynced edits.
+  ///
+  /// In en, this message translates to:
+  /// **'Car {brand} {model} deleted, edits discarded'**
+  String vehicleRemoteDeletedDiscarded(String brand, String model);
+
+  /// Label on a vehicle whose deletion still waits to sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending deletion'**
+  String get vehiclePendingDelete;
+
+  /// Title of the form that edits an existing vehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit vehicle'**
+  String get editVehicle;
+
+  /// Section heading for the identifying vehicle fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle details'**
+  String get vehicleDetailsSection;
+
+  /// Section heading for the optional vehicle fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Additional information (optional)'**
+  String get vehicleAdditionalInfoSection;
+
+  /// Label for the vehicle brand field.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand'**
+  String get vehicleBrandLabel;
+
+  /// Hint for the vehicle brand field.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g. Toyota, Ford, BMW...'**
+  String get vehicleBrandHint;
+
+  /// Label for the vehicle model field.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get vehicleModelLabel;
+
+  /// Hint for the vehicle model field.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g. Corolla, Focus, 3 Series...'**
+  String get vehicleModelHint;
+
+  /// Label for the vehicle year field.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get vehicleYearLabel;
+
+  /// Hint for the vehicle year field.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g. 2020'**
+  String get vehicleYearHint;
+
+  /// Label for the vehicle license plate field.
+  ///
+  /// In en, this message translates to:
+  /// **'License plate'**
+  String get vehicleLicensePlateLabel;
+
+  /// Hint for the vehicle license plate field.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g. 1234 ABC'**
+  String get vehicleLicensePlateHint;
+
+  /// Label for the optional vehicle color field.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get vehicleColorLabel;
+
+  /// Hint for the optional vehicle color field.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g. White...'**
+  String get vehicleColorHint;
+
+  /// Label for the optional vehicle mileage field.
+  ///
+  /// In en, this message translates to:
+  /// **'Mileage'**
+  String get vehicleMileageLabel;
+
+  /// Hint for the optional vehicle mileage field.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g. 45000'**
+  String get vehicleMileageHint;
+
+  /// Submits the vehicle creation form.
+  ///
+  /// In en, this message translates to:
+  /// **'Save vehicle'**
+  String get saveVehicle;
+
+  /// Validation message when the brand field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Brand is required'**
+  String get vehicleBrandRequired;
+
+  /// Validation message when the model field is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Model is required'**
+  String get vehicleModelRequired;
+
+  /// Generic validation message for an empty mandatory field.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get fieldRequired;
+
+  /// Validation message when the license plate is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'License plate is required'**
+  String get vehicleLicensePlateRequired;
+
+  /// Validation message when the year is not a number.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid year'**
+  String get vehicleYearInvalid;
+
+  /// Validation message when the year is not a plausible car year.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of range'**
+  String get vehicleYearOutOfRange;
+
+  /// Validation message when the mileage is not a number.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid mileage'**
+  String get vehicleMileageInvalid;
+
+  /// Title of the vehicle deletion confirmation dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete vehicle'**
+  String get deleteVehicleTitle;
+
+  /// Body of the vehicle deletion confirmation dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {vehicleName}?'**
+  String deleteVehicleConfirmation(String vehicleName);
+
+  /// Snackbar shown when creating a vehicle fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the vehicle'**
+  String get vehicleCreateError;
+
+  /// Snackbar shown when updating a vehicle fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update the vehicle'**
+  String get vehicleUpdateError;
+
+  /// Snackbar shown when deleting a vehicle fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the vehicle'**
+  String get vehicleDeleteError;
 }
 
 class _AppLocalizationsDelegate

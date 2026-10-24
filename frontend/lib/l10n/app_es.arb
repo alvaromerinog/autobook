@@ -47,5 +47,203 @@
   "selectVehicle": "Selecciona un vehículo",
   "@selectVehicle": {
     "description": "Placeholder prompting the user to pick a car first."
+  },
+  "garageEmptyTitle": "Tu garaje está vacío",
+  "@garageEmptyTitle": {
+    "description": "Heading shown when the user has no vehicles yet."
+  },
+  "garageEmptyHint": "Añade tu primer vehículo para empezar a llevar el registro de sus mantenimientos.",
+  "@garageEmptyHint": {
+    "description": "Explanation shown under the empty garage heading."
+  },
+  "vehicleNetworkFailure": "No se pudo conectar con el servidor.",
+  "@vehicleNetworkFailure": {
+    "description": "Shown when a vehicle sync fails because the network is unreachable."
+  },
+  "vehicleServerFailure": "No se pudieron cargar los vehículos. Inténtalo de nuevo.",
+  "@vehicleServerFailure": {
+    "description": "Shown when the backend rejects the vehicle request."
+  },
+  "vehicleCacheFailure": "Error al acceder al almacenamiento local.",
+  "@vehicleCacheFailure": {
+    "description": "Shown when the local vehicle database cannot be read."
+  },
+  "vehicleLoadErrorDetails": "Error cargando vehículos: {error}",
+  "@vehicleLoadErrorDetails": {
+    "description": "Prefix for an unexpected vehicle load error.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Connection closed"
+      }
+    }
+  },
+  "vehiclesPendingSync": "Vehículos pendientes de sincronización",
+  "@vehiclesPendingSync": {
+    "description": "Banner telling the user that vehicles wait to be synced."
+  },
+  "syncAction": "Sincronizar",
+  "@syncAction": {
+    "description": "Starts synchronizing the pending records."
+  },
+  "vehicleSyncErrorWithPending": "{error} Hay vehículos pendientes de sincronización.",
+  "@vehicleSyncErrorWithPending": {
+    "description": "Sync failure banner combined with the pending vehicles notice.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "No se pudo conectar con el servidor."
+      }
+    }
+  },
+  "vehicleRemoteDeleted": "Coche {brand} {model} eliminado",
+  "@vehicleRemoteDeleted": {
+    "description": "Snackbar reporting a vehicle removed by another device.",
+    "placeholders": {
+      "brand": {
+        "type": "String",
+        "example": "Ford"
+      },
+      "model": {
+        "type": "String",
+        "example": "Focus"
+      }
+    }
+  },
+  "vehicleRemoteDeletedDiscarded": "Coche {brand} {model} eliminado, edición descartada",
+  "@vehicleRemoteDeletedDiscarded": {
+    "description": "Snackbar reporting a remotely deleted vehicle with unsynced edits.",
+    "placeholders": {
+      "brand": {
+        "type": "String",
+        "example": "Ford"
+      },
+      "model": {
+        "type": "String",
+        "example": "Focus"
+      }
+    }
+  },
+  "vehiclePendingDelete": "Pendiente de borrado",
+  "@vehiclePendingDelete": {
+    "description": "Label on a vehicle whose deletion still waits to sync."
+  },
+  "editVehicle": "Editar vehículo",
+  "@editVehicle": {
+    "description": "Title of the form that edits an existing vehicle."
+  },
+  "vehicleDetailsSection": "Datos del vehículo",
+  "@vehicleDetailsSection": {
+    "description": "Section heading for the identifying vehicle fields."
+  },
+  "vehicleAdditionalInfoSection": "Información adicional (opcional)",
+  "@vehicleAdditionalInfoSection": {
+    "description": "Section heading for the optional vehicle fields."
+  },
+  "vehicleBrandLabel": "Marca",
+  "@vehicleBrandLabel": {
+    "description": "Label for the vehicle brand field."
+  },
+  "vehicleBrandHint": "Ej. Toyota, Ford, BMW...",
+  "@vehicleBrandHint": {
+    "description": "Hint for the vehicle brand field."
+  },
+  "vehicleModelLabel": "Modelo",
+  "@vehicleModelLabel": {
+    "description": "Label for the vehicle model field."
+  },
+  "vehicleModelHint": "Ej. Corolla, Focus, Serie 3...",
+  "@vehicleModelHint": {
+    "description": "Hint for the vehicle model field."
+  },
+  "vehicleYearLabel": "Año",
+  "@vehicleYearLabel": {
+    "description": "Label for the vehicle year field."
+  },
+  "vehicleYearHint": "Ej. 2020",
+  "@vehicleYearHint": {
+    "description": "Hint for the vehicle year field."
+  },
+  "vehicleLicensePlateLabel": "Matrícula",
+  "@vehicleLicensePlateLabel": {
+    "description": "Label for the vehicle license plate field."
+  },
+  "vehicleLicensePlateHint": "Ej. 1234 ABC",
+  "@vehicleLicensePlateHint": {
+    "description": "Hint for the vehicle license plate field."
+  },
+  "vehicleColorLabel": "Color",
+  "@vehicleColorLabel": {
+    "description": "Label for the optional vehicle color field."
+  },
+  "vehicleColorHint": "Ej. Blanco...",
+  "@vehicleColorHint": {
+    "description": "Hint for the optional vehicle color field."
+  },
+  "vehicleMileageLabel": "Kilometraje",
+  "@vehicleMileageLabel": {
+    "description": "Label for the optional vehicle mileage field."
+  },
+  "vehicleMileageHint": "Ej. 45000",
+  "@vehicleMileageHint": {
+    "description": "Hint for the optional vehicle mileage field."
+  },
+  "saveVehicle": "Guardar vehículo",
+  "@saveVehicle": {
+    "description": "Submits the vehicle creation form."
+  },
+  "vehicleBrandRequired": "La marca es obligatoria",
+  "@vehicleBrandRequired": {
+    "description": "Validation message when the brand field is empty."
+  },
+  "vehicleModelRequired": "El modelo es obligatorio",
+  "@vehicleModelRequired": {
+    "description": "Validation message when the model field is empty."
+  },
+  "fieldRequired": "Obligatorio",
+  "@fieldRequired": {
+    "description": "Generic validation message for an empty mandatory field."
+  },
+  "vehicleLicensePlateRequired": "Obligatoria",
+  "@vehicleLicensePlateRequired": {
+    "description": "Validation message when the license plate is empty."
+  },
+  "vehicleYearInvalid": "Año inválido",
+  "@vehicleYearInvalid": {
+    "description": "Validation message when the year is not a number."
+  },
+  "vehicleYearOutOfRange": "Fuera de rango",
+  "@vehicleYearOutOfRange": {
+    "description": "Validation message when the year is not a plausible car year."
+  },
+  "vehicleMileageInvalid": "Kilometraje inválido",
+  "@vehicleMileageInvalid": {
+    "description": "Validation message when the mileage is not a number."
+  },
+  "deleteVehicleTitle": "Eliminar vehículo",
+  "@deleteVehicleTitle": {
+    "description": "Title of the vehicle deletion confirmation dialog."
+  },
+  "deleteVehicleConfirmation": "¿Seguro que quieres eliminar {vehicleName}?",
+  "@deleteVehicleConfirmation": {
+    "description": "Body of the vehicle deletion confirmation dialog.",
+    "placeholders": {
+      "vehicleName": {
+        "type": "String",
+        "example": "Toyota Corolla"
+      }
+    }
+  },
+  "vehicleCreateError": "Error al crear el vehículo",
+  "@vehicleCreateError": {
+    "description": "Snackbar shown when creating a vehicle fails."
+  },
+  "vehicleUpdateError": "Error al actualizar el vehículo",
+  "@vehicleUpdateError": {
+    "description": "Snackbar shown when updating a vehicle fails."
+  },
+  "vehicleDeleteError": "Error al eliminar el vehículo",
+  "@vehicleDeleteError": {
+    "description": "Snackbar shown when deleting a vehicle fails."
   }
 }

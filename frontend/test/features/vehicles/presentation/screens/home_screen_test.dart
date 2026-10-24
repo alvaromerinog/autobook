@@ -25,8 +25,9 @@ class MockIdGenerator extends Mock implements IdGenerator {}
 
 Future<void> pumpHomeScreen(
   WidgetTester tester,
-  MockCarRepository mockRepo,
-) async {
+  MockCarRepository mockRepo, {
+  Locale locale = const Locale('es'),
+}) async {
   final mockIds = MockIdGenerator();
   await tester.pumpWidget(
     ProviderScope(
@@ -51,7 +52,7 @@ Future<void> pumpHomeScreen(
         updateCarUseCaseProvider.overrideWithValue(UpdateCarUseCase(mockRepo)),
         deleteCarUseCaseProvider.overrideWithValue(DeleteCarUseCase(mockRepo)),
       ],
-      child: localizedTestApp(home: const HomeScreen()),
+      child: localizedTestApp(locale: locale, home: const HomeScreen()),
     ),
   );
   await tester.pumpAndSettle();
@@ -96,6 +97,16 @@ void main() {
         );
         expect(opacity.opacity, lessThan(1.0));
       });
+
+      testWidgets('given a car pending delete in English, then the row shows '
+          'the English pending label', (tester) async {
+        stubSyncDefaults(mockRepo);
+        when(() => mockRepo.pendingDeleteIds()).thenAnswer((_) async => {'1'});
+
+        await pumpHomeScreen(tester, mockRepo, locale: const Locale('en'));
+
+        expect(find.text('Pending deletion'), findsOneWidget);
+      });
     });
 
     group('ephemeral remote change banner', () {
@@ -114,6 +125,18 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Coche Toyota Corolla eliminado'), findsNothing);
+      });
+
+      testWidgets('given a remote deletion event in English, then the English '
+          'snackbar is shown', (tester) async {
+        stubSyncDefaults(mockRepo);
+        when(() => mockRepo.refreshFromRemote()).thenAnswer(
+          (_) async => [const RemoteSyncEvent.remoteDeleted(toyotaCorolla)],
+        );
+
+        await pumpHomeScreen(tester, mockRepo, locale: const Locale('en'));
+
+        expect(find.text('Car Toyota Corolla deleted'), findsOneWidget);
       });
     });
   });

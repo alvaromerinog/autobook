@@ -3,6 +3,7 @@ import 'package:autobook/features/maintenances/domain/entities/maintenance_type.
 import 'package:autobook/features/maintenances/domain/usecases/create_maintenance_usecase.dart';
 import 'package:autobook/features/maintenances/presentation/widgets/maintenance_dialog.dart';
 import 'package:autobook/features/maintenances/presentation/widgets/maint_type_icon.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -19,6 +20,9 @@ Future<MaintenanceDraft? Function()> _pumpDialog(
   MaintenanceDraft? result;
   await tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('es'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Builder(
           builder: (context) => Center(
