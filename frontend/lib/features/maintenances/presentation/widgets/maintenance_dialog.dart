@@ -1,7 +1,7 @@
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance_type.dart';
 import 'package:autobook/features/maintenances/domain/usecases/create_maintenance_usecase.dart';
-import 'package:autobook/features/maintenances/presentation/theme/maint_type_icons.dart';
+import 'package:autobook/features/maintenances/presentation/localization/maintenance_type_localizations.dart';
 import 'package:autobook/features/maintenances/presentation/widgets/maint_type_icon.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/blur_dialog.dart';
 import 'package:autobook/features/vehicles/presentation/widgets/custom_form_field.dart';
@@ -81,6 +81,7 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final isEditing = widget.existing != null;
 
     return Center(
@@ -111,8 +112,8 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                           Expanded(
                             child: Text(
                               isEditing
-                                  ? 'Editar mantenimiento'
-                                  : 'Nuevo mantenimiento',
+                                  ? l10n.maintenanceEditTitle
+                                  : l10n.maintenanceNewTitle,
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -129,7 +130,7 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Datos del mantenimiento',
+                        l10n.maintenanceDetailsSection,
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: cs.primary,
                           fontWeight: FontWeight.w600,
@@ -138,14 +139,14 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                       const SizedBox(height: 16),
                       DropdownButtonFormField<MaintenanceType>(
                         initialValue: _type,
-                        decoration: const InputDecoration(
-                          labelText: 'Tipo de mantenimiento',
-                          border: OutlineInputBorder(
+                        decoration: InputDecoration(
+                          labelText: l10n.maintenanceTypeFieldLabel,
+                          border: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(12)),
                           ),
                           filled: true,
                           isDense: true,
-                          contentPadding: EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 14,
                           ),
@@ -162,7 +163,7 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        maintTypeLabel(t),
+                                        maintTypeLabel(context, t),
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                       ),
@@ -174,7 +175,7 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                         ],
                         onChanged: (v) => setState(() => _type = v ?? _type),
                         validator: (v) =>
-                            v == null ? 'Selecciona un tipo' : null,
+                            v == null ? l10n.maintenanceTypeRequired : null,
                       ),
                       const SizedBox(height: 14),
                       Row(
@@ -191,8 +192,8 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                             flex: 5,
                             child: CustomFormField(
                               controller: _kmCtrl,
-                              label: 'Kilómetros',
-                              hint: 'Ej. 45000',
+                              label: l10n.maintenanceMileageLabel,
+                              hint: l10n.maintenanceMileageHint,
                               icon: Icons.speed_outlined,
                               keyboardType: TextInputType.number,
                               textInputAction: TextInputAction.done,
@@ -202,11 +203,15 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                               onSubmitted: _submit,
                               validator: (v) {
                                 if (v == null || v.trim().isEmpty) {
-                                  return 'Los kilómetros son obligatorios';
+                                  return l10n.maintenanceMileageRequired;
                                 }
                                 final n = int.tryParse(v.trim());
-                                if (n == null) return 'Km inválido';
-                                if (n < 0) return 'No puede ser negativo';
+                                if (n == null) {
+                                  return l10n.maintenanceMileageInvalid;
+                                }
+                                if (n < 0) {
+                                  return l10n.maintenanceNegativeNotAllowed;
+                                }
                                 return null;
                               },
                             ),
@@ -216,8 +221,8 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                       const SizedBox(height: 12),
                       CustomFormField(
                         controller: _costCtrl,
-                        label: 'Coste',
-                        hint: 'Ej. 145.20',
+                        label: l10n.maintenanceCostLabel,
+                        hint: l10n.maintenanceCostHint,
                         icon: Icons.euro,
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
@@ -231,17 +236,19 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                         onSubmitted: _submit,
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) {
-                            return 'El coste es obligatorio';
+                            return l10n.maintenanceCostRequired;
                           }
                           final n = double.tryParse(v.trim());
-                          if (n == null) return 'Coste inválido';
-                          if (n < 0) return 'No puede ser negativo';
+                          if (n == null) return l10n.maintenanceCostInvalid;
+                          if (n < 0) {
+                            return l10n.maintenanceNegativeNotAllowed;
+                          }
                           return null;
                         },
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Información adicional (opcional)',
+                        l10n.maintenanceAdditionalInfoSection,
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: cs.primary,
                           fontWeight: FontWeight.w600,
@@ -250,8 +257,8 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                       const SizedBox(height: 16),
                       CustomFormField(
                         controller: _garageCtrl,
-                        label: 'Taller',
-                        hint: 'Ej. Taller Marín · Madrid',
+                        label: l10n.maintenanceGarageLabel,
+                        hint: l10n.maintenanceGarageHint,
                         icon: Icons.location_on_outlined,
                         textInputAction: TextInputAction.done,
                         onSubmitted: _submit,
@@ -259,8 +266,8 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                       const SizedBox(height: 12),
                       CustomFormField(
                         controller: _notesCtrl,
-                        label: 'Notas',
-                        hint: 'Detalles del servicio...',
+                        label: l10n.maintenanceNotesLabel,
+                        hint: l10n.maintenanceNotesHint,
                         icon: Icons.notes,
                         keyboardType: TextInputType.multiline,
                         textInputAction: TextInputAction.newline,
@@ -269,7 +276,7 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog> {
                       FilledButton.icon(
                         onPressed: _submit,
                         icon: const Icon(Icons.check),
-                        label: Text(isEditing ? 'Guardar cambios' : 'Guardar'),
+                        label: Text(isEditing ? l10n.saveChanges : l10n.save),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           textStyle: theme.textTheme.titleSmall,
@@ -294,6 +301,7 @@ class _DateField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).toString();
     final label = DateFormat('dd MMM yyyy', locale).format(date);
     return FormField<String>(
@@ -309,15 +317,18 @@ class _DateField extends StatelessWidget {
           if (picked != null) onChanged(picked);
         },
         child: InputDecorator(
-          decoration: const InputDecoration(
-            labelText: 'Fecha',
-            prefixIcon: Icon(Icons.calendar_today_outlined, size: 18),
-            border: OutlineInputBorder(
+          decoration: InputDecoration(
+            labelText: l10n.maintenanceDateLabel,
+            prefixIcon: const Icon(Icons.calendar_today_outlined, size: 18),
+            border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
             filled: true,
             isDense: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 14,
+            ),
           ),
           child: Text(label),
         ),

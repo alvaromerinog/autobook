@@ -175,4 +175,205 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get vehicleDeleteError => 'Error al eliminar el vehículo';
+
+  @override
+  String get addMaintenance => 'Añadir mantenimiento';
+
+  @override
+  String get maintenanceNewTitle => 'Nuevo mantenimiento';
+
+  @override
+  String get maintenanceEditTitle => 'Editar mantenimiento';
+
+  @override
+  String get maintenanceDetailsSection => 'Datos del mantenimiento';
+
+  @override
+  String get maintenanceTypeFieldLabel => 'Tipo de mantenimiento';
+
+  @override
+  String get maintenanceTypeRequired => 'Selecciona un tipo';
+
+  @override
+  String get maintenanceMileageLabel => 'Kilómetros';
+
+  @override
+  String get maintenanceMileageHint => 'Ej. 45000';
+
+  @override
+  String get maintenanceMileageRequired => 'Los kilómetros son obligatorios';
+
+  @override
+  String get maintenanceMileageInvalid => 'Km inválido';
+
+  @override
+  String get maintenanceCostLabel => 'Coste';
+
+  @override
+  String get maintenanceCostHint => 'Ej. 145.20';
+
+  @override
+  String get maintenanceCostRequired => 'El coste es obligatorio';
+
+  @override
+  String get maintenanceCostInvalid => 'Coste inválido';
+
+  @override
+  String get maintenanceNegativeNotAllowed => 'No puede ser negativo';
+
+  @override
+  String get maintenanceDateLabel => 'Fecha';
+
+  @override
+  String get maintenanceAdditionalInfoSection =>
+      'Información adicional (opcional)';
+
+  @override
+  String get maintenanceGarageLabel => 'Taller';
+
+  @override
+  String get maintenanceGarageHint => 'Ej. Taller Marín · Madrid';
+
+  @override
+  String get maintenanceNotesLabel => 'Notas';
+
+  @override
+  String get maintenanceNotesHint => 'Detalles del servicio...';
+
+  @override
+  String get save => 'Guardar';
+
+  @override
+  String get maintenanceHistoryTitle => 'Historial de mantenimientos';
+
+  @override
+  String get maintenanceHistoryEmpty => 'Sin mantenimientos registrados';
+
+  @override
+  String maintenanceEntryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entradas',
+      one: '1 entrada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get maintenanceCreated => 'Mantenimiento registrado';
+
+  @override
+  String get maintenanceCreateError => 'Error al crear el mantenimiento';
+
+  @override
+  String maintenanceErrorDetails(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get maintenanceStatsKmLabel => 'KM';
+
+  @override
+  String get maintenanceStatsSpentLabel => 'GASTADO';
+
+  @override
+  String get maintenanceStatsEntriesLabel => 'ENTRADAS';
+
+  @override
+  String get vehicleNotFound => 'Vehículo no encontrado';
+
+  @override
+  String get maintenanceNotFound => 'Registro no encontrado';
+
+  @override
+  String get deleteMaintenanceTitle => 'Eliminar mantenimiento';
+
+  @override
+  String get deleteMaintenanceConfirmation =>
+      '¿Seguro que quieres eliminar este registro?';
+
+  @override
+  String get maintenanceDeleted => 'Mantenimiento eliminado';
+
+  @override
+  String get maintenanceDeleteError => 'Error al eliminar el mantenimiento';
+
+  @override
+  String get maintenanceUpdateError => 'Error al actualizar el mantenimiento';
+
+  @override
+  String get maintenanceNotesSection => 'NOTAS';
+
+  @override
+  String get timelineNoDate => 'Sin fecha';
+
+  @override
+  String timelineEntrySemantics(String type, String date) {
+    return '$type $date';
+  }
+
+  @override
+  String maintenanceRemoteDeleted(String id) {
+    return 'Mantenimiento $id eliminado';
+  }
+
+  @override
+  String maintenanceRemoteDeletedDiscarded(String id) {
+    return 'Mantenimiento $id eliminado, edición descartada';
+  }
+
+  @override
+  String get maintTypeOil => 'Cambio de aceite';
+
+  @override
+  String get maintTypeOilShort => 'Aceite';
+
+  @override
+  String get maintTypeCoolant => 'Refrigerante';
+
+  @override
+  String get maintTypeCoolantShort => 'Refrigerante';
+
+  @override
+  String get maintTypeBelt => 'Correa de distribución';
+
+  @override
+  String get maintTypeBeltShort => 'Distribución';
+
+  @override
+  String get maintTypeItv => 'ITV';
+
+  @override
+  String get maintTypeItvShort => 'ITV';
+
+  @override
+  String get maintTypeRepair => 'Reparación general';
+
+  @override
+  String get maintTypeRepairShort => 'Reparación';
+
+  @override
+  String get maintTypeFilter => 'Filtro de aire';
+
+  @override
+  String get maintTypeFilterShort => 'Filtro';
+
+  @override
+  String get maintTypeBattery => 'Batería';
+
+  @override
+  String get maintTypeBatteryShort => 'Batería';
+
+  @override
+  String get maintTypeBrakes => 'Frenos';
+
+  @override
+  String get maintTypeBrakesShort => 'Frenos';
+
+  @override
+  String get maintTypeTires => 'Neumáticos';
+
+  @override
+  String get maintTypeTiresShort => 'Ruedas';
 }

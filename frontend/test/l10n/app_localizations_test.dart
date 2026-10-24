@@ -302,6 +302,240 @@ void main() {
         expect(spanish.vehicleDeleteError, 'Error al eliminar el vehículo');
       });
     });
+
+    group('maintenance type labels', () {
+      test('all nine full labels are translated in both catalogs', () {
+        expect(english.maintTypeOil, 'Oil change');
+        expect(spanish.maintTypeOil, 'Cambio de aceite');
+        expect(english.maintTypeCoolant, 'Coolant');
+        expect(spanish.maintTypeCoolant, 'Refrigerante');
+        expect(english.maintTypeBelt, 'Timing belt');
+        expect(spanish.maintTypeBelt, 'Correa de distribución');
+        expect(english.maintTypeItv, 'Vehicle inspection');
+        expect(spanish.maintTypeItv, 'ITV');
+        expect(english.maintTypeRepair, 'General repair');
+        expect(spanish.maintTypeRepair, 'Reparación general');
+        expect(english.maintTypeFilter, 'Air filter');
+        expect(spanish.maintTypeFilter, 'Filtro de aire');
+        expect(english.maintTypeBattery, 'Battery');
+        expect(spanish.maintTypeBattery, 'Batería');
+        expect(english.maintTypeBrakes, 'Brakes');
+        expect(spanish.maintTypeBrakes, 'Frenos');
+        expect(english.maintTypeTires, 'Tires');
+        expect(spanish.maintTypeTires, 'Neumáticos');
+      });
+
+      test('all nine short labels are translated in both catalogs', () {
+        expect(english.maintTypeOilShort, 'Oil');
+        expect(spanish.maintTypeOilShort, 'Aceite');
+        expect(english.maintTypeCoolantShort, 'Coolant');
+        expect(spanish.maintTypeCoolantShort, 'Refrigerante');
+        expect(english.maintTypeBeltShort, 'Belt');
+        expect(spanish.maintTypeBeltShort, 'Distribución');
+        expect(english.maintTypeItvShort, 'ITV');
+        expect(spanish.maintTypeItvShort, 'ITV');
+        expect(english.maintTypeRepairShort, 'Repair');
+        expect(spanish.maintTypeRepairShort, 'Reparación');
+        expect(english.maintTypeFilterShort, 'Filter');
+        expect(spanish.maintTypeFilterShort, 'Filtro');
+        expect(english.maintTypeBatteryShort, 'Battery');
+        expect(spanish.maintTypeBatteryShort, 'Batería');
+        expect(english.maintTypeBrakesShort, 'Brakes');
+        expect(spanish.maintTypeBrakesShort, 'Frenos');
+        expect(english.maintTypeTiresShort, 'Tires');
+        expect(spanish.maintTypeTiresShort, 'Ruedas');
+      });
+    });
+
+    group('maintenance plurals and placeholders', () {
+      test('entry count is an ICU plural in both catalogs', () {
+        expect(english.maintenanceEntryCount(1), '1 entry');
+        expect(english.maintenanceEntryCount(2), '2 entries');
+        expect(spanish.maintenanceEntryCount(1), '1 entrada');
+        expect(spanish.maintenanceEntryCount(2), '2 entradas');
+      });
+
+      test('remote maintenance messages keep their identifiers', () {
+        expect(
+          english.maintenanceRemoteDeleted('maint-01/A'),
+          contains('maint-01/A'),
+        );
+        expect(
+          english.maintenanceRemoteDeleted('maint-01/A'),
+          'Maintenance maint-01/A deleted',
+        );
+        expect(
+          spanish.maintenanceRemoteDeleted('maint-01/A'),
+          'Mantenimiento maint-01/A eliminado',
+        );
+        expect(
+          english.maintenanceRemoteDeletedDiscarded('maint-01/A'),
+          'Maintenance maint-01/A deleted, edits discarded',
+        );
+        expect(
+          spanish.maintenanceRemoteDeletedDiscarded('maint-01/A'),
+          'Mantenimiento maint-01/A eliminado, edición descartada',
+        );
+      });
+
+      test('diagnostic details keep the raw error', () {
+        expect(
+          english.maintenanceErrorDetails('Connection closed'),
+          'Error: Connection closed',
+        );
+        expect(
+          spanish.maintenanceErrorDetails('Connection closed'),
+          'Error: Connection closed',
+        );
+      });
+
+      test('timeline semantics keep type and date', () {
+        expect(
+          english.timelineEntrySemantics('Oil change', '12 Mar'),
+          'Oil change on 12 Mar',
+        );
+        expect(
+          spanish.timelineEntrySemantics('Cambio de aceite', '12 mar'),
+          'Cambio de aceite 12 mar',
+        );
+      });
+    });
+
+    group('maintenance screens copy', () {
+      test('form copy is translated in both catalogs', () {
+        expect(english.maintenanceNewTitle, 'New maintenance');
+        expect(spanish.maintenanceNewTitle, 'Nuevo mantenimiento');
+        expect(english.maintenanceEditTitle, 'Edit maintenance');
+        expect(spanish.maintenanceEditTitle, 'Editar mantenimiento');
+        expect(english.maintenanceDetailsSection, 'Maintenance details');
+        expect(spanish.maintenanceDetailsSection, 'Datos del mantenimiento');
+        expect(english.maintenanceTypeFieldLabel, 'Maintenance type');
+        expect(spanish.maintenanceTypeFieldLabel, 'Tipo de mantenimiento');
+        expect(english.maintenanceTypeRequired, 'Select a type');
+        expect(spanish.maintenanceTypeRequired, 'Selecciona un tipo');
+        expect(english.maintenanceMileageLabel, 'Mileage');
+        expect(spanish.maintenanceMileageLabel, 'Kilómetros');
+        expect(english.maintenanceMileageHint, 'E.g. 45000');
+        expect(spanish.maintenanceMileageHint, 'Ej. 45000');
+        expect(english.maintenanceCostLabel, 'Cost');
+        expect(spanish.maintenanceCostLabel, 'Coste');
+        expect(english.maintenanceCostHint, 'E.g. 145.20');
+        expect(spanish.maintenanceCostHint, 'Ej. 145.20');
+        expect(english.maintenanceDateLabel, 'Date');
+        expect(spanish.maintenanceDateLabel, 'Fecha');
+        expect(english.maintenanceGarageLabel, 'Workshop');
+        expect(spanish.maintenanceGarageLabel, 'Taller');
+        expect(english.maintenanceGarageHint, 'E.g. Marín Workshop · Madrid');
+        expect(spanish.maintenanceGarageHint, 'Ej. Taller Marín · Madrid');
+        expect(english.maintenanceNotesLabel, 'Notes');
+        expect(spanish.maintenanceNotesLabel, 'Notas');
+        expect(english.maintenanceNotesHint, 'Service details...');
+        expect(spanish.maintenanceNotesHint, 'Detalles del servicio...');
+        expect(
+          english.maintenanceAdditionalInfoSection,
+          'Additional information (optional)',
+        );
+        expect(
+          spanish.maintenanceAdditionalInfoSection,
+          'Información adicional (opcional)',
+        );
+        expect(english.save, 'Save');
+        expect(spanish.save, 'Guardar');
+      });
+
+      test('validation messages are translated in both catalogs', () {
+        expect(english.maintenanceMileageRequired, 'Mileage is required');
+        expect(
+          spanish.maintenanceMileageRequired,
+          'Los kilómetros son '
+          'obligatorios',
+        );
+        expect(english.maintenanceMileageInvalid, 'Invalid mileage');
+        expect(spanish.maintenanceMileageInvalid, 'Km inválido');
+        expect(english.maintenanceCostRequired, 'Cost is required');
+        expect(spanish.maintenanceCostRequired, 'El coste es obligatorio');
+        expect(english.maintenanceCostInvalid, 'Invalid cost');
+        expect(spanish.maintenanceCostInvalid, 'Coste inválido');
+        expect(english.maintenanceNegativeNotAllowed, 'Cannot be negative');
+        expect(spanish.maintenanceNegativeNotAllowed, 'No puede ser negativo');
+      });
+
+      test('history copy is translated in both catalogs', () {
+        expect(english.addMaintenance, 'Add maintenance');
+        expect(spanish.addMaintenance, 'Añadir mantenimiento');
+        expect(english.maintenanceHistoryTitle, 'Maintenance history');
+        expect(spanish.maintenanceHistoryTitle, 'Historial de mantenimientos');
+        expect(english.maintenanceHistoryEmpty, 'No maintenance records yet');
+        expect(
+          spanish.maintenanceHistoryEmpty,
+          'Sin mantenimientos '
+          'registrados',
+        );
+        expect(english.maintenanceCreated, 'Maintenance recorded');
+        expect(spanish.maintenanceCreated, 'Mantenimiento registrado');
+        expect(
+          english.maintenanceCreateError,
+          'Could not create the '
+          'maintenance',
+        );
+        expect(
+          spanish.maintenanceCreateError,
+          'Error al crear el mantenimiento',
+        );
+        expect(english.maintenanceStatsKmLabel, 'KM');
+        expect(spanish.maintenanceStatsKmLabel, 'KM');
+        expect(english.maintenanceStatsSpentLabel, 'SPENT');
+        expect(spanish.maintenanceStatsSpentLabel, 'GASTADO');
+        expect(english.maintenanceStatsEntriesLabel, 'ENTRIES');
+        expect(spanish.maintenanceStatsEntriesLabel, 'ENTRADAS');
+        expect(english.vehicleNotFound, 'Vehicle not found');
+        expect(spanish.vehicleNotFound, 'Vehículo no encontrado');
+      });
+
+      test('detail copy is translated in both catalogs', () {
+        expect(english.maintenanceNotFound, 'Record not found');
+        expect(spanish.maintenanceNotFound, 'Registro no encontrado');
+        expect(english.deleteMaintenanceTitle, 'Delete maintenance');
+        expect(spanish.deleteMaintenanceTitle, 'Eliminar mantenimiento');
+        expect(
+          english.deleteMaintenanceConfirmation,
+          'Are you sure you want to delete this record?',
+        );
+        expect(
+          spanish.deleteMaintenanceConfirmation,
+          '¿Seguro que quieres eliminar este registro?',
+        );
+        expect(english.maintenanceDeleted, 'Maintenance deleted');
+        expect(spanish.maintenanceDeleted, 'Mantenimiento eliminado');
+        expect(
+          english.maintenanceDeleteError,
+          'Could not delete the '
+          'maintenance',
+        );
+        expect(
+          spanish.maintenanceDeleteError,
+          'Error al eliminar el '
+          'mantenimiento',
+        );
+        expect(
+          english.maintenanceUpdateError,
+          'Could not update the '
+          'maintenance',
+        );
+        expect(
+          spanish.maintenanceUpdateError,
+          'Error al actualizar el '
+          'mantenimiento',
+        );
+        expect(english.maintenanceNotesSection, 'NOTES');
+        expect(spanish.maintenanceNotesSection, 'NOTAS');
+      });
+
+      test('timeline no-date copy is translated in both catalogs', () {
+        expect(english.timelineNoDate, 'No date');
+        expect(spanish.timelineNoDate, 'Sin fecha');
+      });
+    });
   });
 
   group('localizedTestApp', () {

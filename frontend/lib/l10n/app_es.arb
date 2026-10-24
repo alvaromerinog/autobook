@@ -245,5 +245,282 @@
   "vehicleDeleteError": "Error al eliminar el vehículo",
   "@vehicleDeleteError": {
     "description": "Snackbar shown when deleting a vehicle fails."
+  },
+  "addMaintenance": "Añadir mantenimiento",
+  "@addMaintenance": {
+    "description": "Action that opens the form to create a maintenance."
+  },
+  "maintenanceNewTitle": "Nuevo mantenimiento",
+  "@maintenanceNewTitle": {
+    "description": "Title of the form that creates a maintenance record."
+  },
+  "maintenanceEditTitle": "Editar mantenimiento",
+  "@maintenanceEditTitle": {
+    "description": "Title of the form that edits a maintenance record."
+  },
+  "maintenanceDetailsSection": "Datos del mantenimiento",
+  "@maintenanceDetailsSection": {
+    "description": "Section heading for the identifying maintenance fields."
+  },
+  "maintenanceTypeFieldLabel": "Tipo de mantenimiento",
+  "@maintenanceTypeFieldLabel": {
+    "description": "Label for the maintenance type dropdown."
+  },
+  "maintenanceTypeRequired": "Selecciona un tipo",
+  "@maintenanceTypeRequired": {
+    "description": "Validation message when no maintenance type is selected."
+  },
+  "maintenanceMileageLabel": "Kilómetros",
+  "@maintenanceMileageLabel": {
+    "description": "Label for the maintenance mileage field."
+  },
+  "maintenanceMileageHint": "Ej. 45000",
+  "@maintenanceMileageHint": {
+    "description": "Hint for the maintenance mileage field."
+  },
+  "maintenanceMileageRequired": "Los kilómetros son obligatorios",
+  "@maintenanceMileageRequired": {
+    "description": "Validation message when the mileage field is empty."
+  },
+  "maintenanceMileageInvalid": "Km inválido",
+  "@maintenanceMileageInvalid": {
+    "description": "Validation message when the mileage is not a number."
+  },
+  "maintenanceCostLabel": "Coste",
+  "@maintenanceCostLabel": {
+    "description": "Label for the maintenance cost field."
+  },
+  "maintenanceCostHint": "Ej. 145.20",
+  "@maintenanceCostHint": {
+    "description": "Hint for the maintenance cost field."
+  },
+  "maintenanceCostRequired": "El coste es obligatorio",
+  "@maintenanceCostRequired": {
+    "description": "Validation message when the cost field is empty."
+  },
+  "maintenanceCostInvalid": "Coste inválido",
+  "@maintenanceCostInvalid": {
+    "description": "Validation message when the cost is not a number."
+  },
+  "maintenanceNegativeNotAllowed": "No puede ser negativo",
+  "@maintenanceNegativeNotAllowed": {
+    "description": "Validation message when a numeric field is negative."
+  },
+  "maintenanceDateLabel": "Fecha",
+  "@maintenanceDateLabel": {
+    "description": "Label for the maintenance date field."
+  },
+  "maintenanceAdditionalInfoSection": "Información adicional (opcional)",
+  "@maintenanceAdditionalInfoSection": {
+    "description": "Section heading for the optional maintenance fields."
+  },
+  "maintenanceGarageLabel": "Taller",
+  "@maintenanceGarageLabel": {
+    "description": "Label for the optional maintenance workshop field."
+  },
+  "maintenanceGarageHint": "Ej. Taller Marín · Madrid",
+  "@maintenanceGarageHint": {
+    "description": "Hint for the optional maintenance workshop field."
+  },
+  "maintenanceNotesLabel": "Notas",
+  "@maintenanceNotesLabel": {
+    "description": "Label for the optional maintenance notes field."
+  },
+  "maintenanceNotesHint": "Detalles del servicio...",
+  "@maintenanceNotesHint": {
+    "description": "Hint for the optional maintenance notes field."
+  },
+  "save": "Guardar",
+  "@save": {
+    "description": "Submits the form with its current values."
+  },
+  "maintenanceHistoryTitle": "Historial de mantenimientos",
+  "@maintenanceHistoryTitle": {
+    "description": "Heading of the maintenance history section of a car."
+  },
+  "maintenanceHistoryEmpty": "Sin mantenimientos registrados",
+  "@maintenanceHistoryEmpty": {
+    "description": "Shown when a car has no maintenance records."
+  },
+  "maintenanceEntryCount": "{count, plural, =1{1 entrada} other{{count} entradas}}",
+  "@maintenanceEntryCount": {
+    "description": "Number of maintenance records shown under the history heading.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "maintenanceCreated": "Mantenimiento registrado",
+  "@maintenanceCreated": {
+    "description": "Snackbar shown when a maintenance is created."
+  },
+  "maintenanceCreateError": "Error al crear el mantenimiento",
+  "@maintenanceCreateError": {
+    "description": "Snackbar shown when creating a maintenance fails."
+  },
+  "maintenanceErrorDetails": "Error: {error}",
+  "@maintenanceErrorDetails": {
+    "description": "Prefix for an unexpected maintenance load error.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Connection closed"
+      }
+    }
+  },
+  "maintenanceStatsKmLabel": "KM",
+  "@maintenanceStatsKmLabel": {
+    "description": "Label of the mileage statistic of a car."
+  },
+  "maintenanceStatsSpentLabel": "GASTADO",
+  "@maintenanceStatsSpentLabel": {
+    "description": "Label of the money spent statistic of a car."
+  },
+  "maintenanceStatsEntriesLabel": "ENTRADAS",
+  "@maintenanceStatsEntriesLabel": {
+    "description": "Label of the maintenance entry count statistic."
+  },
+  "vehicleNotFound": "Vehículo no encontrado",
+  "@vehicleNotFound": {
+    "description": "Shown when the requested car does not exist."
+  },
+  "maintenanceNotFound": "Registro no encontrado",
+  "@maintenanceNotFound": {
+    "description": "Shown when the requested maintenance does not exist."
+  },
+  "deleteMaintenanceTitle": "Eliminar mantenimiento",
+  "@deleteMaintenanceTitle": {
+    "description": "Title of the maintenance deletion confirmation dialog."
+  },
+  "deleteMaintenanceConfirmation": "¿Seguro que quieres eliminar este registro?",
+  "@deleteMaintenanceConfirmation": {
+    "description": "Body of the maintenance deletion confirmation dialog."
+  },
+  "maintenanceDeleted": "Mantenimiento eliminado",
+  "@maintenanceDeleted": {
+    "description": "Snackbar shown when a maintenance is deleted."
+  },
+  "maintenanceDeleteError": "Error al eliminar el mantenimiento",
+  "@maintenanceDeleteError": {
+    "description": "Snackbar shown when deleting a maintenance fails."
+  },
+  "maintenanceUpdateError": "Error al actualizar el mantenimiento",
+  "@maintenanceUpdateError": {
+    "description": "Snackbar shown when updating a maintenance fails."
+  },
+  "maintenanceNotesSection": "NOTAS",
+  "@maintenanceNotesSection": {
+    "description": "Heading of the maintenance notes section."
+  },
+  "timelineNoDate": "Sin fecha",
+  "@timelineNoDate": {
+    "description": "Timeline group heading for records without a valid date."
+  },
+  "timelineEntrySemantics": "{type} {date}",
+  "@timelineEntrySemantics": {
+    "description": "Screen reader label of a timeline maintenance entry.",
+    "placeholders": {
+      "type": {
+        "type": "String",
+        "example": "Cambio de aceite"
+      },
+      "date": {
+        "type": "String",
+        "example": "12 mar"
+      }
+    }
+  },
+  "maintenanceRemoteDeleted": "Mantenimiento {id} eliminado",
+  "@maintenanceRemoteDeleted": {
+    "description": "Snackbar reporting a maintenance removed by another device.",
+    "placeholders": {
+      "id": {
+        "type": "String",
+        "example": "maint-01/A"
+      }
+    }
+  },
+  "maintenanceRemoteDeletedDiscarded": "Mantenimiento {id} eliminado, edición descartada",
+  "@maintenanceRemoteDeletedDiscarded": {
+    "description": "Snackbar reporting a remotely deleted maintenance with unsynced edits.",
+    "placeholders": {
+      "id": {
+        "type": "String",
+        "example": "maint-01/A"
+      }
+    }
+  },
+  "maintTypeOil": "Cambio de aceite",
+  "@maintTypeOil": {
+    "description": "Full label of the oil change maintenance type."
+  },
+  "maintTypeOilShort": "Aceite",
+  "@maintTypeOilShort": {
+    "description": "Short label of the oil change maintenance type."
+  },
+  "maintTypeCoolant": "Refrigerante",
+  "@maintTypeCoolant": {
+    "description": "Full label of the coolant maintenance type."
+  },
+  "maintTypeCoolantShort": "Refrigerante",
+  "@maintTypeCoolantShort": {
+    "description": "Short label of the coolant maintenance type."
+  },
+  "maintTypeBelt": "Correa de distribución",
+  "@maintTypeBelt": {
+    "description": "Full label of the timing belt maintenance type."
+  },
+  "maintTypeBeltShort": "Distribución",
+  "@maintTypeBeltShort": {
+    "description": "Short label of the timing belt maintenance type."
+  },
+  "maintTypeItv": "ITV",
+  "@maintTypeItv": {
+    "description": "Full label of the vehicle inspection maintenance type."
+  },
+  "maintTypeItvShort": "ITV",
+  "@maintTypeItvShort": {
+    "description": "Short label of the vehicle inspection maintenance type."
+  },
+  "maintTypeRepair": "Reparación general",
+  "@maintTypeRepair": {
+    "description": "Full label of the general repair maintenance type."
+  },
+  "maintTypeRepairShort": "Reparación",
+  "@maintTypeRepairShort": {
+    "description": "Short label of the general repair maintenance type."
+  },
+  "maintTypeFilter": "Filtro de aire",
+  "@maintTypeFilter": {
+    "description": "Full label of the air filter maintenance type."
+  },
+  "maintTypeFilterShort": "Filtro",
+  "@maintTypeFilterShort": {
+    "description": "Short label of the air filter maintenance type."
+  },
+  "maintTypeBattery": "Batería",
+  "@maintTypeBattery": {
+    "description": "Full label of the battery maintenance type."
+  },
+  "maintTypeBatteryShort": "Batería",
+  "@maintTypeBatteryShort": {
+    "description": "Short label of the battery maintenance type."
+  },
+  "maintTypeBrakes": "Frenos",
+  "@maintTypeBrakes": {
+    "description": "Full label of the brakes maintenance type."
+  },
+  "maintTypeBrakesShort": "Frenos",
+  "@maintTypeBrakesShort": {
+    "description": "Short label of the brakes maintenance type."
+  },
+  "maintTypeTires": "Neumáticos",
+  "@maintTypeTires": {
+    "description": "Full label of the tires maintenance type."
+  },
+  "maintTypeTiresShort": "Ruedas",
+  "@maintTypeTiresShort": {
+    "description": "Short label of the tires maintenance type."
   }
 }

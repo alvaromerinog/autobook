@@ -5,9 +5,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 MaterialApp localizedTestApp({
   required Widget home,
   Locale locale = const Locale('es'),
+  ThemeData? theme,
 }) {
   return MaterialApp(
     locale: locale,
+    theme: theme,
     localizationsDelegates: const [
       AppLocalizations.delegate,
       GlobalMaterialLocalizations.delegate,

@@ -10,6 +10,7 @@ import 'package:autobook/features/vehicles/presentation/providers/car_list_provi
 import 'package:autobook/features/vehicles/presentation/screens/add_car_screen.dart'
     show showCarDialog;
 import 'package:autobook/features/vehicles/presentation/widgets/delete_car_dialog.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -58,7 +59,7 @@ class CarDetailScreen extends ConsumerWidget {
       context,
       ref,
       () => ref.read(carListProvider.notifier).updateCar(updated, car),
-      errorText: 'Error al actualizar el vehículo',
+      errorText: AppLocalizations.of(context)!.vehicleUpdateError,
     );
   }
 
@@ -73,7 +74,7 @@ class CarDetailScreen extends ConsumerWidget {
       context,
       ref,
       () => ref.read(carListProvider.notifier).deleteCar(car),
-      errorText: 'Error al eliminar el vehículo',
+      errorText: AppLocalizations.of(context)!.vehicleDeleteError,
     );
     if (!deleted || !context.mounted) return;
     if (windowSizeClassOf(context) == WindowSizeClass.expanded) {
@@ -87,6 +88,7 @@ class CarDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final carsState = ref.watch(carListProvider).value;
     Car? car;
     if (carsState != null) {
@@ -101,31 +103,33 @@ class CarDetailScreen extends ConsumerWidget {
     final maintAsync = ref.watch(maintenanceListProvider(carId));
     final embedded = windowSizeClassOf(context) == WindowSizeClass.expanded;
 
-    ref.listen<
-      AsyncValue<MaintenanceListState>
-    >(maintenanceListProvider(carId), (prev, next) {
-      next.whenData((s) {
-        if (s.remoteSyncEvents.isEmpty) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              s.remoteSyncEvents
-                  .map(
-                    (e) => e.when(
-                      remoteDeleted: (m) => 'Mantenimiento ${m.id} eliminado',
-                      remoteDeletedWithPendingUpdate: (m) =>
-                          'Mantenimiento ${m.id} eliminado, edición descartada',
-                    ),
-                  )
-                  .join('\n'),
+    ref.listen<AsyncValue<MaintenanceListState>>(
+      maintenanceListProvider(carId),
+      (prev, next) {
+        next.whenData((s) {
+          if (s.remoteSyncEvents.isEmpty) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                s.remoteSyncEvents
+                    .map(
+                      (e) => e.when(
+                        remoteDeleted: (m) =>
+                            l10n.maintenanceRemoteDeleted(m.id),
+                        remoteDeletedWithPendingUpdate: (m) =>
+                            l10n.maintenanceRemoteDeletedDiscarded(m.id),
+                      ),
+                    )
+                    .join('\n'),
+              ),
             ),
-          ),
-        );
-        ref
-            .read(maintenanceListProvider(carId).notifier)
-            .clearRemoteChangeBanner();
-      });
-    });
+          );
+          ref
+              .read(maintenanceListProvider(carId).notifier)
+              .clearRemoteChangeBanner();
+        });
+      },
+    );
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -138,7 +142,7 @@ class CarDetailScreen extends ConsumerWidget {
       body: carsState == null
           ? const Center(child: CircularProgressIndicator())
           : selectedCar == null
-          ? const Center(child: Text('Vehículo no encontrado'))
+          ? Center(child: Text(l10n.vehicleNotFound))
           : ColoredBox(
               color: cs.surface,
               child: Column(
@@ -195,7 +199,9 @@ class CarDetailScreen extends ConsumerWidget {
                     ),
                     error: (e, _) => Padding(
                       padding: const EdgeInsets.all(40),
-                      child: Center(child: Text('Error: $e')),
+                      child: Center(
+                        child: Text(l10n.maintenanceErrorDetails('$e')),
+                      ),
                     ),
                     data: (s) {
                       final totalSpent = s.maintenances.fold<double>(
@@ -227,7 +233,7 @@ class CarDetailScreen extends ConsumerWidget {
                               children: [
                                 _DetailActionButton(
                                   icon: Icons.edit_outlined,
-                                  tooltip: 'Editar vehículo',
+                                  tooltip: l10n.editVehicle,
                                   discColor: cs.primary,
                                   iconColor: cs.onPrimary,
                                   onPressed: () =>
@@ -236,7 +242,7 @@ class CarDetailScreen extends ConsumerWidget {
                                 const SizedBox(width: 8),
                                 _DetailActionButton(
                                   icon: Icons.delete_outlined,
-                                  tooltip: 'Eliminar vehículo',
+                                  tooltip: l10n.deleteVehicleTitle,
                                   discColor: cs.error,
                                   iconColor: cs.onError,
                                   onPressed: () =>
@@ -255,7 +261,7 @@ class CarDetailScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Historial de mantenimientos',
+                          l10n.maintenanceHistoryTitle,
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: cs.onSurface,
                           ),
@@ -265,7 +271,7 @@ class CarDetailScreen extends ConsumerWidget {
                             final count =
                                 maintAsync.value?.maintenances.length ?? 0;
                             return Text(
-                              '$count ${count == 1 ? 'entrada' : 'entradas'}',
+                              l10n.maintenanceEntryCount(count),
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: cs.onSurfaceVariant,
                               ),
@@ -279,12 +285,14 @@ class CarDetailScreen extends ConsumerWidget {
                     child: maintAsync.when(
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Center(child: Text('Error: $e')),
+                      error: (e, _) => Center(
+                        child: Text(l10n.maintenanceErrorDetails('$e')),
+                      ),
                       data: (s) => s.maintenances.isEmpty
-                          ? const Center(
+                          ? Center(
                               child: Padding(
-                                padding: EdgeInsets.all(40),
-                                child: Text('Sin mantenimientos registrados'),
+                                padding: const EdgeInsets.all(40),
+                                child: Text(l10n.maintenanceHistoryEmpty),
                               ),
                             )
                           : Timeline(
@@ -305,18 +313,18 @@ class CarDetailScreen extends ConsumerWidget {
           try {
             await ref.read(maintenanceListProvider(carId).notifier).add(draft);
             if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Mantenimiento registrado')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.maintenanceCreated)));
           } on Failure catch (_) {
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Error al crear el mantenimiento')),
+              SnackBar(content: Text(l10n.maintenanceCreateError)),
             );
           }
         },
         icon: const Icon(Icons.add),
-        label: const Text('Añadir mantenimiento'),
+        label: Text(l10n.addMaintenance),
       ),
     );
   }
@@ -370,6 +378,7 @@ class _StatStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Card(
@@ -380,14 +389,22 @@ class _StatStrip extends StatelessWidget {
           padding: const EdgeInsets.only(top: 12, bottom: 24),
           child: Row(
             children: [
-              _Stat(icon: Icons.speed_outlined, value: km, label: 'KM'),
+              _Stat(
+                icon: Icons.speed_outlined,
+                value: km,
+                label: l10n.maintenanceStatsKmLabel,
+              ),
               _Divider(),
-              _Stat(icon: Icons.euro, value: spent, label: 'GASTADO'),
+              _Stat(
+                icon: Icons.euro,
+                value: spent,
+                label: l10n.maintenanceStatsSpentLabel,
+              ),
               _Divider(),
               _Stat(
                 icon: Icons.receipt_outlined,
                 value: entries,
-                label: 'ENTRADAS',
+                label: l10n.maintenanceStatsEntriesLabel,
               ),
             ],
           ),

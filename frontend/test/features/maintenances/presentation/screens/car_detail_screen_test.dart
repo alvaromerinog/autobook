@@ -1,3 +1,4 @@
+import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
 import 'package:autobook/features/maintenances/data/repositories/maintenance_repository.dart';
@@ -38,6 +39,7 @@ Future<void> pumpCarDetailScreen(
   MockMaintenanceRepository mockMaintRepo, {
   String carId = '1',
   Size? size,
+  Locale locale = const Locale('es'),
 }) async {
   final mockIds = MockIdGenerator();
   if (size != null) {
@@ -89,7 +91,7 @@ Future<void> pumpCarDetailScreen(
         maintenanceRepositoryProvider.overrideWithValue(mockMaintRepo),
       ],
       child: MaterialApp.router(
-        locale: const Locale('es'),
+        locale: locale,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
@@ -426,6 +428,421 @@ void main() {
         expect(find.text('Vehículo no encontrado'), findsOneWidget);
         expect(find.byTooltip('Editar vehículo'), findsNothing);
         expect(find.byTooltip('Eliminar vehículo'), findsNothing);
+      });
+    });
+
+    group('historial vacío', () {
+      testWidgets('given no maintenances, when pumped in Spanish, then the '
+          'empty message is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+
+        expect(find.text('Sin mantenimientos registrados'), findsOneWidget);
+      });
+
+      testWidgets('given no maintenances, when pumped in English, then the '
+          'English empty message is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          locale: const Locale('en'),
+        );
+
+        expect(find.text('No maintenance records yet'), findsOneWidget);
+      });
+    });
+
+    group('English copy', () {
+      testWidgets('given two maintenances, when pumped, then the header, '
+          'count, stats and actions are translated', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer(
+          (_) async => [
+            buildMaintenance(id: 'm1', carId: '1', date: '2026-03-12'),
+            buildMaintenance(id: 'm2', carId: '1', date: '2026-01-05'),
+          ],
+        );
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          locale: const Locale('en'),
+        );
+
+        expect(find.text('Maintenance history'), findsOneWidget);
+        expect(find.text('2 entries'), findsOneWidget);
+        expect(find.text('SPENT'), findsOneWidget);
+        expect(find.text('ENTRIES'), findsOneWidget);
+        expect(find.text('Add maintenance'), findsOneWidget);
+        expect(find.byTooltip('Edit vehicle'), findsOneWidget);
+        expect(find.byTooltip('Delete vehicle'), findsOneWidget);
+      });
+
+      testWidgets('given one maintenance, when pumped, then the count is '
+          'singular', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer(
+          (_) async => [
+            buildMaintenance(id: 'm1', carId: '1', date: '2026-03-12'),
+          ],
+        );
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          locale: const Locale('en'),
+        );
+
+        expect(find.text('1 entry'), findsOneWidget);
+      });
+
+      testWidgets('given a non-existent carId, when pumped, then the English '
+          'not found message is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          carId: 'no-existe',
+          locale: const Locale('en'),
+        );
+
+        expect(find.text('Vehicle not found'), findsOneWidget);
+      });
+    });
+
+    group('formato por idioma', () {
+      testWidgets('given a spent total, when pumped, then the euro amount '
+          'follows the Spanish grouping', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer(
+          (_) async => [
+            buildMaintenance(
+              id: 'm1',
+              carId: '1',
+              date: '2026-03-12',
+              cost: 1000,
+            ),
+            buildMaintenance(
+              id: 'm2',
+              carId: '1',
+              date: '2026-01-05',
+              cost: 234.5,
+            ),
+          ],
+        );
+
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+
+        expect(find.text('1.235\u00A0€'), findsOneWidget);
+      });
+
+      testWidgets('given a spent total, when pumped in English, then the euro '
+          'amount follows the English grouping', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer(
+          (_) async => [
+            buildMaintenance(
+              id: 'm1',
+              carId: '1',
+              date: '2026-03-12',
+              cost: 1000,
+            ),
+            buildMaintenance(
+              id: 'm2',
+              carId: '1',
+              date: '2026-01-05',
+              cost: 234.5,
+            ),
+          ],
+        );
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          locale: const Locale('en'),
+        );
+
+        expect(find.text('€1,235'), findsOneWidget);
+      });
+    });
+
+    group('snackbars de mantenimiento', () {
+      testWidgets('given a saved maintenance, when the dialog is saved, then '
+          'the Spanish success snackbar is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.create(any())).thenAnswer((_) async {});
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          size: const Size(1080, 2400),
+        );
+        await tester.tap(find.text('Añadir mantenimiento'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Kilómetros'),
+          '5000',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Coste'),
+          '40',
+        );
+        await tester.pump();
+        await tester.tap(find.text('Guardar'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Mantenimiento registrado'), findsOneWidget);
+      });
+
+      testWidgets('given the English locale, when the dialog is saved, then '
+          'the English success snackbar is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.create(any())).thenAnswer((_) async {});
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          size: const Size(1080, 2400),
+          locale: const Locale('en'),
+        );
+        await tester.tap(find.text('Add maintenance'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Mileage'),
+          '5000',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Cost'),
+          '40',
+        );
+        await tester.pump();
+        await tester.tap(find.text('Save'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Maintenance recorded'), findsOneWidget);
+      });
+
+      testWidgets('given create fails, when the dialog is saved, then the '
+          'Spanish error snackbar is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(
+          () => mockMaintRepo.create(any()),
+        ).thenThrow(const ServerFailure(500));
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          size: const Size(1080, 2400),
+        );
+        await tester.tap(find.text('Añadir mantenimiento'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Kilómetros'),
+          '5000',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Coste'),
+          '40',
+        );
+        await tester.pump();
+        await tester.tap(find.text('Guardar'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Error al crear el mantenimiento'), findsOneWidget);
+      });
+
+      testWidgets('given create fails in English, when the dialog is saved, '
+          'then the English error snackbar is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(
+          () => mockMaintRepo.create(any()),
+        ).thenThrow(const ServerFailure(500));
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          size: const Size(1080, 2400),
+          locale: const Locale('en'),
+        );
+        await tester.tap(find.text('Add maintenance'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Mileage'),
+          '5000',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Cost'),
+          '40',
+        );
+        await tester.pump();
+        await tester.tap(find.text('Save'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Could not create the maintenance'), findsOneWidget);
+      });
+    });
+
+    group('eventos remotos de mantenimiento', () {
+      testWidgets('given a remote deletion, when the list refreshes, then the '
+          'identifier is kept in the Spanish snackbar', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.refreshFromRemote('1')).thenAnswer(
+          (_) async => [
+            MaintenanceRemoteSyncEvent.remoteDeleted(
+              buildMaintenance(id: 'maint-01/A', carId: '1'),
+            ),
+          ],
+        );
+
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+
+        expect(find.text('Mantenimiento maint-01/A eliminado'), findsOneWidget);
+      });
+
+      testWidgets(
+        'given a remote deletion with edits, when the list refreshes, '
+        'then the English snackbar keeps the identifier',
+        (tester) async {
+          stubCarDefaults(mockCarRepo);
+          stubMaintDefaults(mockMaintRepo);
+          when(() => mockMaintRepo.refreshFromRemote('1')).thenAnswer(
+            (_) async => [
+              MaintenanceRemoteSyncEvent.remoteDeletedWithPendingUpdate(
+                buildMaintenance(id: 'maint-01/A', carId: '1'),
+              ),
+            ],
+          );
+
+          await pumpCarDetailScreen(
+            tester,
+            mockCarRepo,
+            mockMaintRepo,
+            locale: const Locale('en'),
+          );
+
+          expect(
+            find.text('Maintenance maint-01/A deleted, edits discarded'),
+            findsOneWidget,
+          );
+        },
+      );
+    });
+
+    group('errores de vehículo', () {
+      testWidgets('given update fails, when the edit dialog is saved, then '
+          'the Spanish update error is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(
+          () => mockCarRepo.update(any()),
+        ).thenThrow(const ServerFailure(500));
+
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+        await tester.tap(find.byTooltip('Editar vehículo'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Guardar cambios'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Error al actualizar el vehículo'), findsOneWidget);
+      });
+
+      testWidgets('given update fails in English, when the edit dialog is '
+          'saved, then the English update error is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(
+          () => mockCarRepo.update(any()),
+        ).thenThrow(const ServerFailure(500));
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          locale: const Locale('en'),
+        );
+        await tester.tap(find.byTooltip('Edit vehicle'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Save changes'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Could not update the vehicle'), findsOneWidget);
+      });
+
+      testWidgets('given delete fails, when the confirmation is accepted, '
+          'then the Spanish delete error is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(
+          () => mockCarRepo.delete(any()),
+        ).thenThrow(const ServerFailure(500));
+
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+        await tester.tap(find.byTooltip('Eliminar vehículo'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Error al eliminar el vehículo'), findsOneWidget);
+      });
+
+      testWidgets('given delete fails in English, when the confirmation is '
+          'accepted, then the English delete error is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(
+          () => mockCarRepo.delete(any()),
+        ).thenThrow(const ServerFailure(500));
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          locale: const Locale('en'),
+        );
+        await tester.tap(find.byTooltip('Delete vehicle'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Delete'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Could not delete the vehicle'), findsOneWidget);
+      });
+    });
+
+    group('estado de error', () {
+      testWidgets('given the maintenance list throws, when pumped, then the '
+          'diagnostic error detail is shown', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenThrow(StateError('boom'));
+
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+
+        expect(find.text('Error: Bad state: boom'), findsWidgets);
       });
     });
   });

@@ -1,4 +1,5 @@
 import 'package:autobook/features/maintenances/domain/entities/maintenance_type.dart';
+import 'package:autobook/features/maintenances/presentation/localization/maintenance_type_localizations.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_tints.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_type_icons.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,7 @@ class MaintTypePill extends StatelessWidget {
           Icon(maintTypeIcon(type), size: 14, color: tint.fg),
           const SizedBox(width: 4),
           Text(
-            maintTypeShort(type),
+            maintTypeShort(context, type),
             style: Theme.of(
               context,
             ).textTheme.labelMedium?.copyWith(color: tint.fg),
