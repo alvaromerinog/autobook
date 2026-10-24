@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:autobook/features/vehicles/presentation/widgets/garage_list_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/maintenances/fixtures/maintenance_fixtures.dart';
 import '../app_test_harness.dart';
@@ -337,6 +338,203 @@ void main() {
         );
         final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
         expect(rail.selectedIndex, 1);
+      },
+    );
+  });
+
+  group('whole-app localization', () {
+    testWidgets(
+      'given clean preferences and Spanish at compact, when settings switches '
+      'to English and back, then copy changes while the router, route and '
+      'user data survive',
+      (tester) async {
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(400, 900),
+          initialPreferences: const {},
+          locale: const Locale('es'),
+        );
+        final originalRouter = router;
+        final preferences = await SharedPreferences.getInstance();
+
+        expect(find.text('Añadir vehículo'), findsOneWidget);
+        expect(find.byTooltip('Ajustes'), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+
+        await tester.tap(find.byTooltip('Ajustes'));
+        await tester.pumpAndSettle();
+
+        expect(router.routeInformationProvider.value.uri.path, '/settings');
+        expect(find.text('Idioma'), findsOneWidget);
+        expect(find.text('Español'), findsOneWidget);
+        expect(find.text('English'), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsNothing);
+
+        await tester.tap(find.text('English'));
+        await tester.pumpAndSettle();
+
+        expect(router.routeInformationProvider.value.uri.path, '/settings');
+        expect(identical(router, originalRouter), isTrue);
+        expect(find.text('Settings'), findsOneWidget);
+        expect(find.text('Ajustes'), findsNothing);
+        expect(find.text('Language'), findsOneWidget);
+        expect(find.text('Idioma'), findsNothing);
+        expect(find.text('Español'), findsOneWidget);
+        expect(find.text('English'), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsNothing);
+        expect(preferences.getString('app_language'), 'en');
+
+        await tester.tap(find.byType(BackButton));
+        await tester.pumpAndSettle();
+
+        expect(router.routeInformationProvider.value.uri.path, '/');
+        expect(find.text('Add vehicle'), findsOneWidget);
+        expect(find.text('Añadir vehículo'), findsNothing);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+
+        await tester.tap(find.byTooltip('Settings'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Español'));
+        await tester.pumpAndSettle();
+
+        expect(router.routeInformationProvider.value.uri.path, '/settings');
+        expect(identical(router, originalRouter), isTrue);
+        expect(find.text('Ajustes'), findsOneWidget);
+        expect(find.text('Settings'), findsNothing);
+        expect(find.text('Idioma'), findsOneWidget);
+        expect(find.text('Language'), findsNothing);
+        expect(find.text('Español'), findsOneWidget);
+        expect(preferences.getString('app_language'), 'es');
+      },
+    );
+
+    testWidgets(
+      'given clean preferences and Spanish at expanded, when settings switches '
+      'to English, then the rail, route and garage user data stay intact',
+      (tester) async {
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(1200, 900),
+          initialPreferences: const {},
+          locale: const Locale('es'),
+        );
+        final originalRouter = router;
+        final preferences = await SharedPreferences.getInstance();
+
+        expect(find.text('Selecciona un vehículo'), findsOneWidget);
+        expect(find.text('Garaje'), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+
+        await tester.tap(find.text('Ajustes'));
+        await tester.pumpAndSettle();
+
+        expect(router.routeInformationProvider.value.uri.path, '/settings');
+        expect(find.text('Idioma'), findsOneWidget);
+        expect(find.text('Español'), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsNothing);
+
+        await tester.tap(find.text('English'));
+        await tester.pumpAndSettle();
+
+        expect(router.routeInformationProvider.value.uri.path, '/settings');
+        expect(identical(router, originalRouter), isTrue);
+        expect(find.text('Settings'), findsNWidgets(2));
+        expect(find.text('Ajustes'), findsNothing);
+        expect(find.text('Language'), findsOneWidget);
+        expect(find.text('Idioma'), findsNothing);
+        expect(find.text('Toyota Corolla'), findsNothing);
+        expect(preferences.getString('app_language'), 'en');
+        final settingsRail = tester.widget<NavigationRail>(
+          find.byType(NavigationRail),
+        );
+        expect(settingsRail.selectedIndex, 1);
+
+        await tester.tap(find.text('Garage'));
+        await tester.pumpAndSettle();
+
+        expect(router.routeInformationProvider.value.uri.path, '/');
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+        expect(find.text('Select a vehicle'), findsOneWidget);
+        final garageRail = tester.widget<NavigationRail>(
+          find.byType(NavigationRail),
+        );
+        expect(garageRail.selectedIndex, 0);
+
+        await tester.tap(find.byIcon(Icons.settings));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Español'));
+        await tester.pumpAndSettle();
+
+        expect(router.routeInformationProvider.value.uri.path, '/settings');
+        expect(identical(router, originalRouter), isTrue);
+        expect(find.text('Ajustes'), findsNWidgets(2));
+        expect(find.text('Settings'), findsNothing);
+        expect(find.text('Idioma'), findsOneWidget);
+        expect(find.text('Language'), findsNothing);
+        expect(preferences.getString('app_language'), 'es');
+      },
+    );
+
+    testWidgets(
+      'given clean preferences and a Spanish platform locale, when the app '
+      'launches in explicit English at compact, then every entry point is '
+      'English and no preference is persisted',
+      (tester) async {
+        tester.platformDispatcher.localesTestValue = [const Locale('es')];
+        addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+
+        final (router, _) = await pumpApp(
+          tester,
+          size: const Size(400, 900),
+          initialPreferences: const {},
+          locale: const Locale('en'),
+        );
+        final preferences = await SharedPreferences.getInstance();
+
+        expect(find.text('Autobook'), findsOneWidget);
+        expect(find.text('Add vehicle'), findsOneWidget);
+        expect(find.byTooltip('Settings'), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+        expect(find.text('Añadir vehículo'), findsNothing);
+
+        await tester.tap(find.byTooltip('Settings'));
+        await tester.pumpAndSettle();
+
+        expect(router.routeInformationProvider.value.uri.path, '/settings');
+        expect(find.text('Settings'), findsOneWidget);
+        expect(find.text('Language'), findsOneWidget);
+        expect(find.text('Español'), findsOneWidget);
+        expect(find.text('English'), findsOneWidget);
+        expect(find.text('Ajustes'), findsNothing);
+        expect(find.text('Idioma'), findsNothing);
+        expect(preferences.getString('app_language'), isNull);
+      },
+    );
+
+    testWidgets(
+      'given clean preferences and a Spanish platform locale, when the app '
+      'launches in explicit English at expanded, then the rail and garage '
+      'placeholders are English without persisting a preference',
+      (tester) async {
+        tester.platformDispatcher.localesTestValue = [const Locale('es')];
+        addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+
+        await pumpApp(
+          tester,
+          size: const Size(1200, 900),
+          initialPreferences: const {},
+          locale: const Locale('en'),
+        );
+        final preferences = await SharedPreferences.getInstance();
+
+        expect(find.text('Garage'), findsOneWidget);
+        expect(find.text('Settings'), findsOneWidget);
+        expect(find.text('Select a vehicle'), findsOneWidget);
+        expect(find.text('Toyota Corolla'), findsOneWidget);
+        expect(find.text('Garaje'), findsNothing);
+        expect(find.text('Ajustes'), findsNothing);
+        expect(find.text('Selecciona un vehículo'), findsNothing);
+        expect(preferences.getString('app_language'), isNull);
       },
     );
   });

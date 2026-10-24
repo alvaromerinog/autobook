@@ -1,8 +1,40 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:autobook/app/localization/app_language.dart';
 import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../app/localization_test_harness.dart';
+
+Map<String, Object?> readArb(String path) =>
+    jsonDecode(File(path).readAsStringSync()) as Map<String, Object?>;
+
+Set<String> messageKeys(Map<String, Object?> arb) =>
+    arb.keys.where((key) => !key.startsWith('@') && key != '@@locale').toSet();
+
+Set<Object?> messageValues(Map<String, Object?> arb) =>
+    messageKeys(arb).map((key) => arb[key]).toSet();
+
+Set<String> placeholderNames(Map<String, Object?> arb, String key) {
+  final metadata = arb['@$key'];
+  if (metadata is! Map<String, Object?>) {
+    fail('$key has no metadata to read placeholders from');
+  }
+  final placeholders = metadata['placeholders'];
+  if (placeholders is! Map<String, Object?>) {
+    return <String>{};
+  }
+  return placeholders.keys.toSet();
+}
+
+Set<String> pluralKeys(Map<String, Object?> arb) {
+  final pattern = RegExp(r'\{[^}]*, plural,');
+  return messageKeys(
+    arb,
+  ).where((key) => pattern.hasMatch(arb[key]! as String)).toSet();
+}
 
 void main() {
   group('AppLocalizations', () {
@@ -535,6 +567,72 @@ void main() {
         expect(english.timelineNoDate, 'No date');
         expect(spanish.timelineNoDate, 'Sin fecha');
       });
+    });
+  });
+
+  group('ARB catalog parity', () {
+    late Map<String, Object?> englishArb;
+    late Map<String, Object?> spanishArb;
+
+    setUpAll(() {
+      englishArb = readArb('lib/l10n/app_en.arb');
+      spanishArb = readArb('lib/l10n/app_es.arb');
+    });
+
+    test('both catalogs declare the same message keys', () {
+      final englishMessages = messageKeys(englishArb);
+      final spanishMessages = messageKeys(spanishArb);
+
+      expect(englishMessages, isNotEmpty);
+      expect(spanishMessages, englishMessages);
+    });
+
+    test('each catalog declares its own locale', () {
+      expect(englishArb['@@locale'], 'en');
+      expect(spanishArb['@@locale'], 'es');
+    });
+
+    test('every message declares translator metadata in both catalogs', () {
+      for (final key in messageKeys(englishArb)) {
+        expect(
+          englishArb['@$key'],
+          isA<Map<String, Object?>>(),
+          reason: '$key needs translator metadata in app_en.arb',
+        );
+        expect(
+          spanishArb['@$key'],
+          isA<Map<String, Object?>>(),
+          reason: '$key needs translator metadata in app_es.arb',
+        );
+      }
+    });
+
+    test('every message declares the same placeholder names', () {
+      for (final key in messageKeys(englishArb)) {
+        expect(
+          placeholderNames(spanishArb, key),
+          placeholderNames(englishArb, key),
+          reason: '$key placeholders diverge between catalogs',
+        );
+      }
+    });
+
+    test('plural messages use ICU plural syntax in both catalogs', () {
+      final englishPlurals = pluralKeys(englishArb);
+
+      expect(englishPlurals, isNotEmpty);
+      expect(pluralKeys(spanishArb), englishPlurals);
+      expect(englishPlurals, contains('maintenanceEntryCount'));
+    });
+
+    test('selector endonyms stay locale independent', () {
+      final endonyms = AppLanguage.values.map((language) => language.endonym);
+
+      expect(endonyms, ['Español', 'English']);
+      expect(messageValues(englishArb), isNot(contains('Español')));
+      expect(messageValues(englishArb), isNot(contains('English')));
+      expect(messageValues(spanishArb), isNot(contains('Español')));
+      expect(messageValues(spanishArb), isNot(contains('English')));
     });
   });
 
