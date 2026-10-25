@@ -3,7 +3,21 @@ name: Publish Docker images
 on:
   push:
     tags: ['v*']
+    # TODO: remove before merging to main — branch-only trigger for pipeline tests
+    branches: ['feat/add-docker-repository']
   workflow_dispatch:
+    inputs:
+      platforms:
+        description: Platforms to build (multi-arch is slow; branch runs default to amd64)
+        type: choice
+        default: linux/amd64,linux/arm64
+        options:
+          - linux/amd64,linux/arm64
+          - linux/amd64
+      api_url:
+        description: AUTOBOOK_API_URL baked into the web build (empty = repo variable)
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -11,6 +25,10 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+
+concurrency:
+  group: docker-publish-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
   publish:
@@ -25,7 +43,7 @@ jobs:
           - image: autobook-frontend
             context: ./frontend
             build-args: |
-              AUTOBOOK_API_URL=${{ vars.AUTOBOOK_API_URL || 'http://localhost:30000' }}
+              AUTOBOOK_API_URL=${{ inputs.api_url || vars.AUTOBOOK_API_URL || 'http://localhost:30000' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -54,7 +72,7 @@ jobs:
           context: ${{ matrix.context }}
           file: ${{ matrix.context }}/Dockerfile
           target: runner
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ inputs.platforms || (github.ref_type == 'tag' && 'linux/amd64,linux/arm64' || 'linux/amd64') }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
