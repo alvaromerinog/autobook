@@ -13,9 +13,28 @@ tasks:
       - fvm dart format .
 
   run:
-    desc: Run the Flutter app
+    desc: Run the Flutter app on DEVICE (asks with fzf when omitted)
     cmds:
-      - fvm flutter run
+      - |
+        device="{{.DEVICE}}"
+        if [ -z "$device" ]; then
+          command -v jq >/dev/null || { echo "jq is not installed" >&2; exit 1; }
+          command -v fzf >/dev/null || { echo "fzf is not installed" >&2; exit 1; }
+          # Flutter restores the terminal to cooked mode on exit, which would
+          # leave fzf deaf, so list devices before starting fzf.
+          devices=$(fvm flutter devices --machine 2>/dev/null)
+          device=$(printf '%s\n' "$devices" |
+            jq -r '.[] | select(.isSupported != false)
+                   | [.id, (.name + "  —  " + .targetPlatform)] | @tsv' |
+            fzf --delimiter='\t' --with-nth=2 --prompt='flutter device> ' \
+              --header='Flutter device to run on (Esc cancels)' |
+            cut -f1)
+          if [ -z "$device" ]; then
+            echo "no flutter device selected" >&2
+            exit 1
+          fi
+        fi
+        fvm flutter run -d "$device"
 
   test:
     desc: Run Flutter unit and widget tests

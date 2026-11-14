@@ -13,7 +13,7 @@ tasks:
 
   dev:
     aliases: [dev:start]
-    desc: Run backend and frontend in a tmux session (TMUX_SESSION=autobook by default)
+    desc: Run backend and frontend in two tmux panes (TMUX_SESSION=autobook); DEVICE=<id> skips the fzf device picker
     cmds:
       - |
         command -v tmux >/dev/null || { echo "tmux is not installed" >&2; exit 1; }
@@ -21,11 +21,30 @@ tasks:
         if tmux has-session -t "$session" 2>/dev/null; then
           echo "tmux session '$session' already exists, attaching to it"
         else
-          tmux new-session -d -s "$session" -n backend -c "{{.TASKFILE_DIR}}"
-          tmux send-keys -t "${session}:backend" 'task backend:start' C-m
-          tmux new-window -t "$session" -n frontend -c "{{.TASKFILE_DIR}}"
-          tmux send-keys -t "${session}:frontend" 'task frontend:run' C-m
-          tmux select-window -t "${session}:backend"
+          device="${DEVICE:-}"
+          if [ -z "$device" ]; then
+            command -v jq >/dev/null || { echo "jq is not installed" >&2; exit 1; }
+            command -v fzf >/dev/null || { echo "fzf is not installed" >&2; exit 1; }
+            # Flutter restores the terminal to cooked mode on exit, which would
+            # leave fzf deaf, so list devices before starting fzf.
+            devices="$(cd frontend && fvm flutter devices --machine 2>/dev/null)"
+            device="$(printf '%s\n' "$devices" |
+              jq -r '.[] | select(.isSupported != false)
+                     | [.id, (.name + "  —  " + .targetPlatform)] | @tsv' |
+              fzf --delimiter='\t' --with-nth=2 --prompt='flutter device> ' \
+                --header='Device for `task frontend:run` (Esc cancels)' |
+              cut -f1)"
+            if [ -z "$device" ]; then
+              echo "no flutter device selected, aborting" >&2
+              exit 1
+            fi
+          fi
+          tmux new-session -d -s "$session" -n dev -c "{{.TASKFILE_DIR}}"
+          tmux send-keys -t "${session}:dev.0" 'task backend:start' C-m
+          tmux split-window -h -t "${session}:dev" -c "{{.TASKFILE_DIR}}"
+          tmux send-keys -t "${session}:dev.1" "task frontend:run DEVICE='$device'" C-m
+          tmux select-layout -t "${session}:dev" even-horizontal
+          tmux select-pane -t "${session}:dev.0"
         fi
         if [ -n "$TMUX" ]; then
           tmux switch-client -t "$session"
