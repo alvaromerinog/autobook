@@ -36,30 +36,54 @@ String backupFileName(DateTime timestamp) {
 }
 
 @Riverpod(keepAlive: true)
-Future<DateTime?> lastBackupAt(Ref ref) async {
-  final preferences = await ref.watch(sharedPreferencesProvider.future);
-  final storedValue = preferences.getString(_lastBackupAtStorageKey);
-  if (storedValue == null) return null;
-  return DateTime.tryParse(storedValue);
+class LastBackupAt extends _$LastBackupAt {
+  @override
+  Future<DateTime?> build() async {
+    try {
+      final preferences = await ref.watch(sharedPreferencesProvider.future);
+      final storedValue = preferences.getString(_lastBackupAtStorageKey);
+      if (storedValue == null) return null;
+      return DateTime.tryParse(storedValue);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> record(DateTime exportedAt) async {
+    state = AsyncData(exportedAt);
+    try {
+      final preferences = await ref.read(sharedPreferencesProvider.future);
+      await preferences.setString(
+        _lastBackupAtStorageKey,
+        exportedAt.toIso8601String(),
+      );
+    } catch (_) {
+      return;
+    }
+  }
 }
 
 @riverpod
 BackupController backupController(Ref ref) {
   return BackupController(
     repository: ref.watch(autobookDataRepositoryProvider),
-    ref: ref,
+    lastBackupAt: ref.watch(lastBackupAtProvider.notifier),
+    deliverBackupFile: ref.watch(fileDeliveryProvider),
   );
 }
 
 class BackupController {
   BackupController({
     required AutobookDataRepository repository,
-    required Ref ref,
+    required LastBackupAt lastBackupAt,
+    required FileDelivery deliverBackupFile,
   }) : _repository = repository,
-       _ref = ref;
+       _lastBackupAt = lastBackupAt,
+       _deliverBackupFile = deliverBackupFile;
 
   final AutobookDataRepository _repository;
-  final Ref _ref;
+  final LastBackupAt _lastBackupAt;
+  final FileDelivery _deliverBackupFile;
 
   Future<BackupResult> createBackup() async {
     try {
@@ -71,16 +95,11 @@ class BackupController {
         exportedAt: exportedAt,
       );
       final backupBytes = utf8.encode(jsonEncode(backupJson));
-      await deliverFile(
+      await _deliverBackupFile(
         fileName: backupFileName(exportedAt),
         bytes: backupBytes,
       );
-      final preferences = await _ref.read(sharedPreferencesProvider.future);
-      await preferences.setString(
-        _lastBackupAtStorageKey,
-        exportedAt.toIso8601String(),
-      );
-      _ref.invalidate(lastBackupAtProvider);
+      await _lastBackupAt.record(exportedAt);
       return const BackupSucceeded();
     } on Failure catch (cause) {
       return BackupFailed(cause);
