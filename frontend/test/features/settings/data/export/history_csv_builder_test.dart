@@ -79,8 +79,8 @@ void main() {
         notes: 'Notes',
       );
       const expectedCsv =
-          'Brand,Model,Year,License plate,Date,Type,Mileage,Cost,'
-          'Garage,Notes'
+          'Brand,Model,Year,License plate,Date,Type,Mileage (Kilometers),'
+          'Cost (€),Garage,Notes'
           '\r\n'
           'Toyota,Corolla,2020,1234 ABC,2026-03-12,oil,10000,45.5,'
           'Taller Ana,"Oil, filter change"'
@@ -96,6 +96,60 @@ void main() {
         cars: cars,
         maintenances: maintenances,
         labels: csvLabels,
+        distanceUnitLabel: 'Kilometers',
+        currencySymbol: '€',
+      );
+      final csvContent = utf8.decode(csvBytes);
+
+      expect(csvContent, expectedCsv);
+    });
+
+    test('given miles and dollars as the active preferences, '
+        'when the csv is built, '
+        'then the headers carry them and the values stay raw', () {
+      const cars = [
+        Car(
+          id: 'car-1',
+          brand: 'Toyota',
+          model: 'Corolla',
+          year: 2020,
+          licensePlate: '1234 ABC',
+        ),
+      ];
+      const maintenances = [
+        Maintenance(
+          id: 'm1',
+          carId: 'car-1',
+          type: MaintenanceType.oil,
+          date: '2026-03-12',
+          mileage: 10000,
+          cost: 45.5,
+        ),
+      ];
+      const csvLabels = (
+        brand: 'Brand',
+        model: 'Model',
+        year: 'Year',
+        licensePlate: 'License plate',
+        date: 'Date',
+        type: 'Type',
+        mileage: 'Mileage',
+        cost: 'Cost',
+        garage: 'Garage',
+        notes: 'Notes',
+      );
+      const expectedCsv =
+          'Brand,Model,Year,License plate,Date,Type,Mileage (Miles),'
+          r'Cost ($),Garage,Notes'
+          '\r\n'
+          'Toyota,Corolla,2020,1234 ABC,2026-03-12,oil,10000,45.5,,';
+
+      final csvBytes = buildHistoryCsv(
+        cars: cars,
+        maintenances: maintenances,
+        labels: csvLabels,
+        distanceUnitLabel: 'Miles',
+        currencySymbol: r'$',
       );
       final csvContent = utf8.decode(csvBytes);
 
@@ -118,13 +172,15 @@ void main() {
         notes: 'Notes',
       );
       const expectedCsv =
-          'Brand,Model,Year,License plate,Date,Type,Mileage,Cost,'
-          'Garage,Notes';
+          'Brand,Model,Year,License plate,Date,Type,Mileage (Kilometers),'
+          'Cost (€),Garage,Notes';
 
       final csvBytes = buildHistoryCsv(
         cars: const [],
         maintenances: const [],
         labels: csvLabels,
+        distanceUnitLabel: 'Kilometers',
+        currencySymbol: '€',
       );
       final csvContent = utf8.decode(csvBytes);
 

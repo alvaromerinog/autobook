@@ -22,6 +22,8 @@ Uint8List buildHistoryCsv({
   required List<Car> cars,
   required List<Maintenance> maintenances,
   required HistoryCsvLabels labels,
+  required String distanceUnitLabel,
+  required String currencySymbol,
 }) {
   final rows = <List<String>>[
     [
@@ -31,8 +33,8 @@ Uint8List buildHistoryCsv({
       labels.licensePlate,
       labels.date,
       labels.type,
-      labels.mileage,
-      labels.cost,
+      '${labels.mileage} ($distanceUnitLabel)',
+      '${labels.cost} ($currencySymbol)',
       labels.garage,
       labels.notes,
     ],

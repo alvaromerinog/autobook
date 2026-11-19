@@ -67,6 +67,29 @@ base class StubPlatformFile extends PlatformFile {
   Stream<Uint8List> readAsByteStream() => Stream.value(bytes);
 }
 
+base class UnreadablePlatformFile extends PlatformFile {
+  @override
+  Never get xFile => throw UnimplementedError();
+
+  @override
+  String get name => 'backup.json';
+
+  @override
+  Uri get uri => Uri.file('backup.json');
+
+  @override
+  Future<int?> length() async => 0;
+
+  @override
+  int? lengthSync() => 0;
+
+  @override
+  Future<Uint8List> readAsBytes() async => throw Exception('read failed');
+
+  @override
+  Stream<Uint8List> readAsByteStream() => const Stream.empty();
+}
+
 Future<void> pumpSettings(
   WidgetTester tester, {
   Locale locale = const Locale('es'),
@@ -300,6 +323,33 @@ void main() {
             find.text(
               'Tus datos actuales se sustituirán por el contenido de la copia.',
             ),
+            findsOneWidget,
+          );
+        },
+      );
+    });
+
+    group('restore read failure', () {
+      testWidgets(
+        'given a picked backup file that cannot be read, when the restore '
+        'is confirmed, then the invalid backup snackbar appears',
+        (tester) async {
+          final originalPickerPlatform = FilePickerPlatform.instance;
+          addTearDown(
+            () => FilePickerPlatform.instance = originalPickerPlatform,
+          );
+          FilePickerPlatform.instance = FakeFilePickerPlatform([
+            UnreadablePlatformFile(),
+          ]);
+          await pumpSettings(tester);
+
+          await tester.tap(find.text('Restaurar'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.widgetWithText(FilledButton, 'Restaurar'));
+          await tester.pumpAndSettle();
+
+          expect(
+            find.text('El archivo seleccionado no es una copia válida'),
             findsOneWidget,
           );
         },

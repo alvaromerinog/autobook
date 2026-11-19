@@ -57,6 +57,8 @@ class ExportController {
           cars: cars,
           maintenances: maintenances,
           labels: csvLabels,
+          distanceUnitLabel: distanceUnitLabel,
+          currencySymbol: currencySymbol,
         ),
         ExportFormat.pdf => await buildHistoryPdf(
           cars: cars,

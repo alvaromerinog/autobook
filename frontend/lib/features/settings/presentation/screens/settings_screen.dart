@@ -183,7 +183,9 @@ String _backupSubtitle(
 ) {
   if (lastBackupAt == null) return l10n.backupNeverHint;
   final localeName = Localizations.localeOf(context).toString();
-  final formattedDate = DateFormat.yMd(localeName).format(lastBackupAt);
+  final formattedDate = DateFormat.yMd(
+    localeName,
+  ).add_Hm().format(lastBackupAt);
   return l10n.backupLastSavedHint(formattedDate);
 }
 
@@ -355,10 +357,15 @@ Future<void> _restoreBackup(
     ),
   );
   if (confirmed != true) return;
-  final bytes = await pickedFiles.single.readAsBytes();
-  final result = await ref
-      .read(backupControllerProvider)
-      .restoreFromBytes(bytes);
+  BackupResult result;
+  try {
+    final backupBytes = await pickedFiles.single.readAsBytes();
+    result = await ref
+        .read(backupControllerProvider)
+        .restoreFromBytes(backupBytes);
+  } catch (cause) {
+    result = BackupFailed(CacheFailure(cause.toString()));
+  }
   final message = switch (result) {
     BackupSucceeded() => l10n.restoreDoneMessage,
     BackupFailed(:final cause) => switch (cause) {
@@ -455,6 +462,7 @@ class _ThemeSelector extends ConsumerWidget {
       selected: {selectedMode},
       style: SegmentedButton.styleFrom(
         selectedBackgroundColor: colorScheme.secondaryContainer,
+        shape: const StadiumBorder(),
       ),
       onSelectionChanged: (selection) {
         ref.read(appThemeModeProvider.notifier).select(selection.first);
