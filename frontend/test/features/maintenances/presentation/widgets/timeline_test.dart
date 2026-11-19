@@ -65,7 +65,11 @@ Widget _pumpTimeline(
     locale: locale,
     theme: theme,
     home: Scaffold(
-      body: Timeline(maintenances: items, carId: 'car-1', onOpen: (_) {}),
+      body: CustomScrollView(
+        slivers: [
+          Timeline(maintenances: items, carId: 'car-1', onOpen: (_) {}),
+        ],
+      ),
     ),
   );
 }
@@ -443,10 +447,14 @@ void main() {
       await tester.pumpWidget(
         localizedTestApp(
           home: Scaffold(
-            body: Timeline(
-              maintenances: [m],
-              carId: 'car-1',
-              onOpen: openedIds.add,
+            body: CustomScrollView(
+              slivers: [
+                Timeline(
+                  maintenances: [m],
+                  carId: 'car-1',
+                  onOpen: openedIds.add,
+                ),
+              ],
             ),
           ),
         ),

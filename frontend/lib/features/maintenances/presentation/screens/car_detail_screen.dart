@@ -295,11 +295,16 @@ class CarDetailScreen extends ConsumerWidget {
                                 child: Text(l10n.maintenanceHistoryEmpty),
                               ),
                             )
-                          : Timeline(
-                              maintenances: s.maintenances,
-                              carId: carId,
-                              onOpen: (id) =>
-                                  context.go('/cars/$carId/maintenances/$id'),
+                          : CustomScrollView(
+                              slivers: [
+                                Timeline(
+                                  maintenances: s.maintenances,
+                                  carId: carId,
+                                  onOpen: (id) => context.go(
+                                    '/cars/$carId/maintenances/$id',
+                                  ),
+                                ),
+                              ],
                             ),
                     ),
                   ),

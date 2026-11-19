@@ -43,42 +43,36 @@ class Timeline extends StatelessWidget {
     final years = groups.keys.toList();
     final allFlat = [for (final y in years) ...groups[y]!];
 
-    return CustomScrollView(
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 88),
-          sliver: SliverMainAxisGroup(
-            slivers: [
-              for (final year in years)
-                SliverMainAxisGroup(
-                  slivers: [
-                    SliverPersistentHeader(
-                      pinned: true,
-                      delegate: _YearHeaderDelegate(
-                        label: year == 0
-                            ? l10n.timelineNoDate
-                            : year.toString(),
-                        background: cs.surface,
-                        foreground: cs.onSurfaceVariant,
-                      ),
-                    ),
-                    SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final maintenance = groups[year]![index];
-                        return TimelineEntry(
-                          maintenance: maintenance,
-                          isFirst: identical(maintenance, allFlat.first),
-                          isLast: identical(maintenance, allFlat.last),
-                          onOpen: () => onOpen(maintenance.id),
-                        );
-                      }, childCount: groups[year]!.length),
-                    ),
-                  ],
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 88),
+      sliver: SliverMainAxisGroup(
+        slivers: [
+          for (final year in years)
+            SliverMainAxisGroup(
+              slivers: [
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _YearHeaderDelegate(
+                    label: year == 0 ? l10n.timelineNoDate : year.toString(),
+                    background: cs.surface,
+                    foreground: cs.onSurfaceVariant,
+                  ),
                 ),
-            ],
-          ),
-        ),
-      ],
+                SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final maintenance = groups[year]![index];
+                    return TimelineEntry(
+                      maintenance: maintenance,
+                      isFirst: identical(maintenance, allFlat.first),
+                      isLast: identical(maintenance, allFlat.last),
+                      onOpen: () => onOpen(maintenance.id),
+                    );
+                  }, childCount: groups[year]!.length),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }
