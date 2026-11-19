@@ -3,6 +3,8 @@ import 'package:autobook/features/maintenances/domain/entities/maintenance.dart'
 import 'package:autobook/features/maintenances/domain/entities/maintenance_type.dart';
 import 'package:autobook/features/vehicles/data/datasources/local/app_database.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
+import 'package:autobook/features/vehicles/domain/entities/sync_state.dart';
+import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'autobook_data_repository.g.dart';
@@ -45,5 +47,52 @@ class AutobookDataRepository {
       carRows.map(_toCarEntity).toList(),
       maintenanceRows.map(_toMaintenanceEntity).toList(),
     );
+  }
+
+  CarsTableCompanion _toCarCompanion(Car car) => CarsTableCompanion(
+    id: Value(car.id),
+    brand: Value(car.brand),
+    model: Value(car.model),
+    year: Value(car.year),
+    licensePlate: Value(car.licensePlate),
+    color: Value(car.color),
+    mileage: Value(car.mileage),
+    syncState: const Value(SyncStateEnum.pendingCreate),
+    updatedAt: Value(DateTime.now()),
+  );
+
+  MaintenancesTableCompanion _toMaintenanceCompanion(Maintenance m) =>
+      MaintenancesTableCompanion(
+        id: Value(m.id),
+        carId: Value(m.carId),
+        type: Value(m.type.name),
+        date: Value(m.date),
+        mileage: Value(m.mileage),
+        cost: Value(m.cost),
+        garage: Value(m.garage),
+        notes: Value(m.notes),
+        syncState: const Value(SyncStateEnum.pendingCreate),
+        updatedAt: Value(DateTime.now()),
+      );
+
+  Future<void> replaceAll({
+    required List<Car> cars,
+    required List<Maintenance> maintenances,
+  }) {
+    return _db.transaction(() async {
+      await _db.delete(_db.carsTable).go();
+      await _db.delete(_db.maintenancesTable).go();
+      await _db.batch((batch) {
+        for (final car in cars) {
+          batch.insert(_db.carsTable, _toCarCompanion(car));
+        }
+        for (final maintenance in maintenances) {
+          batch.insert(
+            _db.maintenancesTable,
+            _toMaintenanceCompanion(maintenance),
+          );
+        }
+      });
+    });
   }
 }
