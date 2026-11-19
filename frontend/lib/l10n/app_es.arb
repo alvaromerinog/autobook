@@ -522,5 +522,161 @@
   "maintTypeTiresShort": "Ruedas",
   "@maintTypeTiresShort": {
     "description": "Short label of the tires maintenance type."
+  },
+  "settingsAppearanceSection": "Apariencia",
+  "@settingsAppearanceSection": {
+    "description": "Heading of the appearance section of settings."
+  },
+  "settingsPreferencesSection": "Preferencias",
+  "@settingsPreferencesSection": {
+    "description": "Heading of the preferences section of settings."
+  },
+  "settingsDataSection": "Datos",
+  "@settingsDataSection": {
+    "description": "Heading of the data section of settings."
+  },
+  "settingsAboutSection": "Sobre",
+  "@settingsAboutSection": {
+    "description": "Heading of the about section of settings."
+  },
+  "themeLightLabel": "Claro",
+  "@themeLightLabel": {
+    "description": "Light option of the theme selector."
+  },
+  "themeDarkLabel": "Oscuro",
+  "@themeDarkLabel": {
+    "description": "Dark option of the theme selector."
+  },
+  "dynamicColorNote": "Los colores siguen el color dinámico del sistema cuando está disponible.",
+  "@dynamicColorNote": {
+    "description": "Informational note under the theme selector."
+  },
+  "distanceUnitLabel": "Unidades",
+  "@distanceUnitLabel": {
+    "description": "Title of the distance unit row in settings."
+  },
+  "kilometersLabel": "Kilómetros",
+  "@kilometersLabel": {
+    "description": "Kilometers option of the distance unit selector."
+  },
+  "milesLabel": "Millas",
+  "@milesLabel": {
+    "description": "Miles option of the distance unit selector."
+  },
+  "unitMiles": "millas",
+  "@unitMiles": {
+    "description": "Long label of the miles unit shown next to mileage values."
+  },
+  "currencyLabel": "Moneda",
+  "@currencyLabel": {
+    "description": "Title of the currency row in settings."
+  },
+  "euroLabel": "Euro (€)",
+  "@euroLabel": {
+    "description": "Euro option of the currency selector."
+  },
+  "dollarLabel": "Dólar ($)",
+  "@dollarLabel": {
+    "description": "Dollar option of the currency selector."
+  },
+  "notificationsLabel": "Notificaciones",
+  "@notificationsLabel": {
+    "description": "Title of the notifications row in settings."
+  },
+  "notificationsOnLabel": "Activadas",
+  "@notificationsOnLabel": {
+    "description": "Subtitle shown when notifications are enabled."
+  },
+  "notificationsOffLabel": "Desactivadas",
+  "@notificationsOffLabel": {
+    "description": "Subtitle shown when notifications are disabled."
+  },
+  "exportHistoryLabel": "Exportar historial",
+  "@exportHistoryLabel": {
+    "description": "Title of the export history row in settings."
+  },
+  "exportHistoryHint": "CSV o PDF",
+  "@exportHistoryHint": {
+    "description": "Subtitle of the export history row in settings."
+  },
+  "exportFormatLabel": "Formato",
+  "@exportFormatLabel": {
+    "description": "Title of the export format selector."
+  },
+  "exportFormatCsv": "CSV",
+  "@exportFormatCsv": {
+    "description": "CSV option of the export format selector."
+  },
+  "exportFormatPdf": "PDF",
+  "@exportFormatPdf": {
+    "description": "PDF option of the export format selector."
+  },
+  "backupLabel": "Copia de seguridad",
+  "@backupLabel": {
+    "description": "Title of the backup row in settings."
+  },
+  "backupNeverHint": "Nunca",
+  "@backupNeverHint": {
+    "description": "Subtitle shown when no backup exists yet."
+  },
+  "backupLastSavedHint": "Último guardado: {date}",
+  "@backupLastSavedHint": {
+    "description": "Subtitle showing when the last backup was saved.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "19/11/2026"
+      }
+    }
+  },
+  "restoreLabel": "Restaurar",
+  "@restoreLabel": {
+    "description": "Title of the restore row and accept action of its dialog."
+  },
+  "restoreHint": "Importa un archivo de copia",
+  "@restoreHint": {
+    "description": "Subtitle of the restore row in settings."
+  },
+  "restoreConfirmTitle": "¿Restaurar la copia de seguridad?",
+  "@restoreConfirmTitle": {
+    "description": "Title of the restore confirmation dialog."
+  },
+  "restoreConfirmBody": "Tus datos actuales se sustituirán por el contenido de la copia.",
+  "@restoreConfirmBody": {
+    "description": "Body of the restore confirmation dialog."
+  },
+  "aboutVersionLine": "Versión {version} · Material 3",
+  "@aboutVersionLine": {
+    "description": "About line showing the app version.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "0.1.0"
+      }
+    }
+  },
+  "exportDoneMessage": "Historial exportado",
+  "@exportDoneMessage": {
+    "description": "Snackbar shown when the history export succeeds."
+  },
+  "exportErrorMessage": "No se pudo exportar el historial",
+  "@exportErrorMessage": {
+    "description": "Snackbar shown when the history export fails."
+  },
+  "backupDoneMessage": "Copia de seguridad creada",
+  "@backupDoneMessage": {
+    "description": "Snackbar shown when the backup creation succeeds."
+  },
+  "backupErrorMessage": "No se pudo crear la copia de seguridad",
+  "@backupErrorMessage": {
+    "description": "Snackbar shown when the backup creation fails."
+  },
+  "restoreDoneMessage": "Copia de seguridad restaurada",
+  "@restoreDoneMessage": {
+    "description": "Snackbar shown when the restore succeeds."
+  },
+  "invalidBackupFileMessage": "El archivo seleccionado no es una copia válida",
+  "@invalidBackupFileMessage": {
+    "description": "Snackbar shown when the picked file cannot be parsed as a backup."
   }
 }

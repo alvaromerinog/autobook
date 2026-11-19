@@ -3,7 +3,9 @@ import 'package:autobook/features/maintenances/domain/entities/maintenance_type.
 import 'package:autobook/features/maintenances/presentation/widgets/maint_type_pill.dart';
 import 'package:autobook/features/maintenances/presentation/widgets/timeline.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/localization_test_harness.dart';
 import '../../fixtures/maintenance_fixtures.dart';
@@ -61,11 +63,13 @@ Widget _pumpTimeline(
   ThemeData? theme,
   Locale locale = const Locale('es'),
 }) {
-  return localizedTestApp(
-    locale: locale,
-    theme: theme,
-    home: Scaffold(
-      body: Timeline(maintenances: items, carId: 'car-1', onOpen: (_) {}),
+  return ProviderScope(
+    child: localizedTestApp(
+      locale: locale,
+      theme: theme,
+      home: Scaffold(
+        body: Timeline(maintenances: items, carId: 'car-1', onOpen: (_) {}),
+      ),
     ),
   );
 }
@@ -80,6 +84,10 @@ Color _pinnedHeaderBackground(WidgetTester tester) {
 }
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
   group('Timeline', () {
     testWidgets('given one maintenance with yyyy-MM-dd date, '
         'when pumped, '
@@ -441,12 +449,14 @@ void main() {
       final openedIds = <String>[];
 
       await tester.pumpWidget(
-        localizedTestApp(
-          home: Scaffold(
-            body: Timeline(
-              maintenances: [m],
-              carId: 'car-1',
-              onOpen: openedIds.add,
+        ProviderScope(
+          child: localizedTestApp(
+            home: Scaffold(
+              body: Timeline(
+                maintenances: [m],
+                carId: 'car-1',
+                onOpen: openedIds.add,
+              ),
             ),
           ),
         ),

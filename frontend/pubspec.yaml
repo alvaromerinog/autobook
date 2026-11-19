@@ -26,6 +26,12 @@ dependencies:
   go_router: ^14.0.0
   freezed_annotation: ^3.0.0
   json_annotation: ^4.9.0
+  csv: ^8.0.0
+  pdf: ^3.13.1
+  share_plus: ^13.3.1
+  web: ^1.1.1
+  file_picker: ^13.4.0
+  package_info_plus: ^10.2.2
 
 dev_dependencies:
   flutter_test:

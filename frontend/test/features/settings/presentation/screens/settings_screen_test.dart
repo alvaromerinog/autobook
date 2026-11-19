@@ -1,166 +1,388 @@
+import 'dart:typed_data';
+
+import 'package:autobook/core/di/shared_preferences_provider.dart';
+import 'package:autobook/features/settings/presentation/providers/backup_providers.dart';
+import 'package:autobook/features/settings/presentation/providers/export_providers.dart';
 import 'package:autobook/features/settings/presentation/screens/settings_screen.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../app/app_test_harness.dart';
+import '../../../../app/localization_test_harness.dart';
 
-Finder languageRow(String endonym) => find.widgetWithText(ListTile, endonym);
+class MockExportController extends Mock implements ExportController {}
 
-bool rowSelected(WidgetTester tester, String endonym) =>
-    tester.widget<ListTile>(languageRow(endonym)).selected;
+class MockBackupController extends Mock implements BackupController {}
 
-Finder rowIcon(String endonym, IconData icon) =>
-    find.descendant(of: languageRow(endonym), matching: find.byIcon(icon));
+class FakeFilePickerPlatform extends FilePickerPlatform {
+  FakeFilePickerPlatform(this.pickedFiles);
 
-Future<GoRouter> pumpSettings(
+  final List<PlatformFile> pickedFiles;
+
+  @override
+  Future<List<PlatformFile>> pickFiles({
+    String? dialogTitle,
+    String? initialDirectory,
+    FileType? type,
+    List<String>? allowedExtensions,
+    Function(FilePickerStatus)? onFileLoading,
+    int? compressionQuality,
+    AndroidOptions? androidOptions,
+    DarwinOptions? darwinOptions,
+    WindowsOptions? windowsOptions,
+    LinuxOptions? linuxOptions,
+    WebOptions? webOptions,
+  }) async => pickedFiles;
+}
+
+base class StubPlatformFile extends PlatformFile {
+  StubPlatformFile(this.bytes);
+
+  final Uint8List bytes;
+
+  @override
+  Never get xFile => throw UnimplementedError();
+
+  @override
+  String get name => 'backup.json';
+
+  @override
+  Uri get uri => Uri.file('backup.json');
+
+  @override
+  Future<int?> length() async => bytes.length;
+
+  @override
+  int? lengthSync() => bytes.length;
+
+  @override
+  Future<Uint8List> readAsBytes() async => bytes;
+
+  @override
+  Stream<Uint8List> readAsByteStream() => Stream.value(bytes);
+}
+
+base class UnreadablePlatformFile extends PlatformFile {
+  @override
+  Never get xFile => throw UnimplementedError();
+
+  @override
+  String get name => 'backup.json';
+
+  @override
+  Uri get uri => Uri.file('backup.json');
+
+  @override
+  Future<int?> length() async => 0;
+
+  @override
+  int? lengthSync() => 0;
+
+  @override
+  Future<Uint8List> readAsBytes() async => throw Exception('read failed');
+
+  @override
+  Stream<Uint8List> readAsByteStream() => const Stream.empty();
+}
+
+Future<void> pumpSettings(
   WidgetTester tester, {
-  Locale? locale = const Locale('es'),
+  Locale locale = const Locale('es'),
   Map<String, Object> initialPreferences = const {},
+  ExportController? exportController,
+  BackupController? backupController,
 }) async {
-  final (router, _) = await pumpApp(
-    tester,
-    size: const Size(400, 900),
-    initial: '/settings',
-    locale: locale,
-    initialPreferences: initialPreferences,
+  tester.view.physicalSize = const Size(400, 1600);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  SharedPreferences.setMockInitialValues(initialPreferences);
+  final preferences = await SharedPreferences.getInstance();
+  final container = ProviderContainer(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(AsyncData(preferences)),
+      exportControllerProvider.overrideWithValue(
+        exportController ?? MockExportController(),
+      ),
+      backupControllerProvider.overrideWithValue(
+        backupController ?? MockBackupController(),
+      ),
+    ],
   );
-  return router;
+  addTearDown(container.dispose);
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: localizedTestApp(locale: locale, home: const SettingsScreen()),
+    ),
+  );
+  await tester.pumpAndSettle();
 }
 
 void main() {
   setUpAll(() {
     registerAppHarnessFallbacks();
+    registerFallbackValue(ExportFormat.csv);
+    registerFallbackValue((
+      brand: '',
+      model: '',
+      year: '',
+      licensePlate: '',
+      date: '',
+      type: '',
+      mileage: '',
+      cost: '',
+      garage: '',
+      notes: '',
+    ));
+    registerFallbackValue((
+      title: '',
+      date: '',
+      type: '',
+      mileage: '',
+      cost: '',
+      garage: '',
+      notes: '',
+    ));
+  });
+
+  setUp(() {
+    PackageInfo.setMockInitialValues(
+      appName: 'Autobook',
+      packageName: 'autobook',
+      version: '0.1.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
   });
 
   group('SettingsScreen', () {
-    group('language choices', () {
+    group('section headers', () {
       testWidgets(
-        'given no saved language, when settings is pumped, then the two '
-        'endonyms appear in enum order, Spanish is selected, no system row '
-        'is offered and there is no confirmation action',
+        'given the Spanish locale, when settings is pumped, then the four '
+        'section headers and the about line appear',
         (tester) async {
           await pumpSettings(tester);
 
-          expect(find.byType(SettingsScreen), findsOneWidget);
-          expect(find.text('Ajustes'), findsOneWidget);
-          expect(find.text('Idioma'), findsOneWidget);
-          expect(find.text('Español'), findsOneWidget);
-          expect(find.text('English'), findsOneWidget);
-          expect(find.text('System'), findsNothing);
-          expect(find.text('Sistema'), findsNothing);
-          expect(find.text('Guardar cambios'), findsNothing);
-          expect(find.text('Save changes'), findsNothing);
-          expect(
-            tester.getTopLeft(find.text('Español')).dy,
-            lessThan(tester.getTopLeft(find.text('English')).dy),
-          );
-          expect(rowSelected(tester, 'Español'), isTrue);
-          expect(rowSelected(tester, 'English'), isFalse);
-          expect(
-            rowIcon('Español', Icons.radio_button_checked),
-            findsOneWidget,
-          );
-          expect(
-            rowIcon('English', Icons.radio_button_unchecked),
-            findsOneWidget,
-          );
+          expect(find.text('APARIENCIA'), findsOneWidget);
+          expect(find.text('PREFERENCIAS'), findsOneWidget);
+          expect(find.text('DATOS'), findsOneWidget);
+          expect(find.text('SOBRE'), findsOneWidget);
+          expect(find.text('Versión 0.1.0 · Material 3'), findsOneWidget);
         },
       );
 
-      for (final (systemLocale, selected, other) in [
-        (const Locale('es'), 'Español', 'English'),
-        (const Locale('en'), 'English', 'Español'),
-      ]) {
-        testWidgets('given no saved language and a system locale of '
-            '${systemLocale.languageCode}, when settings is pumped, then the '
-            'matching row is the effective selection', (tester) async {
-          tester.platformDispatcher.localesTestValue = [systemLocale];
-          addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-
-          await pumpSettings(tester, locale: null);
-
-          expect(rowSelected(tester, selected), isTrue);
-          expect(rowSelected(tester, other), isFalse);
-        });
-      }
-
       testWidgets(
-        'given a saved English language, when settings is pumped with a '
-        'Spanish default locale, then English is the effective selection and '
-        'the labels are English',
+        'given the English locale, when settings is pumped, then the four '
+        'section headers appear in English',
         (tester) async {
-          await pumpSettings(
-            tester,
-            initialPreferences: const {'app_language': 'en'},
-          );
+          await pumpSettings(tester, locale: const Locale('en'));
 
-          expect(find.text('Settings'), findsOneWidget);
-          expect(find.text('Language'), findsOneWidget);
-          expect(rowSelected(tester, 'English'), isTrue);
-          expect(rowSelected(tester, 'Español'), isFalse);
+          expect(find.text('APPEARANCE'), findsOneWidget);
+          expect(find.text('PREFERENCES'), findsOneWidget);
+          expect(find.text('DATA'), findsOneWidget);
+          expect(find.text('ABOUT'), findsOneWidget);
+          expect(find.text('Version 0.1.0 · Material 3'), findsOneWidget);
         },
       );
     });
 
-    group('selecting a language', () {
+    group('theme selection', () {
       testWidgets(
-        'given Spanish active, when Español is tapped, then Spanish labels '
-        'remain, the choice is persisted and the route stays on settings',
+        'given no saved theme, when the dark segment is tapped, then dark is '
+        'selected and persisted',
         (tester) async {
-          final router = await pumpSettings(tester);
+          await pumpSettings(tester);
           final preferences = await SharedPreferences.getInstance();
 
-          await tester.tap(find.text('Español'));
-          await tester.pump();
-
-          expect(find.text('Ajustes'), findsOneWidget);
-          expect(find.text('Idioma'), findsOneWidget);
-          expect(preferences.getString('app_language'), 'es');
-          expect(rowSelected(tester, 'Español'), isTrue);
-          expect(router.routeInformationProvider.value.uri.path, '/settings');
-        },
-      );
-
-      testWidgets(
-        'given Spanish active, when English is tapped, then the surrounding '
-        'labels switch immediately, the choice is persisted and the route is '
-        'unchanged',
-        (tester) async {
-          final router = await pumpSettings(tester);
-          final preferences = await SharedPreferences.getInstance();
-
-          await tester.tap(find.text('English'));
+          await tester.tap(find.text('Oscuro'));
           await tester.pumpAndSettle();
 
-          expect(find.text('Settings'), findsOneWidget);
-          expect(find.text('Language'), findsOneWidget);
-          expect(find.text('Ajustes'), findsNothing);
-          expect(find.text('Idioma'), findsNothing);
-          expect(rowSelected(tester, 'English'), isTrue);
-          expect(preferences.getString('app_language'), 'en');
-          expect(router.routeInformationProvider.value.uri.path, '/settings');
+          expect(preferences.getString('app_theme_mode'), 'dark');
+          final themeButton = tester.widget<SegmentedButton<ThemeMode>>(
+            find.byType(SegmentedButton<ThemeMode>),
+          );
+          expect(themeButton.selected, {ThemeMode.dark});
         },
       );
 
       testWidgets(
-        'given English restored from storage, when Español is tapped, then '
-        'the labels switch back to Spanish immediately',
+        'given dark as the saved theme, when the selector is pumped, then '
+        'the selected segment shows a single check icon',
         (tester) async {
           await pumpSettings(
             tester,
-            initialPreferences: const {'app_language': 'en'},
+            initialPreferences: {'app_theme_mode': 'dark'},
           );
-          final preferences = await SharedPreferences.getInstance();
 
-          await tester.tap(find.text('Español'));
+          final themeSelector = find.byType(SegmentedButton<ThemeMode>);
+          expect(
+            find.descendant(
+              of: themeSelector,
+              matching: find.byIcon(Icons.check),
+            ),
+            findsOneWidget,
+          );
+
+          await tester.tap(find.text('Claro'));
           await tester.pumpAndSettle();
 
-          expect(find.text('Ajustes'), findsOneWidget);
-          expect(find.text('Idioma'), findsOneWidget);
-          expect(preferences.getString('app_language'), 'es');
-          expect(rowSelected(tester, 'Español'), isTrue);
+          expect(
+            find.descendant(
+              of: themeSelector,
+              matching: find.byIcon(Icons.check),
+            ),
+            findsOneWidget,
+          );
+        },
+      );
+    });
+
+    group('notifications switch', () {
+      testWidgets(
+        'given notifications disabled, when the switch is toggled, then the '
+        'state is persisted and the subtitle updates',
+        (tester) async {
+          await pumpSettings(tester);
+          final preferences = await SharedPreferences.getInstance();
+
+          expect(find.text('Desactivadas'), findsOneWidget);
+
+          await tester.tap(find.byType(Switch));
+          await tester.pumpAndSettle();
+
+          expect(preferences.getBool('notifications_enabled'), isTrue);
+          expect(find.text('Activadas'), findsOneWidget);
+        },
+      );
+    });
+
+    group('currency selection', () {
+      testWidgets(
+        'given euro as the current currency, when dollar is selected, then '
+        'the subtitle updates and the choice is persisted',
+        (tester) async {
+          await pumpSettings(tester);
+          final preferences = await SharedPreferences.getInstance();
+
+          expect(find.text('Euro (€)'), findsOneWidget);
+
+          await tester.tap(find.text('Moneda'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.text(r'Dólar ($)'));
+          await tester.pumpAndSettle();
+
+          expect(preferences.getString('currency'), 'dollar');
+          expect(find.text(r'Dólar ($)'), findsOneWidget);
+        },
+      );
+    });
+
+    group('export history', () {
+      testWidgets(
+        'given the export row, when CSV is chosen in the format selector, '
+        'then the export controller runs with CSV',
+        (tester) async {
+          final mockExportController = MockExportController();
+          when(
+            () => mockExportController.exportHistory(
+              format: any(named: 'format'),
+              csvLabels: any(named: 'csvLabels'),
+              pdfLabels: any(named: 'pdfLabels'),
+              distanceUnitLabel: any(named: 'distanceUnitLabel'),
+              currencySymbol: any(named: 'currencySymbol'),
+              locale: any(named: 'locale'),
+            ),
+          ).thenAnswer((_) async => const ExportSucceeded());
+          await pumpSettings(tester, exportController: mockExportController);
+
+          await tester.tap(find.text('Exportar historial'));
+          await tester.pumpAndSettle();
+
+          expect(find.text('CSV'), findsOneWidget);
+          expect(find.text('PDF'), findsOneWidget);
+
+          await tester.tap(find.text('CSV'));
+          await tester.pumpAndSettle();
+
+          final verificationResult = verify(
+            () => mockExportController.exportHistory(
+              format: captureAny(named: 'format'),
+              csvLabels: any(named: 'csvLabels'),
+              pdfLabels: any(named: 'pdfLabels'),
+              distanceUnitLabel: any(named: 'distanceUnitLabel'),
+              currencySymbol: any(named: 'currencySymbol'),
+              locale: any(named: 'locale'),
+            ),
+          );
+          verificationResult.called(1);
+          expect(verificationResult.captured.single, ExportFormat.csv);
+          expect(find.text('Historial exportado'), findsOneWidget);
+        },
+      );
+    });
+
+    group('restore confirmation', () {
+      testWidgets(
+        'given a picked backup file, when the restore row is tapped, then '
+        'the destructive confirmation dialog appears',
+        (tester) async {
+          final backupBytes = Uint8List.fromList([1, 2, 3]);
+          final originalPickerPlatform = FilePickerPlatform.instance;
+          addTearDown(
+            () => FilePickerPlatform.instance = originalPickerPlatform,
+          );
+          FilePickerPlatform.instance = FakeFilePickerPlatform([
+            StubPlatformFile(backupBytes),
+          ]);
+          await pumpSettings(tester);
+
+          await tester.tap(find.text('Restaurar'));
+          await tester.pumpAndSettle();
+
+          expect(
+            find.text('¿Restaurar la copia de seguridad?'),
+            findsOneWidget,
+          );
+          expect(
+            find.text(
+              'Tus datos actuales se sustituirán por el contenido de la copia.',
+            ),
+            findsOneWidget,
+          );
+        },
+      );
+    });
+
+    group('restore read failure', () {
+      testWidgets(
+        'given a picked backup file that cannot be read, when the restore '
+        'is confirmed, then the invalid backup snackbar appears',
+        (tester) async {
+          final originalPickerPlatform = FilePickerPlatform.instance;
+          addTearDown(
+            () => FilePickerPlatform.instance = originalPickerPlatform,
+          );
+          FilePickerPlatform.instance = FakeFilePickerPlatform([
+            UnreadablePlatformFile(),
+          ]);
+          await pumpSettings(tester);
+
+          await tester.tap(find.text('Restaurar'));
+          await tester.pumpAndSettle();
+          await tester.tap(find.widgetWithText(FilledButton, 'Restaurar'));
+          await tester.pumpAndSettle();
+
+          expect(
+            find.text('El archivo seleccionado no es una copia válida'),
+            findsOneWidget,
+          );
         },
       );
     });

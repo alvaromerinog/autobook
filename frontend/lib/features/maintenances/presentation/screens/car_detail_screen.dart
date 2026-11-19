@@ -1,3 +1,6 @@
+import 'package:autobook/app/preferences/currency_provider.dart';
+import 'package:autobook/app/preferences/distance_unit_provider.dart';
+import 'package:autobook/app/preferences/measurement_labels.dart';
 import 'package:autobook/app/responsive/breakpoints.dart';
 import 'package:autobook/app/router/back_navigation.dart';
 import 'package:autobook/core/error/failures.dart';
@@ -14,7 +17,6 @@ import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 class CarDetailScreen extends ConsumerWidget {
   const CarDetailScreen({super.key, required this.carId});
@@ -102,6 +104,9 @@ class CarDetailScreen extends ConsumerWidget {
     final selectedCar = car;
     final maintAsync = ref.watch(maintenanceListProvider(carId));
     final embedded = windowSizeClassOf(context) == WindowSizeClass.expanded;
+    final distanceUnit =
+        ref.watch(distanceUnitSettingProvider).value ?? DistanceUnit.kilometers;
+    final currency = ref.watch(currencySettingProvider).value ?? Currency.euro;
 
     ref.listen<AsyncValue<MaintenanceListState>>(
       maintenanceListProvider(carId),
@@ -208,10 +213,10 @@ class CarDetailScreen extends ConsumerWidget {
                         0,
                         (sum, m) => sum + m.cost,
                       );
-                      final locale = Localizations.localeOf(context).toString();
-                      final costFmt = NumberFormat.currency(
-                        locale: locale,
-                        symbol: '€',
+                      final spent = formatCost(
+                        totalSpent,
+                        currency,
+                        Localizations.localeOf(context),
                         decimalDigits: 0,
                       );
                       return Stack(
@@ -220,8 +225,12 @@ class CarDetailScreen extends ConsumerWidget {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 24),
                             child: _StatStrip(
-                              km: selectedCar.mileage?.toString() ?? '—',
-                              spent: costFmt.format(totalSpent),
+                              distance: selectedCar.mileage?.toString() ?? '—',
+                              distanceLabel: distanceUnitLabel(
+                                distanceUnit,
+                                l10n,
+                              ),
+                              spent: spent,
                               entries: s.maintenances.length.toString(),
                             ),
                           ),
@@ -367,12 +376,14 @@ class _DetailActionButton extends StatelessWidget {
 
 class _StatStrip extends StatelessWidget {
   const _StatStrip({
-    required this.km,
+    required this.distance,
+    required this.distanceLabel,
     required this.spent,
     required this.entries,
   });
 
-  final String km;
+  final String distance;
+  final String distanceLabel;
   final String spent;
   final String entries;
 
@@ -391,8 +402,8 @@ class _StatStrip extends StatelessWidget {
             children: [
               _Stat(
                 icon: Icons.speed_outlined,
-                value: km,
-                label: l10n.maintenanceStatsKmLabel,
+                value: distance,
+                label: distanceLabel,
               ),
               _Divider(),
               _Stat(

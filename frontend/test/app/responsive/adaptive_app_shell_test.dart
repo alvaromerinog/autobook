@@ -532,6 +532,83 @@ void main() {
       });
     });
 
+    group('compact bottom navigation', () {
+      testWidgets(
+        'given a compact surface at /, when pumped, then a NavigationBar '
+        'with garage and settings destinations is shown with the garage '
+        'destination active',
+        (tester) async {
+          await pumpApp(tester, size: const Size(400, 900));
+
+          final navigationBar = tester.widget<NavigationBar>(
+            find.byType(NavigationBar),
+          );
+          expect(navigationBar.destinations, hasLength(2));
+          expect(
+            find.descendant(
+              of: find.byType(NavigationBar),
+              matching: find.text('Garaje'),
+            ),
+            findsOneWidget,
+          );
+          expect(
+            find.descendant(
+              of: find.byType(NavigationBar),
+              matching: find.text('Ajustes'),
+            ),
+            findsOneWidget,
+          );
+          expect(navigationBar.selectedIndex, 0);
+          expect(find.byType(NavigationRail), findsNothing);
+        },
+      );
+
+      testWidgets('given a compact surface at /settings, when pumped, then the '
+          'settings destination is active', (tester) async {
+        await pumpApp(tester, size: const Size(400, 900), initial: '/settings');
+
+        final navigationBar = tester.widget<NavigationBar>(
+          find.byType(NavigationBar),
+        );
+        expect(navigationBar.selectedIndex, 1);
+      });
+
+      testWidgets(
+        'given a compact surface at /, when the settings destination is '
+        'tapped, then the route goes to /settings and the active '
+        'destination changes',
+        (tester) async {
+          final (router, _) = await pumpApp(tester, size: const Size(400, 900));
+
+          await tester.tap(
+            find.descendant(
+              of: find.byType(NavigationBar),
+              matching: find.text('Ajustes'),
+            ),
+          );
+          await tester.pumpAndSettle();
+
+          expect(router.routeInformationProvider.value.uri.path, '/settings');
+          final navigationBar = tester.widget<NavigationBar>(
+            find.byType(NavigationBar),
+          );
+          expect(navigationBar.selectedIndex, 1);
+          expect(find.text('Idioma'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'given a medium surface at /, when pumped, then no NavigationBar '
+        'appears and the rail does',
+        (tester) async {
+          await pumpApp(tester, size: const Size(720, 900));
+
+          expect(find.byType(NavigationBar), findsNothing);
+          expect(find.byType(NavigationRail), findsOneWidget);
+        },
+      );
+    });
+
     group('resize while a dialog is open', () {
       testWidgets('given an expanded detail with the delete dialog open, '
           'when the surface shrinks to compact before confirming, then the '
@@ -641,7 +718,7 @@ void main() {
           );
 
           expect(router.routeInformationProvider.value.uri.path, '/settings');
-          expect(find.text('Ajustes'), findsOneWidget);
+          expect(find.text('Ajustes'), findsNWidgets(3));
           expect(find.text('Idioma'), findsOneWidget);
           expect(find.byType(BackButton), findsOneWidget);
           expect(find.byType(NavigationRail), findsNothing);
@@ -656,7 +733,12 @@ void main() {
         (tester) async {
           final (router, _) = await pumpApp(tester, size: const Size(400, 900));
 
-          await tester.tap(find.byTooltip('Ajustes'));
+          await tester.tap(
+            find.descendant(
+              of: find.byType(AppBar),
+              matching: find.byTooltip('Ajustes'),
+            ),
+          );
           await tester.pumpAndSettle();
 
           expect(router.routeInformationProvider.value.uri.path, '/settings');

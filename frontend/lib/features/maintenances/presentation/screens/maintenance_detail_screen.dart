@@ -1,3 +1,6 @@
+import 'package:autobook/app/preferences/currency_provider.dart';
+import 'package:autobook/app/preferences/distance_unit_provider.dart';
+import 'package:autobook/app/preferences/measurement_labels.dart';
 import 'package:autobook/app/router/back_navigation.dart';
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
@@ -101,6 +104,9 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     final cs = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final maintState = ref.watch(maintenanceListProvider(carId)).value;
+    final distanceUnit =
+        ref.watch(distanceUnitSettingProvider).value ?? DistanceUnit.kilometers;
+    final currency = ref.watch(currencySettingProvider).value ?? Currency.euro;
     final maintenances = maintState?.maintenances ?? const <Maintenance>[];
     final m = _findMaintenance(maintenances);
 
@@ -124,19 +130,13 @@ class MaintenanceDetailScreen extends ConsumerWidget {
           const Car(id: '', brand: '', model: '', year: 0, licensePlate: ''),
     );
     final tint = getTint(m.type, theme.brightness);
-    final locale = Localizations.localeOf(context).toString();
+    final locale = Localizations.localeOf(context);
     final date = DateTime.tryParse(m.date) ?? DateTime.now();
-    final costFmt = NumberFormat.currency(
-      locale: locale,
-      symbol: '€',
-      decimalDigits: 2,
-    );
-    final kmFmt = NumberFormat.decimalPattern(locale);
     final dateFmt = DateFormat(
       'dd MMM',
-      locale,
+      locale.toString(),
     ).format(date).replaceAll('.', '');
-    final yearFmt = DateFormat('yyyy', locale).format(date);
+    final yearFmt = DateFormat('yyyy', locale.toString()).format(date);
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -210,7 +210,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                           children: [
                             BigStat(
                               label: l10n.maintenanceCostLabel,
-                              value: costFmt.format(m.cost),
+                              value: formatCost(m.cost, currency, locale),
                             ),
                             Container(
                               width: 1,
@@ -219,7 +219,12 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                             ),
                             BigStat(
                               label: l10n.maintenanceMileageLabel,
-                              value: '${kmFmt.format(m.mileage)} km',
+                              value: formatMileage(
+                                m.mileage,
+                                distanceUnit,
+                                locale,
+                                l10n,
+                              ),
                             ),
                             Container(
                               width: 1,

@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:autobook/app/localization/app_locale_provider.dart';
 import 'package:autobook/app/router/app_router.dart';
 import 'package:autobook/app/theme/app_theme.dart';
+import 'package:autobook/app/theme/app_theme_mode_provider.dart';
 import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,12 +24,14 @@ class AutobookApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocale = ref.watch(appLocaleProvider);
+    final appThemeMode = ref.watch(appThemeModeProvider);
 
     return MaterialApp.router(
       title: 'Autobook',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      themeMode: appThemeMode.value,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: appLocale.value,
@@ -37,7 +40,7 @@ class AutobookApp extends ConsumerWidget {
         override: appLocale.value,
       ),
       builder: (context, child) {
-        if (appLocale.isLoading) {
+        if (appLocale.isLoading || appThemeMode.isLoading) {
           return const SizedBox.shrink();
         }
         return child ?? const SizedBox.shrink();

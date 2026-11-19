@@ -1,9 +1,13 @@
+import 'package:autobook/app/preferences/currency_provider.dart';
+import 'package:autobook/app/preferences/distance_unit_provider.dart';
+import 'package:autobook/app/preferences/measurement_labels.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
 import 'package:autobook/features/maintenances/presentation/localization/maintenance_type_localizations.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_tints.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_type_icons.dart';
 import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 class Timeline extends StatelessWidget {
@@ -132,7 +136,7 @@ class _YearHeaderDelegate extends SliverPersistentHeaderDelegate {
       oldDelegate.foreground != foreground;
 }
 
-class TimelineEntry extends StatelessWidget {
+class TimelineEntry extends ConsumerWidget {
   const TimelineEntry({
     super.key,
     required this.maintenance,
@@ -147,22 +151,19 @@ class TimelineEntry extends StatelessWidget {
   final VoidCallback onOpen;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
     final tint = getTint(maintenance.type, theme.brightness);
-    final locale = Localizations.localeOf(context).toString();
-    final kmFmt = NumberFormat.decimalPattern(locale);
-    final costFmt = NumberFormat.currency(
-      locale: locale,
-      symbol: '€',
-      decimalDigits: 2,
-    );
+    final distanceUnit =
+        ref.watch(distanceUnitSettingProvider).value ?? DistanceUnit.kilometers;
+    final currency = ref.watch(currencySettingProvider).value ?? Currency.euro;
+    final locale = Localizations.localeOf(context);
     final date = DateTime.tryParse(maintenance.date) ?? DateTime(1970);
     final dateLabel = DateFormat(
       'dd MMM',
-      locale,
+      locale.toString(),
     ).format(date).replaceAll('.', '');
 
     return Semantics(
@@ -261,7 +262,12 @@ class TimelineEntry extends StatelessWidget {
                                   children: [
                                     Flexible(
                                       child: Text(
-                                        '${kmFmt.format(maintenance.mileage)} km',
+                                        formatMileage(
+                                          maintenance.mileage,
+                                          distanceUnit,
+                                          locale,
+                                          l10n,
+                                        ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: theme.textTheme.bodyMedium
@@ -277,7 +283,11 @@ class TimelineEntry extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
-                                      costFmt.format(maintenance.cost),
+                                      formatCost(
+                                        maintenance.cost,
+                                        currency,
+                                        locale,
+                                      ),
                                       style: theme.textTheme.bodyMedium
                                           ?.copyWith(
                                             color: cs.onSurface,
