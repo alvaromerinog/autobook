@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
@@ -40,6 +42,7 @@ Future<void> pumpCarDetailScreen(
   String carId = '1',
   Size? size,
   Locale locale = const Locale('es'),
+  bool settle = true,
 }) async {
   final mockIds = MockIdGenerator();
   if (size != null) {
@@ -98,7 +101,11 @@ Future<void> pumpCarDetailScreen(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
 }
 
 void stubCarDefaults(
@@ -835,14 +842,185 @@ void main() {
 
     group('estado de error', () {
       testWidgets('given the maintenance list throws, when pumped, then the '
-          'diagnostic error detail is shown', (tester) async {
+          'diagnostic error detail is shown once below the car header', (
+        tester,
+      ) async {
         stubCarDefaults(mockCarRepo);
         stubMaintDefaults(mockMaintRepo);
         when(() => mockMaintRepo.getAll('1')).thenThrow(StateError('boom'));
 
         await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
 
-        expect(find.text('Error: Bad state: boom'), findsWidgets);
+        expect(find.text('Error: Bad state: boom'), findsOneWidget);
+        expect(find.text('Corolla'), findsOneWidget);
+        expect(
+          tester.getTopLeft(find.text('Corolla')).dy,
+          lessThan(tester.getTopLeft(find.text('Error: Bad state: boom')).dy),
+        );
+      });
+    });
+
+    group('scroll unificado', () {
+      testWidgets('given maintenances, when scrolled down, then the car '
+          'identity header and stat strip leave the viewport', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer(
+          (_) async => [
+            for (var i = 0; i < 30; i++)
+              buildMaintenance(
+                id: 'm$i',
+                carId: '1',
+                date: '2026-03-${(i % 28) + 1}',
+              ),
+          ],
+        );
+
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+
+        expect(find.byType(CustomScrollView), findsOneWidget);
+        final modelTop = tester.getTopLeft(find.text('Corolla')).dy;
+        final statTop = tester
+            .getTopLeft(find.byKey(const Key('stat-strip-card')))
+            .dy;
+
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+        await tester.pumpAndSettle();
+
+        expect(modelTop, greaterThan(0));
+        expect(statTop, greaterThan(0));
+        expect(find.text('Corolla'), findsNothing);
+        expect(find.byKey(const Key('stat-strip-card')), findsNothing);
+      });
+
+      testWidgets('given many maintenances in one year, when scrolled inside '
+          'the group, then the year header stays pinned below the AppBar', (
+        tester,
+      ) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer(
+          (_) async => [
+            for (var i = 0; i < 30; i++)
+              buildMaintenance(
+                id: 'm$i',
+                carId: '1',
+                date: '2026-03-${(i % 28) + 1}',
+              ),
+          ],
+        );
+
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+        final yearHeader = find
+            .ancestor(of: find.text('2026'), matching: find.byType(Container))
+            .first;
+        final appBarBottom = tester.getRect(find.byType(AppBar)).bottom;
+
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+        await tester.pumpAndSettle();
+
+        expect(tester.getTopLeft(yearHeader).dy, appBarBottom);
+
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
+        await tester.pumpAndSettle();
+
+        expect(tester.getTopLeft(yearHeader).dy, appBarBottom);
+      });
+
+      testWidgets('given a pending maintenance list, when pumped, then the '
+          'car header stays above a single centered spinner', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        final pendingMaintenances = Completer<List<Maintenance>>();
+        when(
+          () => mockMaintRepo.getAll('1'),
+        ).thenAnswer((_) => pendingMaintenances.future);
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          settle: false,
+        );
+        await tester.pump();
+
+        expect(find.byType(CustomScrollView), findsOneWidget);
+        expect(find.text('Corolla'), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(find.text('Historial de mantenimientos'), findsNothing);
+      });
+
+      testWidgets('given no maintenances, when pumped, then the car header '
+          'sits above the centered empty message', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+
+        expect(find.text('Sin mantenimientos registrados'), findsOneWidget);
+        expect(
+          tester.getTopLeft(find.text('Corolla')).dy,
+          lessThan(
+            tester.getTopLeft(find.text('Sin mantenimientos registrados')).dy,
+          ),
+        );
+      });
+
+      testWidgets('given the screen scrolled away and back, when the edit '
+          'button is tapped, then the edit dialog opens', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer(
+          (_) async => [
+            for (var i = 0; i < 30; i++)
+              buildMaintenance(
+                id: 'm$i',
+                carId: '1',
+                date: '2026-03-${(i % 28) + 1}',
+              ),
+          ],
+        );
+
+        await pumpCarDetailScreen(tester, mockCarRepo, mockMaintRepo);
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -600));
+        await tester.pumpAndSettle();
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, 600));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byTooltip('Editar vehículo'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Guardar cambios'), findsOneWidget);
+      });
+
+      testWidgets('given long content on a compact surface, when scrolled, '
+          'then no overflow exception occurs', (tester) async {
+        stubCarDefaults(mockCarRepo);
+        stubMaintDefaults(mockMaintRepo);
+        when(() => mockMaintRepo.getAll('1')).thenAnswer(
+          (_) async => [
+            for (var i = 0; i < 30; i++)
+              buildMaintenance(
+                id: 'm$i',
+                carId: '1',
+                date: '2026-03-${(i % 28) + 1}',
+                mileage: 189000,
+                cost: 120000,
+                garage: 'Taller oficial con un nombre bastante largo',
+              ),
+          ],
+        );
+
+        await pumpCarDetailScreen(
+          tester,
+          mockCarRepo,
+          mockMaintRepo,
+          size: const Size(390, 844),
+        );
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -800));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
       });
     });
   });

@@ -145,60 +145,62 @@ class CarDetailScreen extends ConsumerWidget {
           ? Center(child: Text(l10n.vehicleNotFound))
           : ColoredBox(
               color: cs.surface,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${selectedCar.year} · ${selectedCar.brand}',
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: cs.onSurfaceVariant,
+                    sliver: SliverToBoxAdapter(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${selectedCar.year} · ${selectedCar.brand}',
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                selectedCar.model,
-                                style: theme.textTheme.headlineLarge?.copyWith(
-                                  color: cs.onSurface,
-                                  letterSpacing: -0.5,
+                                Text(
+                                  selectedCar.model,
+                                  style: theme.textTheme.headlineLarge
+                                      ?.copyWith(
+                                        color: cs.onSurface,
+                                        letterSpacing: -0.5,
+                                      ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          height: 28,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: cs.surfaceContainer,
-                            border: Border.all(color: cs.outlineVariant),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            selectedCar.licensePlate,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              letterSpacing: 1.2,
+                              ],
                             ),
                           ),
-                        ),
-                      ],
+                          Container(
+                            height: 28,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: cs.surfaceContainer,
+                              border: Border.all(color: cs.outlineVariant),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              selectedCar.licensePlate,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  maintAsync.when(
-                    loading: () => const Padding(
-                      padding: EdgeInsets.all(40),
+                  maintAsync.when<Widget>(
+                    loading: () => const SliverFillRemaining(
+                      hasScrollBody: false,
                       child: Center(child: CircularProgressIndicator()),
                     ),
-                    error: (e, _) => Padding(
-                      padding: const EdgeInsets.all(40),
+                    error: (e, _) => SliverFillRemaining(
+                      hasScrollBody: false,
                       child: Center(
                         child: Text(l10n.maintenanceErrorDetails('$e')),
                       ),
@@ -214,99 +216,98 @@ class CarDetailScreen extends ConsumerWidget {
                         symbol: '€',
                         decimalDigits: 0,
                       );
-                      return Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 24),
-                            child: _StatStrip(
-                              km: selectedCar.mileage?.toString() ?? '—',
-                              spent: costFmt.format(totalSpent),
-                              entries: s.maintenances.length.toString(),
-                            ),
-                          ),
-                          Positioned(
-                            right: 36,
-                            bottom: 0,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                      return SliverMainAxisGroup(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Stack(
+                              clipBehavior: Clip.none,
                               children: [
-                                _DetailActionButton(
-                                  icon: Icons.edit_outlined,
-                                  tooltip: l10n.editVehicle,
-                                  discColor: cs.primary,
-                                  iconColor: cs.onPrimary,
-                                  onPressed: () =>
-                                      _openEditCar(context, ref, selectedCar),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 24),
+                                  child: _StatStrip(
+                                    km: selectedCar.mileage?.toString() ?? '—',
+                                    spent: costFmt.format(totalSpent),
+                                    entries: s.maintenances.length.toString(),
+                                  ),
                                 ),
-                                const SizedBox(width: 8),
-                                _DetailActionButton(
-                                  icon: Icons.delete_outlined,
-                                  tooltip: l10n.deleteVehicleTitle,
-                                  discColor: cs.error,
-                                  iconColor: cs.onError,
-                                  onPressed: () =>
-                                      _openDeleteCar(context, ref, selectedCar),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 40, 20, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.maintenanceHistoryTitle,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: cs.onSurface,
-                          ),
-                        ),
-                        Builder(
-                          builder: (context) {
-                            final count =
-                                maintAsync.value?.maintenances.length ?? 0;
-                            return Text(
-                              l10n.maintenanceEntryCount(count),
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: maintAsync.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Center(
-                        child: Text(l10n.maintenanceErrorDetails('$e')),
-                      ),
-                      data: (s) => s.maintenances.isEmpty
-                          ? Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(40),
-                                child: Text(l10n.maintenanceHistoryEmpty),
-                              ),
-                            )
-                          : CustomScrollView(
-                              slivers: [
-                                Timeline(
-                                  maintenances: s.maintenances,
-                                  carId: carId,
-                                  onOpen: (id) => context.go(
-                                    '/cars/$carId/maintenances/$id',
+                                Positioned(
+                                  right: 36,
+                                  bottom: 0,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _DetailActionButton(
+                                        icon: Icons.edit_outlined,
+                                        tooltip: l10n.editVehicle,
+                                        discColor: cs.primary,
+                                        iconColor: cs.onPrimary,
+                                        onPressed: () => _openEditCar(
+                                          context,
+                                          ref,
+                                          selectedCar,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      _DetailActionButton(
+                                        icon: Icons.delete_outlined,
+                                        tooltip: l10n.deleteVehicleTitle,
+                                        discColor: cs.error,
+                                        iconColor: cs.onError,
+                                        onPressed: () => _openDeleteCar(
+                                          context,
+                                          ref,
+                                          selectedCar,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
-                    ),
+                          ),
+                          SliverPadding(
+                            padding: const EdgeInsets.fromLTRB(20, 40, 20, 8),
+                            sliver: SliverToBoxAdapter(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.maintenanceHistoryTitle,
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(color: cs.onSurface),
+                                  ),
+                                  Text(
+                                    l10n.maintenanceEntryCount(
+                                      s.maintenances.length,
+                                    ),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (s.maintenances.isEmpty)
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(40),
+                                  child: Text(l10n.maintenanceHistoryEmpty),
+                                ),
+                              ),
+                            )
+                          else
+                            Timeline(
+                              maintenances: s.maintenances,
+                              carId: carId,
+                              onOpen: (id) =>
+                                  context.go('/cars/$carId/maintenances/$id'),
+                            ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
