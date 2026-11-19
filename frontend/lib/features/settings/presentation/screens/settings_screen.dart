@@ -446,18 +446,9 @@ class _ThemeSelector extends ConsumerWidget {
       segments: [
         ButtonSegment(
           value: ThemeMode.light,
-          label: _segmentLabel(
-            l10n.themeLightLabel,
-            selectedMode == ThemeMode.light,
-          ),
+          label: Text(l10n.themeLightLabel),
         ),
-        ButtonSegment(
-          value: ThemeMode.dark,
-          label: _segmentLabel(
-            l10n.themeDarkLabel,
-            selectedMode == ThemeMode.dark,
-          ),
-        ),
+        ButtonSegment(value: ThemeMode.dark, label: Text(l10n.themeDarkLabel)),
       ],
       selected: {selectedMode},
       style: SegmentedButton.styleFrom(
@@ -467,18 +458,6 @@ class _ThemeSelector extends ConsumerWidget {
       onSelectionChanged: (selection) {
         ref.read(appThemeModeProvider.notifier).select(selection.first);
       },
-    );
-  }
-
-  Widget _segmentLabel(String text, bool checked) {
-    if (!checked) return Text(text);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.check, size: 18),
-        const SizedBox(width: 6),
-        Text(text),
-      ],
     );
   }
 }

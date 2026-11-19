@@ -211,6 +211,37 @@ void main() {
           expect(themeButton.selected, {ThemeMode.dark});
         },
       );
+
+      testWidgets(
+        'given dark as the saved theme, when the selector is pumped, then '
+        'the selected segment shows a single check icon',
+        (tester) async {
+          await pumpSettings(
+            tester,
+            initialPreferences: {'app_theme_mode': 'dark'},
+          );
+
+          final themeSelector = find.byType(SegmentedButton<ThemeMode>);
+          expect(
+            find.descendant(
+              of: themeSelector,
+              matching: find.byIcon(Icons.check),
+            ),
+            findsOneWidget,
+          );
+
+          await tester.tap(find.text('Claro'));
+          await tester.pumpAndSettle();
+
+          expect(
+            find.descendant(
+              of: themeSelector,
+              matching: find.byIcon(Icons.check),
+            ),
+            findsOneWidget,
+          );
+        },
+      );
     });
 
     group('notifications switch', () {
