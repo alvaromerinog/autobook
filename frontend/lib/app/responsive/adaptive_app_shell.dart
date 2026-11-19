@@ -19,7 +19,25 @@ class AdaptiveAppShell extends StatelessWidget {
     final isSettings = routeState.uri.path == '/settings';
     Widget layout;
     if (sizeClass == WindowSizeClass.compact) {
-      layout = child;
+      final l10n = AppLocalizations.of(context)!;
+      layout = Scaffold(
+        body: child,
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: isSettings ? 1 : 0,
+          onDestinationSelected: (index) =>
+              context.go(index == 0 ? '/' : '/settings'),
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.garage),
+              label: l10n.garage,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.settings),
+              label: l10n.settingsTitle,
+            ),
+          ],
+        ),
+      );
     } else {
       if (sizeClass == WindowSizeClass.medium) {
         layout = Scaffold(

@@ -142,7 +142,7 @@ void main() {
         );
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
-        expect(find.text('Ajustes'), findsNWidgets(2));
+        expect(find.text('Ajustes'), findsNWidgets(3));
         expect(find.text('Idioma'), findsOneWidget);
         expect(find.byType(NavigationRail), findsNothing);
         expect(find.text('Selecciona un vehículo'), findsNothing);
@@ -213,9 +213,14 @@ void main() {
       'then settings opens',
       (tester) async {
         final (router, _) = await pumpApp(tester, size: const Size(400, 900));
-        expect(find.byIcon(Icons.settings), findsOneWidget);
+        expect(find.byIcon(Icons.settings), findsNWidgets(2));
 
-        await tester.tap(find.byTooltip('Ajustes'));
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.byTooltip('Ajustes'),
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
@@ -360,10 +365,21 @@ void main() {
         final preferences = await SharedPreferences.getInstance();
 
         expect(find.text('Añadir vehículo'), findsOneWidget);
-        expect(find.byTooltip('Ajustes'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.byTooltip('Ajustes'),
+          ),
+          findsOneWidget,
+        );
         expect(find.text('Toyota Corolla'), findsOneWidget);
 
-        await tester.tap(find.byTooltip('Ajustes'));
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.byTooltip('Ajustes'),
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
@@ -379,7 +395,7 @@ void main() {
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
         expect(identical(router, originalRouter), isTrue);
-        expect(find.text('Settings'), findsNWidgets(2));
+        expect(find.text('Settings'), findsNWidgets(3));
         expect(find.text('Ajustes'), findsNothing);
         expect(find.text('Language'), findsOneWidget);
         expect(find.text('Idioma'), findsNothing);
@@ -396,7 +412,12 @@ void main() {
         expect(find.text('Añadir vehículo'), findsNothing);
         expect(find.text('Toyota Corolla'), findsOneWidget);
 
-        await tester.tap(find.byTooltip('Settings'));
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.byTooltip('Settings'),
+          ),
+        );
         await tester.pumpAndSettle();
         await tester.tap(find.text('Language'));
         await tester.pumpAndSettle();
@@ -405,7 +426,7 @@ void main() {
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
         expect(identical(router, originalRouter), isTrue);
-        expect(find.text('Ajustes'), findsNWidgets(2));
+        expect(find.text('Ajustes'), findsNWidgets(3));
         expect(find.text('Settings'), findsNothing);
         expect(find.text('Idioma'), findsOneWidget);
         expect(find.text('Language'), findsNothing);
@@ -503,15 +524,26 @@ void main() {
 
         expect(find.text('Autobook'), findsOneWidget);
         expect(find.text('Add vehicle'), findsOneWidget);
-        expect(find.byTooltip('Settings'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.byTooltip('Settings'),
+          ),
+          findsOneWidget,
+        );
         expect(find.text('Toyota Corolla'), findsOneWidget);
         expect(find.text('Añadir vehículo'), findsNothing);
 
-        await tester.tap(find.byTooltip('Settings'));
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AppBar),
+            matching: find.byTooltip('Settings'),
+          ),
+        );
         await tester.pumpAndSettle();
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
-        expect(find.text('Settings'), findsNWidgets(2));
+        expect(find.text('Settings'), findsNWidgets(3));
         expect(find.text('Language'), findsOneWidget);
         expect(find.text('English'), findsOneWidget);
         expect(find.text('Español'), findsNothing);
