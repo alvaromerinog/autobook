@@ -563,6 +563,10 @@
   "@milesLabel": {
     "description": "Miles option of the distance unit selector."
   },
+  "unitMiles": "miles",
+  "@unitMiles": {
+    "description": "Long label of the miles unit shown next to mileage values."
+  },
   "currencyLabel": "Currency",
   "@currencyLabel": {
     "description": "Title of the currency row in settings."

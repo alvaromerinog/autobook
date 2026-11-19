@@ -1,3 +1,5 @@
+import 'package:autobook/app/preferences/distance_unit_provider.dart';
+import 'package:autobook/app/preferences/measurement_labels.dart';
 import 'package:autobook/app/responsive/breakpoints.dart';
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
@@ -8,7 +10,6 @@ import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 class GarageListContent extends ConsumerWidget {
   const GarageListContent({super.key, this.selectedCarId});
@@ -245,6 +246,8 @@ class _CarCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final distanceUnit =
+        ref.watch(distanceUnitSettingProvider).value ?? DistanceUnit.kilometers;
     final isPendingDelete = ref.watch(
       carListProvider.select(
         (async) => async.value?.pendingDeleteIds.contains(car.id) ?? false,
@@ -331,7 +334,12 @@ class _CarCard extends ConsumerWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${_formatMileage(context, car.mileage!)} km',
+                              formatMileage(
+                                car.mileage!,
+                                distanceUnit,
+                                Localizations.localeOf(context),
+                                l10n,
+                              ),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                               ),
@@ -349,10 +357,5 @@ class _CarCard extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  String _formatMileage(BuildContext context, int mileage) {
-    final locale = Localizations.localeOf(context).toString();
-    return NumberFormat.decimalPattern(locale).format(mileage);
   }
 }
