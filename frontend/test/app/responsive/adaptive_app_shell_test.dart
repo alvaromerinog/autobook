@@ -641,7 +641,7 @@ void main() {
           );
 
           expect(router.routeInformationProvider.value.uri.path, '/settings');
-          expect(find.text('Ajustes'), findsOneWidget);
+          expect(find.text('Ajustes'), findsNWidgets(2));
           expect(find.text('Idioma'), findsOneWidget);
           expect(find.byType(BackButton), findsOneWidget);
           expect(find.byType(NavigationRail), findsNothing);

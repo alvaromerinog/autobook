@@ -142,7 +142,7 @@ void main() {
         );
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
-        expect(find.text('Ajustes'), findsOneWidget);
+        expect(find.text('Ajustes'), findsNWidgets(2));
         expect(find.text('Idioma'), findsOneWidget);
         expect(find.byType(NavigationRail), findsNothing);
         expect(find.text('Selecciona un vehículo'), findsNothing);
@@ -326,6 +326,8 @@ void main() {
         );
         final routeInformation = router.routeInformationProvider;
 
+        await tester.tap(find.text('Idioma'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('English'));
         await tester.pumpAndSettle();
 
@@ -367,20 +369,22 @@ void main() {
         expect(router.routeInformationProvider.value.uri.path, '/settings');
         expect(find.text('Idioma'), findsOneWidget);
         expect(find.text('Español'), findsOneWidget);
-        expect(find.text('English'), findsOneWidget);
+        expect(find.text('English'), findsNothing);
         expect(find.text('Toyota Corolla'), findsNothing);
 
+        await tester.tap(find.text('Idioma'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('English'));
         await tester.pumpAndSettle();
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
         expect(identical(router, originalRouter), isTrue);
-        expect(find.text('Settings'), findsOneWidget);
+        expect(find.text('Settings'), findsNWidgets(2));
         expect(find.text('Ajustes'), findsNothing);
         expect(find.text('Language'), findsOneWidget);
         expect(find.text('Idioma'), findsNothing);
-        expect(find.text('Español'), findsOneWidget);
         expect(find.text('English'), findsOneWidget);
+        expect(find.text('Español'), findsNothing);
         expect(find.text('Toyota Corolla'), findsNothing);
         expect(preferences.getString('app_language'), 'en');
 
@@ -394,12 +398,14 @@ void main() {
 
         await tester.tap(find.byTooltip('Settings'));
         await tester.pumpAndSettle();
+        await tester.tap(find.text('Language'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Español'));
         await tester.pumpAndSettle();
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
         expect(identical(router, originalRouter), isTrue);
-        expect(find.text('Ajustes'), findsOneWidget);
+        expect(find.text('Ajustes'), findsNWidgets(2));
         expect(find.text('Settings'), findsNothing);
         expect(find.text('Idioma'), findsOneWidget);
         expect(find.text('Language'), findsNothing);
@@ -433,12 +439,14 @@ void main() {
         expect(find.text('Español'), findsOneWidget);
         expect(find.text('Toyota Corolla'), findsNothing);
 
+        await tester.tap(find.text('Idioma'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('English'));
         await tester.pumpAndSettle();
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
         expect(identical(router, originalRouter), isTrue);
-        expect(find.text('Settings'), findsNWidgets(2));
+        expect(find.text('Settings'), findsNWidgets(3));
         expect(find.text('Ajustes'), findsNothing);
         expect(find.text('Language'), findsOneWidget);
         expect(find.text('Idioma'), findsNothing);
@@ -462,12 +470,14 @@ void main() {
 
         await tester.tap(find.byIcon(Icons.settings));
         await tester.pumpAndSettle();
+        await tester.tap(find.text('Language'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Español'));
         await tester.pumpAndSettle();
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
         expect(identical(router, originalRouter), isTrue);
-        expect(find.text('Ajustes'), findsNWidgets(2));
+        expect(find.text('Ajustes'), findsNWidgets(3));
         expect(find.text('Settings'), findsNothing);
         expect(find.text('Idioma'), findsOneWidget);
         expect(find.text('Language'), findsNothing);
@@ -501,10 +511,10 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(router.routeInformationProvider.value.uri.path, '/settings');
-        expect(find.text('Settings'), findsOneWidget);
+        expect(find.text('Settings'), findsNWidgets(2));
         expect(find.text('Language'), findsOneWidget);
-        expect(find.text('Español'), findsOneWidget);
         expect(find.text('English'), findsOneWidget);
+        expect(find.text('Español'), findsNothing);
         expect(find.text('Ajustes'), findsNothing);
         expect(find.text('Idioma'), findsNothing);
         expect(preferences.getString('app_language'), isNull);
