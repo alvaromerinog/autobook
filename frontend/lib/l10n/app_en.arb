@@ -1,0 +1,526 @@
+{
+  "@@locale": "en",
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Dismisses a dialog or form without saving changes."
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "Removes the selected record permanently."
+  },
+  "edit": "Edit",
+  "@edit": {
+    "description": "Opens the editor for the selected record."
+  },
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retries the failed network or sync operation."
+  },
+  "close": "Close",
+  "@close": {
+    "description": "Closes the current screen or overlay."
+  },
+  "saveChanges": "Save changes",
+  "@saveChanges": {
+    "description": "Persists the edits made in a form."
+  },
+  "garage": "Garage",
+  "@garage": {
+    "description": "Navigation label for the list of the user's cars."
+  },
+  "settingsTitle": "Settings",
+  "@settingsTitle": {
+    "description": "Title of the settings screen."
+  },
+  "languageLabel": "Language",
+  "@languageLabel": {
+    "description": "Label for the language selector in settings."
+  },
+  "addCar": "Add car",
+  "@addCar": {
+    "description": "Action that opens the form to create a car."
+  },
+  "addVehicle": "Add vehicle",
+  "@addVehicle": {
+    "description": "Title of the form that creates a vehicle."
+  },
+  "selectVehicle": "Select a vehicle",
+  "@selectVehicle": {
+    "description": "Placeholder prompting the user to pick a car first."
+  },
+  "garageEmptyTitle": "Your garage is empty",
+  "@garageEmptyTitle": {
+    "description": "Heading shown when the user has no vehicles yet."
+  },
+  "garageEmptyHint": "Add your first vehicle to start tracking its maintenance.",
+  "@garageEmptyHint": {
+    "description": "Explanation shown under the empty garage heading."
+  },
+  "vehicleNetworkFailure": "Could not connect to the server.",
+  "@vehicleNetworkFailure": {
+    "description": "Shown when a vehicle sync fails because the network is unreachable."
+  },
+  "vehicleServerFailure": "The vehicles could not be loaded. Please try again.",
+  "@vehicleServerFailure": {
+    "description": "Shown when the backend rejects the vehicle request."
+  },
+  "vehicleCacheFailure": "Could not access local storage.",
+  "@vehicleCacheFailure": {
+    "description": "Shown when the local vehicle database cannot be read."
+  },
+  "vehicleLoadErrorDetails": "Error loading vehicles: {error}",
+  "@vehicleLoadErrorDetails": {
+    "description": "Prefix for an unexpected vehicle load error.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Connection closed"
+      }
+    }
+  },
+  "vehiclesPendingSync": "Vehicles pending synchronization",
+  "@vehiclesPendingSync": {
+    "description": "Banner telling the user that vehicles wait to be synced."
+  },
+  "syncAction": "Sync",
+  "@syncAction": {
+    "description": "Starts synchronizing the pending records."
+  },
+  "vehicleSyncErrorWithPending": "{error} Some vehicles are pending synchronization.",
+  "@vehicleSyncErrorWithPending": {
+    "description": "Sync failure banner combined with the pending vehicles notice.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Could not connect to the server."
+      }
+    }
+  },
+  "vehicleRemoteDeleted": "Car {brand} {model} deleted",
+  "@vehicleRemoteDeleted": {
+    "description": "Snackbar reporting a vehicle removed by another device.",
+    "placeholders": {
+      "brand": {
+        "type": "String",
+        "example": "Ford"
+      },
+      "model": {
+        "type": "String",
+        "example": "Focus"
+      }
+    }
+  },
+  "vehicleRemoteDeletedDiscarded": "Car {brand} {model} deleted, edits discarded",
+  "@vehicleRemoteDeletedDiscarded": {
+    "description": "Snackbar reporting a remotely deleted vehicle with unsynced edits.",
+    "placeholders": {
+      "brand": {
+        "type": "String",
+        "example": "Ford"
+      },
+      "model": {
+        "type": "String",
+        "example": "Focus"
+      }
+    }
+  },
+  "vehiclePendingDelete": "Pending deletion",
+  "@vehiclePendingDelete": {
+    "description": "Label on a vehicle whose deletion still waits to sync."
+  },
+  "editVehicle": "Edit vehicle",
+  "@editVehicle": {
+    "description": "Title of the form that edits an existing vehicle."
+  },
+  "vehicleDetailsSection": "Vehicle details",
+  "@vehicleDetailsSection": {
+    "description": "Section heading for the identifying vehicle fields."
+  },
+  "vehicleAdditionalInfoSection": "Additional information (optional)",
+  "@vehicleAdditionalInfoSection": {
+    "description": "Section heading for the optional vehicle fields."
+  },
+  "vehicleBrandLabel": "Brand",
+  "@vehicleBrandLabel": {
+    "description": "Label for the vehicle brand field."
+  },
+  "vehicleBrandHint": "E.g. Toyota, Ford, BMW...",
+  "@vehicleBrandHint": {
+    "description": "Hint for the vehicle brand field."
+  },
+  "vehicleModelLabel": "Model",
+  "@vehicleModelLabel": {
+    "description": "Label for the vehicle model field."
+  },
+  "vehicleModelHint": "E.g. Corolla, Focus, 3 Series...",
+  "@vehicleModelHint": {
+    "description": "Hint for the vehicle model field."
+  },
+  "vehicleYearLabel": "Year",
+  "@vehicleYearLabel": {
+    "description": "Label for the vehicle year field."
+  },
+  "vehicleYearHint": "E.g. 2020",
+  "@vehicleYearHint": {
+    "description": "Hint for the vehicle year field."
+  },
+  "vehicleLicensePlateLabel": "License plate",
+  "@vehicleLicensePlateLabel": {
+    "description": "Label for the vehicle license plate field."
+  },
+  "vehicleLicensePlateHint": "E.g. 1234 ABC",
+  "@vehicleLicensePlateHint": {
+    "description": "Hint for the vehicle license plate field."
+  },
+  "vehicleColorLabel": "Color",
+  "@vehicleColorLabel": {
+    "description": "Label for the optional vehicle color field."
+  },
+  "vehicleColorHint": "E.g. White...",
+  "@vehicleColorHint": {
+    "description": "Hint for the optional vehicle color field."
+  },
+  "vehicleMileageLabel": "Mileage",
+  "@vehicleMileageLabel": {
+    "description": "Label for the optional vehicle mileage field."
+  },
+  "vehicleMileageHint": "E.g. 45000",
+  "@vehicleMileageHint": {
+    "description": "Hint for the optional vehicle mileage field."
+  },
+  "saveVehicle": "Save vehicle",
+  "@saveVehicle": {
+    "description": "Submits the vehicle creation form."
+  },
+  "vehicleBrandRequired": "Brand is required",
+  "@vehicleBrandRequired": {
+    "description": "Validation message when the brand field is empty."
+  },
+  "vehicleModelRequired": "Model is required",
+  "@vehicleModelRequired": {
+    "description": "Validation message when the model field is empty."
+  },
+  "fieldRequired": "Required",
+  "@fieldRequired": {
+    "description": "Generic validation message for an empty mandatory field."
+  },
+  "vehicleLicensePlateRequired": "License plate is required",
+  "@vehicleLicensePlateRequired": {
+    "description": "Validation message when the license plate is empty."
+  },
+  "vehicleYearInvalid": "Invalid year",
+  "@vehicleYearInvalid": {
+    "description": "Validation message when the year is not a number."
+  },
+  "vehicleYearOutOfRange": "Out of range",
+  "@vehicleYearOutOfRange": {
+    "description": "Validation message when the year is not a plausible car year."
+  },
+  "vehicleMileageInvalid": "Invalid mileage",
+  "@vehicleMileageInvalid": {
+    "description": "Validation message when the mileage is not a number."
+  },
+  "deleteVehicleTitle": "Delete vehicle",
+  "@deleteVehicleTitle": {
+    "description": "Title of the vehicle deletion confirmation dialog."
+  },
+  "deleteVehicleConfirmation": "Are you sure you want to delete {vehicleName}?",
+  "@deleteVehicleConfirmation": {
+    "description": "Body of the vehicle deletion confirmation dialog.",
+    "placeholders": {
+      "vehicleName": {
+        "type": "String",
+        "example": "Toyota Corolla"
+      }
+    }
+  },
+  "vehicleCreateError": "Could not create the vehicle",
+  "@vehicleCreateError": {
+    "description": "Snackbar shown when creating a vehicle fails."
+  },
+  "vehicleUpdateError": "Could not update the vehicle",
+  "@vehicleUpdateError": {
+    "description": "Snackbar shown when updating a vehicle fails."
+  },
+  "vehicleDeleteError": "Could not delete the vehicle",
+  "@vehicleDeleteError": {
+    "description": "Snackbar shown when deleting a vehicle fails."
+  },
+  "addMaintenance": "Add maintenance",
+  "@addMaintenance": {
+    "description": "Action that opens the form to create a maintenance."
+  },
+  "maintenanceNewTitle": "New maintenance",
+  "@maintenanceNewTitle": {
+    "description": "Title of the form that creates a maintenance record."
+  },
+  "maintenanceEditTitle": "Edit maintenance",
+  "@maintenanceEditTitle": {
+    "description": "Title of the form that edits a maintenance record."
+  },
+  "maintenanceDetailsSection": "Maintenance details",
+  "@maintenanceDetailsSection": {
+    "description": "Section heading for the identifying maintenance fields."
+  },
+  "maintenanceTypeFieldLabel": "Maintenance type",
+  "@maintenanceTypeFieldLabel": {
+    "description": "Label for the maintenance type dropdown."
+  },
+  "maintenanceTypeRequired": "Select a type",
+  "@maintenanceTypeRequired": {
+    "description": "Validation message when no maintenance type is selected."
+  },
+  "maintenanceMileageLabel": "Mileage",
+  "@maintenanceMileageLabel": {
+    "description": "Label for the maintenance mileage field."
+  },
+  "maintenanceMileageHint": "E.g. 45000",
+  "@maintenanceMileageHint": {
+    "description": "Hint for the maintenance mileage field."
+  },
+  "maintenanceMileageRequired": "Mileage is required",
+  "@maintenanceMileageRequired": {
+    "description": "Validation message when the mileage field is empty."
+  },
+  "maintenanceMileageInvalid": "Invalid mileage",
+  "@maintenanceMileageInvalid": {
+    "description": "Validation message when the mileage is not a number."
+  },
+  "maintenanceCostLabel": "Cost",
+  "@maintenanceCostLabel": {
+    "description": "Label for the maintenance cost field."
+  },
+  "maintenanceCostHint": "E.g. 145.20",
+  "@maintenanceCostHint": {
+    "description": "Hint for the maintenance cost field."
+  },
+  "maintenanceCostRequired": "Cost is required",
+  "@maintenanceCostRequired": {
+    "description": "Validation message when the cost field is empty."
+  },
+  "maintenanceCostInvalid": "Invalid cost",
+  "@maintenanceCostInvalid": {
+    "description": "Validation message when the cost is not a number."
+  },
+  "maintenanceNegativeNotAllowed": "Cannot be negative",
+  "@maintenanceNegativeNotAllowed": {
+    "description": "Validation message when a numeric field is negative."
+  },
+  "maintenanceDateLabel": "Date",
+  "@maintenanceDateLabel": {
+    "description": "Label for the maintenance date field."
+  },
+  "maintenanceAdditionalInfoSection": "Additional information (optional)",
+  "@maintenanceAdditionalInfoSection": {
+    "description": "Section heading for the optional maintenance fields."
+  },
+  "maintenanceGarageLabel": "Workshop",
+  "@maintenanceGarageLabel": {
+    "description": "Label for the optional maintenance workshop field."
+  },
+  "maintenanceGarageHint": "E.g. Marín Workshop · Madrid",
+  "@maintenanceGarageHint": {
+    "description": "Hint for the optional maintenance workshop field."
+  },
+  "maintenanceNotesLabel": "Notes",
+  "@maintenanceNotesLabel": {
+    "description": "Label for the optional maintenance notes field."
+  },
+  "maintenanceNotesHint": "Service details...",
+  "@maintenanceNotesHint": {
+    "description": "Hint for the optional maintenance notes field."
+  },
+  "save": "Save",
+  "@save": {
+    "description": "Submits the form with its current values."
+  },
+  "maintenanceHistoryTitle": "Maintenance history",
+  "@maintenanceHistoryTitle": {
+    "description": "Heading of the maintenance history section of a car."
+  },
+  "maintenanceHistoryEmpty": "No maintenance records yet",
+  "@maintenanceHistoryEmpty": {
+    "description": "Shown when a car has no maintenance records."
+  },
+  "maintenanceEntryCount": "{count, plural, =1{1 entry} other{{count} entries}}",
+  "@maintenanceEntryCount": {
+    "description": "Number of maintenance records shown under the history heading.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "maintenanceCreated": "Maintenance recorded",
+  "@maintenanceCreated": {
+    "description": "Snackbar shown when a maintenance is created."
+  },
+  "maintenanceCreateError": "Could not create the maintenance",
+  "@maintenanceCreateError": {
+    "description": "Snackbar shown when creating a maintenance fails."
+  },
+  "maintenanceErrorDetails": "Error: {error}",
+  "@maintenanceErrorDetails": {
+    "description": "Prefix for an unexpected maintenance load error.",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "example": "Connection closed"
+      }
+    }
+  },
+  "maintenanceStatsKmLabel": "KM",
+  "@maintenanceStatsKmLabel": {
+    "description": "Label of the mileage statistic of a car."
+  },
+  "maintenanceStatsSpentLabel": "SPENT",
+  "@maintenanceStatsSpentLabel": {
+    "description": "Label of the money spent statistic of a car."
+  },
+  "maintenanceStatsEntriesLabel": "ENTRIES",
+  "@maintenanceStatsEntriesLabel": {
+    "description": "Label of the maintenance entry count statistic."
+  },
+  "vehicleNotFound": "Vehicle not found",
+  "@vehicleNotFound": {
+    "description": "Shown when the requested car does not exist."
+  },
+  "maintenanceNotFound": "Record not found",
+  "@maintenanceNotFound": {
+    "description": "Shown when the requested maintenance does not exist."
+  },
+  "deleteMaintenanceTitle": "Delete maintenance",
+  "@deleteMaintenanceTitle": {
+    "description": "Title of the maintenance deletion confirmation dialog."
+  },
+  "deleteMaintenanceConfirmation": "Are you sure you want to delete this record?",
+  "@deleteMaintenanceConfirmation": {
+    "description": "Body of the maintenance deletion confirmation dialog."
+  },
+  "maintenanceDeleted": "Maintenance deleted",
+  "@maintenanceDeleted": {
+    "description": "Snackbar shown when a maintenance is deleted."
+  },
+  "maintenanceDeleteError": "Could not delete the maintenance",
+  "@maintenanceDeleteError": {
+    "description": "Snackbar shown when deleting a maintenance fails."
+  },
+  "maintenanceUpdateError": "Could not update the maintenance",
+  "@maintenanceUpdateError": {
+    "description": "Snackbar shown when updating a maintenance fails."
+  },
+  "maintenanceNotesSection": "NOTES",
+  "@maintenanceNotesSection": {
+    "description": "Heading of the maintenance notes section."
+  },
+  "timelineNoDate": "No date",
+  "@timelineNoDate": {
+    "description": "Timeline group heading for records without a valid date."
+  },
+  "timelineEntrySemantics": "{type} on {date}",
+  "@timelineEntrySemantics": {
+    "description": "Screen reader label of a timeline maintenance entry.",
+    "placeholders": {
+      "type": {
+        "type": "String",
+        "example": "Oil change"
+      },
+      "date": {
+        "type": "String",
+        "example": "12 Mar"
+      }
+    }
+  },
+  "maintenanceRemoteDeleted": "Maintenance {id} deleted",
+  "@maintenanceRemoteDeleted": {
+    "description": "Snackbar reporting a maintenance removed by another device.",
+    "placeholders": {
+      "id": {
+        "type": "String",
+        "example": "maint-01/A"
+      }
+    }
+  },
+  "maintenanceRemoteDeletedDiscarded": "Maintenance {id} deleted, edits discarded",
+  "@maintenanceRemoteDeletedDiscarded": {
+    "description": "Snackbar reporting a remotely deleted maintenance with unsynced edits.",
+    "placeholders": {
+      "id": {
+        "type": "String",
+        "example": "maint-01/A"
+      }
+    }
+  },
+  "maintTypeOil": "Oil change",
+  "@maintTypeOil": {
+    "description": "Full label of the oil change maintenance type."
+  },
+  "maintTypeOilShort": "Oil",
+  "@maintTypeOilShort": {
+    "description": "Short label of the oil change maintenance type."
+  },
+  "maintTypeCoolant": "Coolant",
+  "@maintTypeCoolant": {
+    "description": "Full label of the coolant maintenance type."
+  },
+  "maintTypeCoolantShort": "Coolant",
+  "@maintTypeCoolantShort": {
+    "description": "Short label of the coolant maintenance type."
+  },
+  "maintTypeBelt": "Timing belt",
+  "@maintTypeBelt": {
+    "description": "Full label of the timing belt maintenance type."
+  },
+  "maintTypeBeltShort": "Belt",
+  "@maintTypeBeltShort": {
+    "description": "Short label of the timing belt maintenance type."
+  },
+  "maintTypeItv": "Vehicle inspection",
+  "@maintTypeItv": {
+    "description": "Full label of the vehicle inspection maintenance type."
+  },
+  "maintTypeItvShort": "ITV",
+  "@maintTypeItvShort": {
+    "description": "Short label of the vehicle inspection maintenance type."
+  },
+  "maintTypeRepair": "General repair",
+  "@maintTypeRepair": {
+    "description": "Full label of the general repair maintenance type."
+  },
+  "maintTypeRepairShort": "Repair",
+  "@maintTypeRepairShort": {
+    "description": "Short label of the general repair maintenance type."
+  },
+  "maintTypeFilter": "Air filter",
+  "@maintTypeFilter": {
+    "description": "Full label of the air filter maintenance type."
+  },
+  "maintTypeFilterShort": "Filter",
+  "@maintTypeFilterShort": {
+    "description": "Short label of the air filter maintenance type."
+  },
+  "maintTypeBattery": "Battery",
+  "@maintTypeBattery": {
+    "description": "Full label of the battery maintenance type."
+  },
+  "maintTypeBatteryShort": "Battery",
+  "@maintTypeBatteryShort": {
+    "description": "Short label of the battery maintenance type."
+  },
+  "maintTypeBrakes": "Brakes",
+  "@maintTypeBrakes": {
+    "description": "Full label of the brakes maintenance type."
+  },
+  "maintTypeBrakesShort": "Brakes",
+  "@maintTypeBrakesShort": {
+    "description": "Short label of the brakes maintenance type."
+  },
+  "maintTypeTires": "Tires",
+  "@maintTypeTires": {
+    "description": "Full label of the tires maintenance type."
+  },
+  "maintTypeTiresShort": "Tires",
+  "@maintTypeTiresShort": {
+    "description": "Short label of the tires maintenance type."
+  }
+}

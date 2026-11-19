@@ -1,4 +1,6 @@
+import 'package:autobook/app/localization/app_locale_provider.dart';
 import 'package:autobook/app/router/app_router.dart';
+import 'package:autobook/core/di/shared_preferences_provider.dart';
 import 'package:autobook/core/id/id_generator.dart';
 import 'package:autobook/core/sync/sync_coordinator.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
@@ -25,11 +27,13 @@ import 'package:autobook/features/vehicles/domain/usecases/sync_pending_cars_use
 import 'package:autobook/features/vehicles/domain/usecases/update_car_usecase.dart';
 import 'package:autobook/features/vehicles/presentation/providers/usecase_providers.dart'
     as vehicle_usecases;
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../features/maintenances/fixtures/maintenance_fixtures.dart';
 import '../features/vehicles/fixtures/car_fixtures.dart';
@@ -91,17 +95,40 @@ void registerAppHarnessFallbacks() {
   registerFallbackValue(buildMaintenance());
 }
 
+class _HarnessApp extends ConsumerWidget {
+  const _HarnessApp({required this.router, required this.locale});
+
+  final GoRouter router;
+  final Locale? locale;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final storedLocale = ref.watch(appLocaleProvider).value;
+    return MaterialApp.router(
+      locale: storedLocale ?? locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      routerConfig: router,
+    );
+  }
+}
+
 Future<(GoRouter, MockCarRepository)> pumpApp(
   WidgetTester tester, {
   Size size = const Size(1200, 900),
   String initial = '/',
   List<Car> cars = oneCarList,
   Maintenance? maintenance,
+  Locale? locale = const Locale('es'),
+  Map<String, Object> initialPreferences = const {},
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
+
+  SharedPreferences.setMockInitialValues(initialPreferences);
+  final preferences = await SharedPreferences.getInstance();
 
   final maintenances = [maintenance ?? buildMaintenance()];
   final mockCarRepo = MockCarRepository();
@@ -120,6 +147,7 @@ Future<(GoRouter, MockCarRepository)> pumpApp(
   final container = ProviderContainer(
     overrides: [
       syncCoordinatorProvider.overrideWithValue(SyncCoordinator()),
+      sharedPreferencesProvider.overrideWithValue(AsyncData(preferences)),
       vehicle_usecases.getCarsUseCaseProvider.overrideWithValue(
         _StubGetCars(cars),
       ),
@@ -166,7 +194,7 @@ Future<(GoRouter, MockCarRepository)> pumpApp(
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: MaterialApp.router(routerConfig: router),
+      child: _HarnessApp(router: router, locale: locale),
     ),
   );
   await tester.pumpAndSettle();

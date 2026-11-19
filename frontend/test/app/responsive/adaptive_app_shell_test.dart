@@ -579,5 +579,152 @@ void main() {
         expect(find.text('Historial de mantenimientos'), findsOneWidget);
       });
     });
+
+    group('settings', () {
+      testWidgets(
+        'given an expanded surface at /settings, when pumped, then the rail '
+        'keeps Settings selected and the garage list and placeholder are '
+        'replaced by settings content',
+        (tester) async {
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(1200, 900),
+            initial: '/settings',
+          );
+
+          expect(router.routeInformationProvider.value.uri.path, '/settings');
+          expect(find.byType(NavigationRail), findsOneWidget);
+          expect(find.byType(AppSidebar), findsOneWidget);
+          expect(find.text('Idioma'), findsOneWidget);
+          expect(find.text('Español'), findsOneWidget);
+          expect(find.byType(GarageListContent), findsNothing);
+          expect(find.text('Selecciona un vehículo'), findsNothing);
+          expect(find.text('Toyota Corolla'), findsNothing);
+          final rail = tester.widget<NavigationRail>(
+            find.byType(NavigationRail),
+          );
+          expect(rail.selectedIndex, 1);
+        },
+      );
+
+      testWidgets(
+        'given a medium surface at /settings, when pumped, then the rail '
+        'stays and settings fills the content column without the garage list',
+        (tester) async {
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(720, 900),
+            initial: '/settings',
+          );
+
+          expect(router.routeInformationProvider.value.uri.path, '/settings');
+          expect(find.byType(NavigationRail), findsOneWidget);
+          expect(find.byType(AppSidebar), findsOneWidget);
+          expect(find.text('Idioma'), findsOneWidget);
+          expect(find.byType(GarageListContent), findsNothing);
+          expect(find.text('Selecciona un vehículo'), findsNothing);
+          final rail = tester.widget<NavigationRail>(
+            find.byType(NavigationRail),
+          );
+          expect(rail.selectedIndex, 1);
+        },
+      );
+
+      testWidgets(
+        'given a compact surface at /settings, when pumped, then settings is '
+        'full-screen with a back button and no rail',
+        (tester) async {
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(400, 900),
+            initial: '/settings',
+          );
+
+          expect(router.routeInformationProvider.value.uri.path, '/settings');
+          expect(find.text('Ajustes'), findsOneWidget);
+          expect(find.text('Idioma'), findsOneWidget);
+          expect(find.byType(BackButton), findsOneWidget);
+          expect(find.byType(NavigationRail), findsNothing);
+          expect(find.text('Selecciona un vehículo'), findsNothing);
+          expect(find.text('Toyota Corolla'), findsNothing);
+        },
+      );
+
+      testWidgets(
+        'given a compact home, when the settings action is tapped, then the '
+        'home scaffold is replaced by settings on the same route stack',
+        (tester) async {
+          final (router, _) = await pumpApp(tester, size: const Size(400, 900));
+
+          await tester.tap(find.byTooltip('Ajustes'));
+          await tester.pumpAndSettle();
+
+          expect(router.routeInformationProvider.value.uri.path, '/settings');
+          expect(find.text('Añadir vehículo'), findsNothing);
+          expect(find.byType(NavigationRail), findsNothing);
+          expect(find.text('Idioma'), findsOneWidget);
+          expect(find.byType(BackButton), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'given settings pushed in medium, when the settings screen is shown, '
+        'then the rail and the settings content are both present',
+        (tester) async {
+          final (router, _) = await pumpApp(tester, size: const Size(720, 900));
+          unawaited(router.push('/settings'));
+          await tester.pumpAndSettle();
+
+          expect(router.canPop(), isTrue);
+          expect(find.byType(NavigationRail), findsOneWidget);
+          expect(find.byType(GarageListContent), findsNothing);
+          expect(find.text('Idioma'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'given an expanded surface at /settings, when the surface shrinks to '
+        'compact, then settings stays visible and the rail is replaced by a '
+        'back button',
+        (tester) async {
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(1200, 900),
+            initial: '/settings',
+          );
+          expect(find.byType(NavigationRail), findsOneWidget);
+
+          tester.view.physicalSize = const Size(400, 900);
+          tester.view.devicePixelRatio = 1.0;
+          await tester.pumpAndSettle();
+
+          expect(router.routeInformationProvider.value.uri.path, '/settings');
+          expect(find.byType(NavigationRail), findsNothing);
+          expect(find.byType(BackButton), findsOneWidget);
+          expect(find.text('Idioma'), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'given a compact surface cold-loaded at /settings, when the back '
+        'button is tapped, then the empty-stack fallback restores the home '
+        'scaffold',
+        (tester) async {
+          final (router, _) = await pumpApp(
+            tester,
+            size: const Size(400, 900),
+            initial: '/settings',
+          );
+
+          await tester.tap(find.byType(BackButton));
+          await tester.pumpAndSettle();
+
+          expect(router.routeInformationProvider.value.uri.path, '/');
+          expect(find.text('Añadir vehículo'), findsOneWidget);
+          expect(find.text('Toyota Corolla'), findsOneWidget);
+          expect(tester.takeException(), isNull);
+        },
+      );
+    });
   });
 }

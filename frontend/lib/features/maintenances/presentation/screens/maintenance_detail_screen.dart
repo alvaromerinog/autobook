@@ -1,6 +1,7 @@
 import 'package:autobook/app/router/back_navigation.dart';
 import 'package:autobook/core/error/failures.dart';
 import 'package:autobook/features/maintenances/domain/entities/maintenance.dart';
+import 'package:autobook/features/maintenances/presentation/localization/maintenance_type_localizations.dart';
 import 'package:autobook/features/maintenances/presentation/providers/maintenance_list_provider.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_tints.dart';
 import 'package:autobook/features/maintenances/presentation/theme/maint_type_icons.dart';
@@ -8,6 +9,7 @@ import 'package:autobook/features/maintenances/presentation/widgets/big_stat.dar
 import 'package:autobook/features/maintenances/presentation/widgets/maintenance_dialog.dart';
 import 'package:autobook/features/vehicles/domain/entities/car.dart';
 import 'package:autobook/features/vehicles/presentation/providers/car_list_provider.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -27,15 +29,16 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     WidgetRef ref,
     Maintenance m,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Eliminar mantenimiento'),
-        content: const Text('¿Seguro que quieres eliminar este registro?'),
+        title: Text(l10n.deleteMaintenanceTitle),
+        content: Text(l10n.deleteMaintenanceConfirmation),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -43,7 +46,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Theme.of(context).colorScheme.onError,
             ),
-            child: const Text('Eliminar'),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -54,13 +57,13 @@ class MaintenanceDetailScreen extends ConsumerWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Mantenimiento eliminado')));
+      ).showSnackBar(SnackBar(content: Text(l10n.maintenanceDeleted)));
       goBack(context);
     } on Failure catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al eliminar el mantenimiento')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.maintenanceDeleteError)));
     }
   }
 
@@ -78,7 +81,9 @@ class MaintenanceDetailScreen extends ConsumerWidget {
     } on Failure catch (_) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al actualizar el mantenimiento')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.maintenanceUpdateError),
+        ),
       );
     }
   }
@@ -94,6 +99,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final maintState = ref.watch(maintenanceListProvider(carId)).value;
     final maintenances = maintState?.maintenances ?? const <Maintenance>[];
     final m = _findMaintenance(maintenances);
@@ -107,7 +113,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
           scrolledUnderElevation: 0,
           leading: BackButton(onPressed: () => goBack(context)),
         ),
-        body: const Center(child: Text('Registro no encontrado')),
+        body: Center(child: Text(l10n.maintenanceNotFound)),
       );
     }
 
@@ -174,7 +180,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      maintTypeLabel(m.type),
+                      maintTypeLabel(context, m.type),
                       style: theme.textTheme.headlineMedium?.copyWith(
                         color: cs.onSurface,
                         letterSpacing: -0.3,
@@ -203,7 +209,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                         child: Row(
                           children: [
                             BigStat(
-                              label: 'Coste',
+                              label: l10n.maintenanceCostLabel,
                               value: costFmt.format(m.cost),
                             ),
                             Container(
@@ -212,7 +218,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                               color: cs.outlineVariant,
                             ),
                             BigStat(
-                              label: 'Kilómetros',
+                              label: l10n.maintenanceMileageLabel,
                               value: '${kmFmt.format(m.mileage)} km',
                             ),
                             Container(
@@ -221,7 +227,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                               color: cs.outlineVariant,
                             ),
                             BigStat(
-                              label: 'Fecha',
+                              label: l10n.maintenanceDateLabel,
                               value: dateFmt,
                               sub: yearFmt,
                             ),
@@ -239,7 +245,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                     children: [
                       _DetailActionButton(
                         icon: Icons.edit_outlined,
-                        tooltip: 'Editar',
+                        tooltip: l10n.edit,
                         discColor: cs.primary,
                         iconColor: cs.onPrimary,
                         onPressed: () => _openEdit(context, ref, m),
@@ -247,7 +253,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
                       const SizedBox(width: 8),
                       _DetailActionButton(
                         icon: Icons.delete_outlined,
-                        tooltip: 'Eliminar',
+                        tooltip: l10n.delete,
                         discColor: cs.error,
                         iconColor: cs.onError,
                         onPressed: () => _delete(context, ref, m),
@@ -272,7 +278,7 @@ class MaintenanceDetailScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Text(
-                'NOTAS',
+                l10n.maintenanceNotesSection,
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: cs.onSurfaceVariant,
                   letterSpacing: 0.8,

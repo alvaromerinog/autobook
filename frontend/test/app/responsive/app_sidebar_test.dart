@@ -1,4 +1,5 @@
 import 'package:autobook/app/responsive/app_sidebar.dart';
+import 'package:autobook/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,10 +21,21 @@ Future<GoRouter> pumpSidebar(
         path: '/cars/:carId',
         builder: (context, _) => _sidebarLayout(context, extended),
       ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, _) => _sidebarLayout(context, extended),
+      ),
     ],
   );
   await tester.pumpWidget(
-    ProviderScope(child: MaterialApp.router(routerConfig: router)),
+    ProviderScope(
+      child: MaterialApp.router(
+        locale: const Locale('es'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router,
+      ),
+    ),
   );
   await tester.pumpAndSettle();
   return router;
@@ -36,26 +48,27 @@ Widget _sidebarLayout(BuildContext context, bool extended) {
       children: [
         AppSidebar(extended: extended),
         const VerticalDivider(width: 1),
-        Expanded(
-          child: Center(
-            child: Text(
-              destination == '/cars/1' ? 'detail page' : 'garage page',
-            ),
-          ),
-        ),
+        Expanded(child: Center(child: Text(_pageLabel(destination)))),
       ],
     ),
   );
 }
+
+String _pageLabel(String destination) => switch (destination) {
+  '/cars/1' => 'detail page',
+  '/settings' => 'settings page',
+  _ => 'garage page',
+};
+
+int? selectedIndex(WidgetTester tester) =>
+    tester.widget<NavigationRail>(find.byType(NavigationRail)).selectedIndex;
 
 void main() {
   group('AppSidebar', () {
     for (final extended in [false, true]) {
       group('extended: $extended', () {
         testWidgets('given the sidebar, when pumped, then the logo, the '
-            'add-car button and the garage destination are visible', (
-          tester,
-        ) async {
+            'add-car action and both destinations are visible', (tester) async {
           await pumpSidebar(tester, extended: extended);
 
           expect(find.byType(NavigationRail), findsOneWidget);
@@ -64,9 +77,11 @@ void main() {
           if (extended) {
             expect(find.text('Añadir coche'), findsOneWidget);
             expect(find.text('Garaje'), findsOneWidget);
+            expect(find.text('Ajustes'), findsOneWidget);
           } else {
             expect(find.byTooltip('Añadir coche'), findsOneWidget);
             expect(find.byIcon(Icons.garage), findsOneWidget);
+            expect(find.byIcon(Icons.settings), findsOneWidget);
           }
         });
 
@@ -99,6 +114,60 @@ void main() {
 
           expect(router.routeInformationProvider.value.uri.path, '/');
         });
+
+        testWidgets('given the sidebar on /, when the settings destination '
+            'is tapped, then the URL goes to /settings', (tester) async {
+          final router = await pumpSidebar(tester, extended: extended);
+          if (extended) {
+            await tester.tap(find.text('Ajustes'));
+          } else {
+            await tester.tap(find.byIcon(Icons.settings));
+          }
+          await tester.pumpAndSettle();
+
+          expect(router.routeInformationProvider.value.uri.path, '/settings');
+        });
+
+        testWidgets('given the sidebar on /settings, when the garage '
+            'destination is tapped, then the URL goes to /', (tester) async {
+          final router = await pumpSidebar(
+            tester,
+            extended: extended,
+            initialLocation: '/settings',
+          );
+          if (extended) {
+            await tester.tap(find.text('Garaje'));
+          } else {
+            await tester.tap(find.byIcon(Icons.garage));
+          }
+          await tester.pumpAndSettle();
+
+          expect(router.routeInformationProvider.value.uri.path, '/');
+        });
+
+        testWidgets('given the sidebar on /settings, when pumped, then the '
+            'settings destination is selected', (tester) async {
+          await pumpSidebar(
+            tester,
+            extended: extended,
+            initialLocation: '/settings',
+          );
+
+          expect(selectedIndex(tester), 1);
+        });
+
+        for (final location in ['/', '/cars/1']) {
+          testWidgets('given the sidebar on $location, when pumped, then the '
+              'garage destination is selected', (tester) async {
+            await pumpSidebar(
+              tester,
+              extended: extended,
+              initialLocation: location,
+            );
+
+            expect(selectedIndex(tester), 0);
+          });
+        }
       });
     }
   });

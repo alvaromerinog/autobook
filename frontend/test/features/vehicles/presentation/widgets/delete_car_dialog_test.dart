@@ -4,17 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../../../../app/localization_test_harness.dart';
 import '../../fixtures/car_fixtures.dart';
 
 void main() {
   Future<void> pumpDialog(
     WidgetTester tester,
     Car car,
-    List<bool?> result,
-  ) async {
+    List<bool?> result, {
+    Locale locale = const Locale('es'),
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
-        child: MaterialApp(
+        child: localizedTestApp(
+          locale: locale,
           home: Scaffold(
             body: Builder(
               builder: (context) => ElevatedButton(
@@ -60,6 +63,29 @@ void main() {
 
       expect(result[0], isFalse);
       expect(find.text('Eliminar vehículo'), findsNothing);
+    });
+
+    testWidgets('given the dialog in English, then the confirmation and '
+        'actions are translated', (tester) async {
+      final result = <bool?>[null];
+      await pumpDialog(
+        tester,
+        toyotaCorolla,
+        result,
+        locale: const Locale('en'),
+      );
+
+      expect(find.text('Delete vehicle'), findsOneWidget);
+      expect(
+        find.text('Are you sure you want to delete Toyota Corolla?'),
+        findsOneWidget,
+      );
+      expect(find.text('Cancel'), findsOneWidget);
+
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(result[0], isTrue);
     });
   });
 }
